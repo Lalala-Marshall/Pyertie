@@ -33,8 +33,8 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 private fun MainActivityContent() {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
