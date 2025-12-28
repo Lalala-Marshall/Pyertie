@@ -1,5 +1,6 @@
 package com.marshall.pyerite.ui.golbalComponents
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -51,6 +52,7 @@ fun BaseLazyColumnItem(
         modifier = Modifier
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
+            .clickable { model.onClick() }
     ) {
 
         Icon(
@@ -106,4 +108,5 @@ private fun ItemDivider() {
 data class BaseLazyColumnItemModel(
     val iconRes: Int,
     val itemName: String,
+    val onClick: () -> Unit
 )
