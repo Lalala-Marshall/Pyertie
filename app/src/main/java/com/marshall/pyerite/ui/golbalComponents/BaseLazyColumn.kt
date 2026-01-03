@@ -18,10 +18,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import coil.compose.rememberAsyncImagePainter
 import com.marshall.pyerite.R
+import java.io.File
 
 @Composable
 fun BaseLazyColumn(
@@ -59,8 +62,11 @@ fun BaseLazyColumnItem(
         ) {
             Icon(
                 modifier = Modifier.size(24.dp),
-                painter = painterResource(model.iconRes),
+                painter = model.iconFile?.let { file ->
+                    rememberAsyncImagePainter(file)
+                } ?: painterResource(model.iconRes) ,
                 contentDescription = null,
+                tint = Color.Unspecified
             )
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -95,7 +101,8 @@ private fun ItemDivider() {
 }
 
 data class BaseLazyColumnItemModel(
-    val iconRes: Int,
+    val iconRes: Int = R.drawable.ic_database,
+    val iconFile: File? = null,
     val itemName: String,
     val onClick: () -> Unit
 )
