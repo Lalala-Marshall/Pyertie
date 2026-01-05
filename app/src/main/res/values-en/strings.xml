@@ -3,4 +3,6 @@
     <string name="main_page">Main Page</string>
     <string name="data">Data</string>
     <string name="database">Database</string>
+    <string name="group">Group</string>
+    <string name="type">Type</string>
 </resources>

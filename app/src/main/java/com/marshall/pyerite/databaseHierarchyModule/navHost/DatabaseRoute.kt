@@ -1,17 +1,19 @@
 package com.marshall.pyerite.databaseHierarchyModule.navHost
 
+import android.net.Uri
+
 sealed class DatabaseRoute(val route: String) {
 
     object Root : DatabaseRoute("database")
 
     object Category : DatabaseRoute("database/category")
 
-    object Group : DatabaseRoute("database/group/{categoryId}") {
-        fun create(categoryId: Int) = "database/group/$categoryId"
+    object Group : DatabaseRoute("database/group/{categoryId}/{categoryName}") {
+        fun create(categoryId: Int, name: String) = "database/group/$categoryId/${Uri.encode(name)}"
     }
 
-    object Type : DatabaseRoute("database/type/{groupId}") {
-        fun create(groupId: Int) = "database/type/$groupId"
+    object Type : DatabaseRoute("database/type/{groupId}/{groupName}") {
+        fun create(groupId: Int, name: String) = "database/type/$groupId/${Uri.encode(name)}"
     }
 
     object TypeDetail : DatabaseRoute("database/typeDetail/{typeId}") {

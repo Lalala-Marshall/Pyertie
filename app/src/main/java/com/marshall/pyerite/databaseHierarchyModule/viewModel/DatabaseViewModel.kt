@@ -2,26 +2,22 @@ package com.marshall.pyerite.databaseHierarchyModule.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.CategoryEntity
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 
 class DatabaseViewModel(
     private val repository: DatabaseRepository
 ) : ViewModel() {
 
-    private val _categories = MutableStateFlow<List<CategoryEntity>>(emptyList())
-    val categories: StateFlow<List<CategoryEntity>> = _categories
+    val categories = repository.getCategories()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    init {
-        viewModelScope.launch {
-            repository.getCategories()
-                .collect { list ->
-                    _categories.value = list
-                }
-        }
-    }
+    fun groups(categoryId: Int) =
+        repository.getGroups(categoryId)
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    // TODO: 后续再做 groups / types
+    fun types(groupId: Int) =
+        repository.getTypes(groupId)
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
 }
