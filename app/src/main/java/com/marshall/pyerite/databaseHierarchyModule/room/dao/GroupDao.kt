@@ -1,12 +1,11 @@
 package com.marshall.pyerite.databaseHierarchyModule.room.dao
 
 import androidx.room.Dao
-import androidx.room.RawQuery
-import androidx.sqlite.db.SupportSQLiteQuery
+import androidx.room.Query
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.GroupEntity
 
 @Dao
 interface GroupDao {
-    @RawQuery
-    suspend fun getGroupsByCategory(query: SupportSQLiteQuery): List<GroupEntity>
+    @Query("SELECT * FROM groups WHERE categoryID = :categoryId AND published != 0 ORDER BY group_id")
+    suspend fun getGroupsByCategory(categoryId: Int): List<GroupEntity>
 }

@@ -12,7 +12,7 @@ import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
 @Composable
 fun MainPage(navController: NavController) {
     BaseContainer(
-        title = stringResource(R.string.data),
+        title = stringResource(R.string.app_name),
         content = {
             BaseLazyColumn(
                 items = listOf(

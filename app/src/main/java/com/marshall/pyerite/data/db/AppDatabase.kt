@@ -6,8 +6,16 @@ import com.marshall.pyerite.databaseHierarchyModule.room.dao.CategoryDao
 import com.marshall.pyerite.databaseHierarchyModule.room.dao.GroupDao
 import com.marshall.pyerite.databaseHierarchyModule.room.dao.TypeDao
 
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.CategoryEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.GroupEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
+
 @Database(
-    entities = [RoomAnchorEntity::class],
+    entities = [
+        CategoryEntity::class,
+        GroupEntity::class,
+        TypeEntity::class
+    ],
     version = 1,
     exportSchema = false
 )
