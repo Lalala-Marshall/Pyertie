@@ -44,15 +44,23 @@ fun DatabaseHierarchyPage(
     viewModel: DatabaseViewModel = koinViewModel(),
     iconManager: IconManager = koinInject()
 ) {
-    val categories by viewModel.categories.collectAsState()
+    val categories by if (level == DatabaseLevel.CATEGORY) {
+        viewModel.categories.collectAsState()
+    } else {
+        remember { mutableStateOf(emptyList()) }
+    }
 
-    val groups by remember(parentId) {
-        parentId?.let { viewModel.groups(it) }
-    }?.collectAsState(initial = emptyList()) ?: remember { mutableStateOf(emptyList()) }
+    val groups by if (level == DatabaseLevel.GROUP && parentId != null) {
+        remember(parentId) { viewModel.groups(parentId) }.collectAsState()
+    } else {
+        remember { mutableStateOf(emptyList()) }
+    }
 
-    val types by remember(parentId) {
-        parentId?.let { viewModel.types(it) }
-    }?.collectAsState(initial = emptyList()) ?: remember { mutableStateOf(emptyList()) }
+    val types by if (level == DatabaseLevel.TYPE && parentId != null) {
+        remember(parentId) { viewModel.types(parentId) }.collectAsState()
+    } else {
+        remember { mutableStateOf(emptyList()) }
+    }
 
     val (publishedItems, unpublishedItems) = getItems(level, categories, groups, types, iconManager, navController)
 
@@ -64,7 +72,7 @@ fun DatabaseHierarchyPage(
     ) {
         Text(
             text = title,
-            fontSize = 18.sp,
+            fontSize = 24.sp,
             fontWeight = FontWeight.Black,
             color = colorResource(R.color.text_primary),
             modifier = Modifier.padding(start = 24.dp, bottom = 12.dp, top = 12.dp)
