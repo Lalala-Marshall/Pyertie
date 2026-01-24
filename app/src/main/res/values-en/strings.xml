@@ -5,4 +5,6 @@
     <string name="database">Database</string>
     <string name="group">Group</string>
     <string name="type">Type</string>
+    <string name="published">Published</string>
+    <string name="unpublished">Unpublished</string>
 </resources>

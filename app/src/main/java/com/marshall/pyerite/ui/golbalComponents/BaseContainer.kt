@@ -22,9 +22,11 @@ import com.marshall.pyerite.R
 fun BaseContainer(
     title: String? = null,
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier,
+    useSystemBarsPadding: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    Column(modifier = modifier.systemBarsPadding()) {
+    val containerModifier = if (useSystemBarsPadding) modifier.systemBarsPadding() else modifier
+    Column(modifier = containerModifier) {
         title?.let {
             Text(
                 text = it,

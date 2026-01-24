@@ -6,6 +6,6 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.GroupEntity
 
 @Dao
 interface GroupDao {
-    @Query("SELECT * FROM groups WHERE categoryID = :categoryId AND published != 0 ORDER BY group_id")
+    @Query("SELECT * FROM groups WHERE categoryID = :categoryId ORDER BY group_id")
     suspend fun getGroupsByCategory(categoryId: Int): List<GroupEntity>
 }

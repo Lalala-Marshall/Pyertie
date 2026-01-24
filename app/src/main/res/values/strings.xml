@@ -6,4 +6,6 @@
     <string name="database">数据库</string>
     <string name="group">集合</string>
     <string name="type">类型</string>
+    <string name="published">已发布</string>
+    <string name="unpublished">未发布</string>
 </resources>

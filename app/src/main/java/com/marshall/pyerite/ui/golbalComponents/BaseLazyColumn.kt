@@ -31,10 +31,23 @@ fun BaseLazyColumn(
     items: List<BaseLazyColumnItemModel>,
     modifier: Modifier = Modifier,
 ) {
-    LazyColumn(
-        modifier = modifier.fillMaxWidth()
-    ) {
+    LazyColumn(modifier = modifier.fillMaxWidth()) {
         itemsIndexed(items) { index, item ->
+            BaseLazyColumnItem(
+                model = item,
+                showDivider = index != items.lastIndex
+            )
+        }
+    }
+}
+
+@Composable
+fun BaseColumn(
+    items: List<BaseLazyColumnItemModel>,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        items.forEachIndexed { index, item ->
             BaseLazyColumnItem(
                 model = item,
                 showDivider = index != items.lastIndex
