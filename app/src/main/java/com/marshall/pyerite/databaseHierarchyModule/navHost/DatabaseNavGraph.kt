@@ -9,6 +9,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.marshall.pyerite.R
 import com.marshall.pyerite.databaseHierarchyModule.DatabaseHierarchyPage
+import com.marshall.pyerite.databaseHierarchyModule.TypeDetailPage
 
 fun NavGraphBuilder.databaseNavGraph(
     navController: NavController
@@ -53,6 +54,17 @@ fun NavGraphBuilder.databaseNavGraph(
                 level = DatabaseLevel.TYPE,
                 parentId = backStack.arguments!!.getInt("groupId"),
                 navController = navController
+            )
+        }
+
+        composable(
+            route = DatabaseRoute.TypeDetail.route,
+            arguments = listOf(
+                navArgument("typeId") { type = NavType.IntType }
+            )
+        ) { backStack ->
+            TypeDetailPage(
+                typeId = backStack.arguments!!.getInt("typeId")
             )
         }
     }

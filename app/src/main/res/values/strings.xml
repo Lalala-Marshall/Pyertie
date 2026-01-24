@@ -8,4 +8,14 @@
     <string name="type">类型</string>
     <string name="published">已发布</string>
     <string name="unpublished">未发布</string>
+    <string name="type_info">物品信息</string>
+    <string name="base_info">基础信息</string>
+    <string name="structure">结构</string>
+    <string name="industrial_info">工业属性</string>
+    <string name="volume">体积</string>
+    <string name="repackaged_volume">体积(打包后)</string>
+    <string name="capacity">容量</string>
+    <string name="mass">质量</string>
+    <string name="region_market">星域市场</string>
+    <string name="structure_value">结构值</string>
 </resources>

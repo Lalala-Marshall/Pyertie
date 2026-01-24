@@ -20,4 +20,8 @@ class DatabaseViewModel(
         repository.getTypes(groupId)
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
+    fun typeDetail(typeId: Int) =
+        repository.getType(typeId)
+            .stateIn(viewModelScope, SharingStarted.Lazily, null)
+
 }

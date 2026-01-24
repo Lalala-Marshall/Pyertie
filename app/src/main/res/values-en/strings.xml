@@ -7,4 +7,14 @@
     <string name="type">Type</string>
     <string name="published">Published</string>
     <string name="unpublished">Unpublished</string>
+    <string name="type_info">Item Info</string>
+    <string name="base_info">Base Info</string>
+    <string name="structure">Structure</string>
+    <string name="industrial_info">Industrial Info</string>
+    <string name="volume">Volume</string>
+    <string name="repackaged_volume">Repackaged Volume</string>
+    <string name="capacity">Capacity</string>
+    <string name="mass">Mass</string>
+    <string name="region_market">Region market</string>
+    <string name="structure_value">Structure value</string>
 </resources>

@@ -26,4 +26,8 @@ class DatabaseRepository(roomProvider: RoomProvider) {
     fun getTypes(groupId: Int): Flow<List<TypeEntity>> = flow {
         emit(typeDao.getTypesByGroup(groupId))
     }.flowOn(Dispatchers.IO)
+
+    fun getType(typeId: Int): Flow<TypeEntity?> = flow {
+        emit(typeDao.getTypeById(typeId))
+    }.flowOn(Dispatchers.IO)
 }

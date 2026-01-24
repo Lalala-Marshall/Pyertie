@@ -134,10 +134,10 @@ private fun getItems(
 
             DatabaseLevel.TYPE -> {
                 val published = types.filter { it.published == true }.map { type ->
-                    createTypeModel(type, iconManager)
+                    createTypeModel(type, iconManager, navController)
                 }
                 val unpublished = types.filter { it.published != true }.map { type ->
-                    createTypeModel(type, iconManager)
+                    createTypeModel(type, iconManager, navController)
                 }
                 published to unpublished
             }
@@ -175,11 +175,12 @@ private fun createGroupModel(
 
 private fun createTypeModel(
     type: TypeEntity,
-    iconManager: IconManager
+    iconManager: IconManager,
+    navController: NavController
 ) = BaseLazyColumnItemModel(
     iconFile = iconManager.getIconFile(type.iconFilename),
     itemName = type.zhName ?: type.name.orEmpty(),
     onClick = {
-        // Type 一般是终点
+        navController.navigate(DatabaseRoute.TypeDetail.create(type.id))
     }
 )
