@@ -27,6 +27,7 @@ import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseLevel
 import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.CategoryEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.GroupEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.MetaGroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
 import com.marshall.pyerite.ui.golbalComponents.BaseColumn
@@ -62,7 +63,13 @@ fun DatabaseHierarchyPage(
         remember { mutableStateOf(emptyList()) }
     }
 
-    val (publishedItems, unpublishedItems) = getItems(level, categories, groups, types, iconManager, navController)
+    val metaGroups by if (level == DatabaseLevel.TYPE) {
+        viewModel.metaGroups.collectAsState()
+    } else {
+        remember { mutableStateOf(emptyList()) }
+    }
+
+    val sections = getSections(level, categories, groups, types, metaGroups, iconManager, navController)
 
     Column(
         modifier = Modifier
@@ -78,22 +85,13 @@ fun DatabaseHierarchyPage(
             modifier = Modifier.padding(start = 24.dp, bottom = 12.dp, top = 12.dp)
         )
 
-        if (publishedItems.isNotEmpty()) {
+        sections.forEachIndexed { index, section ->
             BaseContainer(
-                title = stringResource(R.string.published),
-                modifier = Modifier.padding(bottom = 16.dp),
+                title = section.title,
+                modifier = Modifier.padding(bottom = if (index == sections.lastIndex) 0.dp else 16.dp),
                 useSystemBarsPadding = false
             ) {
-                BaseColumn(items = publishedItems)
-            }
-        }
-
-        if (unpublishedItems.isNotEmpty()) {
-            BaseContainer(
-                title = stringResource(R.string.unpublished),
-                useSystemBarsPadding = false
-            ) {
-                BaseColumn(items = unpublishedItems)
+                BaseColumn(items = section.items)
             }
         }
         
@@ -101,45 +99,88 @@ fun DatabaseHierarchyPage(
     }
 }
 
+data class SectionModel(
+    val title: String,
+    val items: List<BaseLazyColumnItemModel>
+)
+
 @Composable
-private fun getItems(
+private fun getSections(
     level: DatabaseLevel,
     categories: List<CategoryEntity>,
     groups: List<GroupEntity>,
     types: List<TypeEntity>,
+    metaGroups: List<MetaGroupEntity>,
     iconManager: IconManager,
     navController: NavController
-): Pair<List<BaseLazyColumnItemModel>, List<BaseLazyColumnItemModel>> {
-    return remember(level, categories, groups, types) {
+): List<SectionModel> {
+    val publishedTitle = stringResource(R.string.published)
+    val unpublishedTitle = stringResource(R.string.unpublished)
+
+    return remember(level, categories, groups, types, metaGroups, publishedTitle, unpublishedTitle) {
         when (level) {
             DatabaseLevel.CATEGORY -> {
-                val published = categories.filter { it.published == true }.map { category ->
-                    createCategoryModel(category, iconManager, navController)
+                buildList {
+                    val published = categories.filter { it.published == true }.map { category ->
+                        createCategoryModel(category, iconManager, navController)
+                    }
+                    if (published.isNotEmpty()) add(SectionModel(publishedTitle, published))
+
+                    val unpublished = categories.filter { it.published != true }.map { category ->
+                        createCategoryModel(category, iconManager, navController)
+                    }
+                    if (unpublished.isNotEmpty()) add(SectionModel(unpublishedTitle, unpublished))
                 }
-                val unpublished = categories.filter { it.published != true }.map { category ->
-                    createCategoryModel(category, iconManager, navController)
-                }
-                published to unpublished
             }
 
             DatabaseLevel.GROUP -> {
-                val published = groups.filter { it.published == true }.map { group ->
-                    createGroupModel(group, iconManager, navController)
+                buildList {
+                    val published = groups.filter { it.published == true }.map { group ->
+                        createGroupModel(group, iconManager, navController)
+                    }
+                    if (published.isNotEmpty()) add(SectionModel(publishedTitle, published))
+
+                    val unpublished = groups.filter { it.published != true }.map { group ->
+                        createGroupModel(group, iconManager, navController)
+                    }
+                    if (unpublished.isNotEmpty()) add(SectionModel(unpublishedTitle, unpublished))
                 }
-                val unpublished = groups.filter { it.published != true }.map { group ->
-                    createGroupModel(group, iconManager, navController)
-                }
-                published to unpublished
             }
 
             DatabaseLevel.TYPE -> {
-                val published = types.filter { it.published == true }.map { type ->
-                    createTypeModel(type, iconManager, navController)
+                buildList {
+                    // Split published items by metaGroupID
+                    val publishedTypes = types.filter { it.published == true }
+                    
+                    if (publishedTypes.isNotEmpty()) {
+                        val metaGroupMap = metaGroups.associateBy { it.id }
+                        
+                        // Group by metaGroupID
+                        val grouped = publishedTypes.groupBy { it.metaGroupID }
+                        
+                        // Sort by metaGroupID or metaGroupName? 
+                        // Let's sort by metaGroupID or keep them in the order they appear but usually there's a standard order.
+                        // We'll sort by metaGroupID for stability.
+                        grouped.keys.sortedBy { it ?: Int.MAX_VALUE }.forEach { metaId ->
+                            val itemsInMeta = grouped[metaId] ?: emptyList()
+                            val metaName = if (metaId == null) {
+                                publishedTitle // fallback if null
+                            } else {
+                                metaGroupMap[metaId]?.name ?: "Meta Group $metaId"
+                            }
+                            
+                            add(SectionModel(
+                                metaName, 
+                                itemsInMeta.map { createTypeModel(it, iconManager, navController) }
+                            ))
+                        }
+                    }
+
+                    val unpublished = types.filter { it.published != true }.map { type ->
+                        createTypeModel(type, iconManager, navController)
+                    }
+                    if (unpublished.isNotEmpty()) add(SectionModel(unpublishedTitle, unpublished))
                 }
-                val unpublished = types.filter { it.published != true }.map { type ->
-                    createTypeModel(type, iconManager, navController)
-                }
-                published to unpublished
             }
         }
     }
