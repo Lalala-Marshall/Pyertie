@@ -19,12 +19,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.marshall.pyerite.R
+import com.marshall.pyerite.data.icons.IconManager
+import org.koin.compose.koinInject
 import java.io.File
 
 @Composable
 fun BaseDetailRow(
     model: BaseDetailRowModel,
     showDivider: Boolean,
+    iconManager: IconManager = koinInject()
 ) {
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -35,11 +38,21 @@ fun BaseDetailRow(
                 .padding(horizontal = 12.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val painter = when {
+                model.iconFileName != null -> {
+                    rememberAsyncImagePainter(iconManager.getIconFile(model.iconFileName))
+                }
+                model.iconFile != null -> {
+                    rememberAsyncImagePainter(model.iconFile)
+                }
+                else -> {
+                    painterResource(model.iconRes)
+                }
+            }
+
             Icon(
                 modifier = Modifier.size(24.dp),
-                painter = model.iconFile?.let { file ->
-                    rememberAsyncImagePainter(file)
-                } ?: painterResource(model.iconRes),
+                painter = painter,
                 contentDescription = null,
                 tint = Color.Unspecified
             )
@@ -66,6 +79,7 @@ fun BaseDetailRow(
 data class BaseDetailRowModel(
     val iconRes: Int = R.drawable.ic_database,
     val iconFile: File? = null,
+    val iconFileName: String? = null,
     val label: String,
     val value: String
 )

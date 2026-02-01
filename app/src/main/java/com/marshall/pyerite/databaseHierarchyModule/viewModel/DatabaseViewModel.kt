@@ -27,4 +27,8 @@ class DatabaseViewModel(
     val metaGroups = repository.getMetaGroups()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
+    fun typeAttributes(typeId: Int) =
+        repository.getTypeAttributes(typeId)
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
 }

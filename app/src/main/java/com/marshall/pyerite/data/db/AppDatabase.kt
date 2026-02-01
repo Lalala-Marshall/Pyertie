@@ -7,17 +7,17 @@ import com.marshall.pyerite.databaseHierarchyModule.room.dao.GroupDao
 import com.marshall.pyerite.databaseHierarchyModule.room.dao.TypeDao
 import com.marshall.pyerite.databaseHierarchyModule.room.dao.MetaGroupDao
 
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.CategoryEntity
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.GroupEntity
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.MetaGroupEntity
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.*
 
 @Database(
     entities = [
         CategoryEntity::class,
         GroupEntity::class,
         TypeEntity::class,
-        MetaGroupEntity::class
+        MetaGroupEntity::class,
+        DogmaAttributeEntity::class,
+        DogmaCategoryEntity::class,
+        TypeAttributeEntity::class
     ],
     version = 1,
     exportSchema = false

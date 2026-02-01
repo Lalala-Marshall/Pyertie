@@ -4,6 +4,7 @@ import com.marshall.pyerite.data.db.RoomProvider
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.CategoryEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.GroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.MetaGroupEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -36,5 +37,9 @@ class DatabaseRepository(roomProvider: RoomProvider) {
 
     fun getMetaGroups(): Flow<List<MetaGroupEntity>> = flow {
         emit(metaGroupDao.getAllMetaGroups())
+    }.flowOn(Dispatchers.IO)
+
+    fun getTypeAttributes(typeId: Int): Flow<List<TypeAttributeDetail>> = flow {
+        emit(typeDao.getTypeAttributeDetails(typeId))
     }.flowOn(Dispatchers.IO)
 }
