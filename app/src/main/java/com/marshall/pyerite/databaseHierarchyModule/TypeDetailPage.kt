@@ -34,6 +34,7 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDet
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
 import com.marshall.pyerite.ui.golbalComponents.*
+import com.marshall.pyerite.ui.golbalComponents.BaseDetailRowModel.Companion.formatMappedValue
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import java.text.NumberFormat
@@ -148,7 +149,6 @@ fun TypeDetailPage(
 
 @Composable
 private fun DynamicDogmaSections(attributes: List<TypeAttributeDetail>) {
-    val formatter = remember { NumberFormat.getNumberInstance(Locale.US) }
     
     // Core attributes to skip in dynamic sections (already in Base Info or Summary)
     // ID 4: Mass, 38: Capacity, 161: Volume, 422: Tech Level
@@ -185,7 +185,7 @@ private fun DynamicDogmaSections(attributes: List<TypeAttributeDetail>) {
                         model = BaseDetailRowModel(
                             iconFileName = attr.iconFilename,
                             label = attr.displayName ?: attr.name ?: "未知属性",
-                            value = "${formatter.format(attr.value ?: attr.defaultValue ?: 0.0)} ${attr.unitName ?: ""}"
+                            value = formatMappedValue(attr.value, attr.unitName)
                         ),
                         showDivider = index != attrList.lastIndex
                     )

@@ -82,4 +82,22 @@ data class BaseDetailRowModel(
     val iconFileName: String? = null,
     val label: String,
     val value: String
-)
+) {
+    companion object {
+        private val formatter = java.text.NumberFormat.getNumberInstance(java.util.Locale.US)
+
+        fun formatMappedValue(rawValue: Double?, unitName: String?): String {
+            val value = rawValue ?: 0.0
+            if (unitName != null && unitName.contains("=")) {
+                // Handle "1=xxx 2=yyy 3=zzz" mapping
+                val mapping = unitName.split(Regex("\\s+"))
+                    .mapNotNull { it.trim().split("=").takeIf { parts -> parts.size == 2 } }
+                    .associate { it[0].trim() to it[1].trim() }
+
+                val key = if (value % 1.0 == 0.0) value.toInt().toString() else value.toString()
+                mapping[key]?.let { return it }
+            }
+            return "${formatter.format(value)} ${unitName ?: ""}".trim()
+        }
+    }
+}
