@@ -17,4 +17,32 @@
     <string name="mass">Mass</string>
     <string name="region_market">Region market</string>
     <string name="structure_value">Structure value</string>
+    <string name="skill_level">Level %1$d</string>
+
+    <!-- Dogma Categories -->
+    <string name="category_fitting">Fitting</string>
+    <string name="category_shield">Shield</string>
+    <string name="category_armor">Armor</string>
+    <string name="category_structure">Structure</string>
+    <string name="category_capacitor">Capacitor</string>
+    <string name="category_targeting">Targeting</string>
+    <string name="category_misc">Misc</string>
+    <string name="category_skills">Skill Requirements</string>
+    <string name="category_uncategorized">Uncategorized</string>
+    <string name="category_drones">Drones</string>
+    <string name="category_ai">AI Attributes</string>
+    <string name="category_navigation">Navigation</string>
+    <string name="category_loot">Loot</string>
+    <string name="category_remote_support">Remote Support</string>
+    <string name="category_fighter_abilities">Fighter Abilities</string>
+    <string name="category_ewar">EWar Resistances</string>
+    <string name="category_bonuses">Bonuses</string>
+    <string name="category_fighter_attributes">Fighter Attributes</string>
+    <string name="category_doomsday">Doomsday</string>
+    <string name="category_hangars_bays">Hangars &amp; Bays</string>
+    <string name="category_ship_death">Ship Death / Wreck</string>
+    <string name="category_npc_behavior">NPC Behavior</string>
+    <string name="category_mining">Mining</string>
+    <string name="category_other">Other</string>
+    <string name="unknown_attribute">Unknown Attribute</string>
 </resources>

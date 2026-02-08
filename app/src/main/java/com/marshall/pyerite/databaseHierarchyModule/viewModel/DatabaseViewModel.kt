@@ -31,4 +31,8 @@ class DatabaseViewModel(
         repository.getTypeAttributes(typeId)
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
+    fun skillRequirements(typeId: Int) =
+        repository.getSkillRequirements(typeId)
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
 }

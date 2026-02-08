@@ -18,4 +18,32 @@
     <string name="mass">质量</string>
     <string name="region_market">星域市场</string>
     <string name="structure_value">结构值</string>
+    <string name="skill_level">等级 %1$d</string>
+
+    <!-- Dogma Categories -->
+    <string name="category_fitting">装配</string>
+    <string name="category_shield">护盾</string>
+    <string name="category_armor">装甲</string>
+    <string name="category_structure">结构</string>
+    <string name="category_capacitor">电容器</string>
+    <string name="category_targeting">锁定</string>
+    <string name="category_misc">杂项</string>
+    <string name="category_skills">技能需求</string>
+    <string name="category_uncategorized">未分类</string>
+    <string name="category_drones">无人机</string>
+    <string name="category_ai">AI属性</string>
+    <string name="category_navigation">导航</string>
+    <string name="category_loot">战利品</string>
+    <string name="category_remote_support">远程支援</string>
+    <string name="category_fighter_abilities">铁骑舰载机能力</string>
+    <string name="category_ewar">电子战防御</string>
+    <string name="category_bonuses">加成</string>
+    <string name="category_fighter_attributes">铁骑舰载机属性</string>
+    <string name="category_doomsday">末日武器</string>
+    <string name="category_hangars_bays">挂载 &amp; 舱室</string>
+    <string name="category_ship_death">死亡/残骸</string>
+    <string name="category_npc_behavior">NPC行为</string>
+    <string name="category_mining">采矿</string>
+    <string name="category_other">其他</string>
+    <string name="unknown_attribute">未知属性</string>
 </resources>

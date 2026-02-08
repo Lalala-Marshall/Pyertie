@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.marshall.pyerite.R
 import com.marshall.pyerite.data.icons.IconManager
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillRequirement
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
@@ -65,31 +66,31 @@ private val DOGMA_CATEGORY_WEIGHTS = mapOf(
     9 to 240,  // Uncategorized
 )
 
-private val DOGMA_CATEGORY_NAMES = mapOf(
-    1 to "装配",
-    2 to "护盾",
-    3 to "装甲",
-    4 to "结构",
-    5 to "电容器",
-    6 to "锁定",
-    7 to "杂项",
-    8 to "技能需求",
-    9 to "未分类",
-    10 to "无人机",
-    12 to "AI属性",
-    17 to "导航",
-    19 to "战利品",
-    20 to "远程支援",
-    34 to "铁骑舰载机能力",
-    36 to "电子战防御",
-    37 to "加成",
-    38 to "铁骑舰载机属性",
-    39 to "末日武器",
-    40 to "挂载 & 舱室",
-    41 to "死亡/残骸",
-    42 to "NPC行为",
-    51 to "采矿",
-    52 to "其他"
+private val DOGMA_CATEGORY_RESOURCES = mapOf(
+    1 to R.string.category_fitting,
+    2 to R.string.category_shield,
+    3 to R.string.category_armor,
+    4 to R.string.category_structure,
+    5 to R.string.category_capacitor,
+    6 to R.string.category_targeting,
+    7 to R.string.category_misc,
+    8 to R.string.category_skills,
+    9 to R.string.category_uncategorized,
+    10 to R.string.category_drones,
+    12 to R.string.category_ai,
+    17 to R.string.category_navigation,
+    19 to R.string.category_loot,
+    20 to R.string.category_remote_support,
+    34 to R.string.category_fighter_abilities,
+    36 to R.string.category_ewar,
+    37 to R.string.category_bonuses,
+    38 to R.string.category_fighter_attributes,
+    39 to R.string.category_doomsday,
+    40 to R.string.category_hangars_bays,
+    41 to R.string.category_ship_death,
+    42 to R.string.category_npc_behavior,
+    51 to R.string.category_mining,
+    52 to R.string.category_other
 )
 
 @Composable
@@ -100,6 +101,7 @@ fun TypeDetailPage(
     // Fix flickering by remembering the flow
     val type by remember(typeId) { viewModel.typeDetail(typeId) }.collectAsState(initial = null)
     val attributes by remember(typeId) { viewModel.typeAttributes(typeId) }.collectAsState(initial = emptyList())
+    val skillRequirements by remember(typeId) { viewModel.skillRequirements(typeId) }.collectAsState(initial = emptyList())
 
     type?.let { entity ->
         Column(
@@ -140,7 +142,7 @@ fun TypeDetailPage(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Dynamic Dogma Sections
-            DynamicDogmaSections(attributes)
+            DynamicDogmaSections(attributes, skillRequirements)
 
             Spacer(modifier = Modifier.height(24.dp))
         }
@@ -148,7 +150,10 @@ fun TypeDetailPage(
 }
 
 @Composable
-private fun DynamicDogmaSections(attributes: List<TypeAttributeDetail>) {
+private fun DynamicDogmaSections(
+    attributes: List<TypeAttributeDetail>,
+    skillRequirements: List<SkillRequirement>
+) {
     
     // Core attributes to skip in dynamic sections (already in Base Info or Summary)
     // ID 4: Mass, 38: Capacity, 161: Volume, 422: Tech Level
@@ -173,22 +178,36 @@ private fun DynamicDogmaSections(attributes: List<TypeAttributeDetail>) {
     }
 
     groupedAttributes.forEach { (categoryId, attrList) ->
-        val categoryName = DOGMA_CATEGORY_NAMES[categoryId] ?: attrList.firstOrNull()?.categoryName ?: "其他"
+        val categoryNameRes = DOGMA_CATEGORY_RESOURCES[categoryId]
+        val categoryName = if (categoryNameRes != null) stringResource(categoryNameRes) else (attrList.firstOrNull()?.categoryName ?: stringResource(R.string.category_other))
         BaseContainer(
             title = categoryName,
             useSystemBarsPadding = false,
             modifier = Modifier.padding(bottom = 16.dp)
         ) {
             Column {
-                attrList.forEachIndexed { index, attr ->
-                    BaseDetailRow(
-                        model = BaseDetailRowModel(
-                            iconFileName = attr.iconFilename,
-                            label = attr.displayName ?: attr.name ?: "未知属性",
-                            value = formatMappedValue(attr.value, attr.unitName)
-                        ),
-                        showDivider = index != attrList.lastIndex
-                    )
+                if (categoryId == 8 && skillRequirements.isNotEmpty()) {
+                    skillRequirements.forEachIndexed { index, skill ->
+                        BaseDetailRow(
+                            model = BaseDetailRowModel(
+                                iconFileName = skill.iconFilename,
+                                label = skill.name,
+                                value = stringResource(R.string.skill_level, skill.level)
+                            ),
+                            showDivider = index != skillRequirements.lastIndex
+                        )
+                    }
+                } else {
+                    attrList.forEachIndexed { index, attr ->
+                        BaseDetailRow(
+                            model = BaseDetailRowModel(
+                                iconFileName = attr.iconFilename,
+                                label = attr.displayName ?: attr.name ?: stringResource(R.string.unknown_attribute),
+                                value = formatMappedValue(attr.value, attr.unitName)
+                            ),
+                            showDivider = index != attrList.lastIndex
+                        )
+                    }
                 }
             }
         }
@@ -245,20 +264,21 @@ private fun TypeSummaryCard(entity: TypeEntity, iconManager: IconManager = koinI
 @Composable
 private fun BaseInfoSection(entity: TypeEntity) {
     val formatter = remember { NumberFormat.getNumberInstance(Locale.US) }
+    val context = androidx.compose.ui.platform.LocalContext.current
     // Logic for conditional visibility of detail rows
     val detailItems = remember(entity) {
         buildList {
             // Volume is ALWAYS shown
             add(BaseDetailRowModel(
                 iconFileName = "attribute_67.png",
-                label = "体积", 
+                label = context.getString(R.string.volume), 
                 value = "${formatter.format(entity.volume ?: 0.0)} m3"
             ))
             
             if (entity.repackagedVolume != null) {
                 add(BaseDetailRowModel(
                     iconFileName = "attribute_67.png",
-                    label = "体积(打包后)", 
+                    label = context.getString(R.string.repackaged_volume), 
                     value = "${formatter.format(entity.repackagedVolume)} m3"
                 ))
             }
@@ -266,7 +286,7 @@ private fun BaseInfoSection(entity: TypeEntity) {
             if (entity.capacity != null && entity.capacity > 0) {
                 add(BaseDetailRowModel(
                     iconFileName = "attribute_71.png",
-                    label = "容量", 
+                    label = context.getString(R.string.capacity), 
                     value = "${formatter.format(entity.capacity)} m3"
                 ))
             }
@@ -274,7 +294,7 @@ private fun BaseInfoSection(entity: TypeEntity) {
             if (entity.mass != null && entity.mass > 0) {
                 add(BaseDetailRowModel(
                     iconFileName = "attribute_76.png",
-                    label = "质量", 
+                    label = context.getString(R.string.mass), 
                     value = "${formatter.format(entity.mass)} Kg"
                 ))
             }

@@ -27,10 +27,11 @@ import java.io.File
 fun BaseDetailRow(
     model: BaseDetailRowModel,
     showDivider: Boolean,
+    modifier: Modifier = Modifier,
     iconManager: IconManager = koinInject()
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
