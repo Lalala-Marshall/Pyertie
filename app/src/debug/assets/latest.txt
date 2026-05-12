@@ -1,0 +1,35 @@
+{
+  "build_number": "3343457",
+  "release_date": "2026-05-12T11:45:31Z",
+  "completion_time": "2026-05-12T12:30:36.888456",
+  "icon_version": 18,
+  "icon_sha256": "be3d813fc00150f2aa26acf6cfba33a17279cc52f505aeb6ba7c8e84025491a3",
+  "sde_sha256": "eb3f417a1b27fcadb2f4fc7c460e470c1b3d92df2ff349a8bf3e9cf2e031008a",
+  "patch_number": 0,
+  "extra_db": {
+    "de": {
+      "file": "sde_db_de.zip",
+      "sha256": "252005b660b56ac077639b1503f8bca27730b6ef3a571c1c9e63a5614ddd1baf"
+    },
+    "es": {
+      "file": "sde_db_es.zip",
+      "sha256": "256a2038a7ad41827ee055f7fe4dc24bf6bafd6d1fa359d921cceea3c3fd8828"
+    },
+    "fr": {
+      "file": "sde_db_fr.zip",
+      "sha256": "209da7ea9e492344129031dcca00e858708c858028bfec0ac1db141492374be5"
+    },
+    "ja": {
+      "file": "sde_db_ja.zip",
+      "sha256": "5b57c5d12748a14105c64c8ea8c82f9e1dd843788e3def0c74693640d119d887"
+    },
+    "ko": {
+      "file": "sde_db_ko.zip",
+      "sha256": "18635db70e3d6cbadf31452ef511bfdc5667c3c3e3d8aee048b1b8ea5b96658d"
+    },
+    "ru": {
+      "file": "sde_db_ru.zip",
+      "sha256": "29ce1e5d53858febaf61185acb8611b5b752f74dfda0a754190dfcc40473722a"
+    }
+  }
+}
