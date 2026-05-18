@@ -46,4 +46,23 @@
     <string name="category_mining">采矿</string>
     <string name="category_other">其他</string>
     <string name="unknown_attribute">未知属性</string>
+
+    <string name="type_detail_role_bonus_header">- 特有加成</string>
+    <string name="type_detail_skill_bonus_header_suffix"> 每级技能加成</string>
+    <string name="type_detail_skill_bonus_unknown_name">技能 #%1$d</string>
+
+    <string name="type_detail_section_market">市场</string>
+    <string name="type_detail_market_buy_column_title">买单</string>
+    <string name="type_detail_market_sell_column_title">卖单</string>
+    <string name="type_detail_market_buy_caption">最低卖价</string>
+    <string name="type_detail_market_sell_caption">最高买价</string>
+    <string name="type_detail_market_placeholder_value">—</string>
+    <string name="type_detail_market_api_hint">市场与订单数据将在接入服务器后显示。</string>
+
+    <string name="ewar_cargo_scan_immune">免疫</string>
+    <string name="ewar_cargo_scan_not_immune">不免疫</string>
+    <string name="type_detail_blueprint">蓝图</string>
+    <string name="type_detail_refining_output">精炼产出</string>
+    <string name="type_detail_refining_output_per_unit">每 %1$d 单位</string>
+    <string name="type_detail_refining_output_count">%1$d 种</string>
 </resources>

@@ -7,7 +7,6 @@ package com.marshall.pyerite.databaseHierarchyModule.room.entity
 data class TypeAttributeDetail(
     val attributeId: Int,
     val value: Double?,
-    val defaultValue: Double?,
     val name: String?,
     val displayName: String?,
     val unitName: String?,

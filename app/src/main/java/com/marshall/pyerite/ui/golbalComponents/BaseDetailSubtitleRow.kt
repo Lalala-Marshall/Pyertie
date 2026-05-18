@@ -1,6 +1,7 @@
 package com.marshall.pyerite.ui.golbalComponents
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,87 +24,99 @@ import com.marshall.pyerite.data.icons.IconManager
 import org.koin.compose.koinInject
 import java.io.File
 
+private val DetailRowLabelFontSize = 16.sp
+private val DetailRowValueFontSize = 14.sp
+private val DetailRowLabelSubtitleFontSize = 12.sp
+
+/**
+ * [BaseDetailRowModel] with a second label line (smaller, lighter caption under [label]).
+ */
+data class BaseDetailRowSubtitleModel(
+    val iconRes: Int = R.drawable.ic_database,
+    val iconFile: File? = null,
+    val iconFileName: String? = null,
+    val label: String,
+    val labelSubtitle: String,
+    val value: String,
+) {
+
+    companion object {
+        fun from(base: BaseDetailRowModel, labelSubtitle: String): BaseDetailRowSubtitleModel =
+            BaseDetailRowSubtitleModel(
+                iconRes = base.iconRes,
+                iconFile = base.iconFile,
+                iconFileName = base.iconFileName,
+                label = base.label,
+                labelSubtitle = labelSubtitle,
+                value = base.value,
+            )
+    }
+}
+
 @Composable
-fun BaseDetailRow(
-    model: BaseDetailRowModel,
+fun BaseDetailSubtitleRow(
+    model: BaseDetailRowSubtitleModel,
     showDivider: Boolean,
     modifier: Modifier = Modifier,
-    iconManager: IconManager = koinInject()
+    iconManager: IconManager = koinInject(),
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth()
-    ) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             val shouldShowIcon = model.iconFileName != null ||
                 model.iconFile != null ||
                 model.iconRes != R.drawable.ic_database
             if (shouldShowIcon) {
                 val painter = when {
-                    model.iconFileName != null -> {
+                    model.iconFileName != null ->
                         rememberAsyncImagePainter(iconManager.getIconFile(model.iconFileName))
-                    }
-                    model.iconFile != null -> {
+
+                    model.iconFile != null ->
                         rememberAsyncImagePainter(model.iconFile)
-                    }
-                    else -> {
+
+                    else ->
                         painterResource(model.iconRes)
-                    }
                 }
 
                 Icon(
                     modifier = Modifier.size(24.dp),
                     painter = painter,
                     contentDescription = null,
-                    tint = Color.Unspecified
+                    tint = Color.Unspecified,
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
             }
 
-            Text(
+            Column(
                 modifier = Modifier.weight(1f),
-                text = model.label,
-                color = colorResource(R.color.text_primary),
-            )
+                verticalArrangement = Arrangement.spacedBy(0.dp),
+            ) {
+                Text(
+                    text = model.label,
+                    color = colorResource(R.color.text_primary),
+                    fontSize = DetailRowLabelFontSize,
+                    lineHeight = DetailRowLabelFontSize,
+                )
+                Text(
+                    text = model.labelSubtitle,
+                    color = colorResource(R.color.text_caption),
+                    fontSize = DetailRowLabelSubtitleFontSize,
+                    lineHeight = DetailRowLabelSubtitleFontSize,
+                )
+            }
 
             Text(
                 text = model.value,
                 color = colorResource(R.color.hint_text),
-                fontSize = 14.sp
+                fontSize = DetailRowValueFontSize,
             )
         }
 
         if (showDivider) ItemDivider()
-    }
-}
-
-data class BaseDetailRowModel(
-    val iconRes: Int = R.drawable.ic_database,
-    val iconFile: File? = null,
-    val iconFileName: String? = null,
-    val label: String,
-    val value: String
-) {
-    companion object {
-        private val formatter = java.text.NumberFormat.getNumberInstance(java.util.Locale.US)
-
-        fun formatMappedValue(rawValue: Double?, unitName: String?): String {
-            val value = rawValue ?: 0.0
-            if (unitName != null && unitName.contains("=")) {
-                // Handle "1=xxx 2=yyy 3=zzz" mapping
-                val mapping = unitName.split(Regex("\\s+"))
-                    .mapNotNull { it.trim().split("=").takeIf { parts -> parts.size == 2 } }
-                    .associate { it[0].trim() to it[1].trim() }
-
-                val key = if (value % 1.0 == 0.0) value.toInt().toString() else value.toString()
-                mapping[key]?.let { return it }
-            }
-            return "${formatter.format(value)} ${unitName ?: ""}".trim()
-        }
     }
 }

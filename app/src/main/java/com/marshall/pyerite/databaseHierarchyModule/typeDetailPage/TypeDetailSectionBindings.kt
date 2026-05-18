@@ -1,0 +1,189 @@
+package com.marshall.pyerite.databaseHierarchyModule.typeDetailPage
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
+import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
+import org.koin.androidx.compose.koinViewModel
+
+internal enum class DogmaCategory(val categoryId: Int) {
+    FITTING(1),
+    SHIELD(2),
+    ARMOR(3),
+    STRUCTURE(4),
+    CAPACITOR(5),
+    TARGETING(6),
+    SKILLS(8),
+    DRONES(10),
+    NAVIGATION(17),
+    EWAR_RESISTANCES(36),
+    BONUSES(37),
+    HANGARS_BAYS(40),
+}
+
+internal fun List<TypeAttributeDetail>.inDogmaCategory(category: DogmaCategory): List<TypeAttributeDetail> =
+    filter { it.categoryId == category.categoryId }
+
+@Composable
+private fun rememberDogmaCategoryAttributes(
+    typeId: Int,
+    category: DogmaCategory,
+    viewModel: DatabaseViewModel,
+): List<TypeAttributeDetail> {
+    val attributes by remember(typeId) { viewModel.typeAttributes(typeId) }
+        .collectAsState(initial = emptyList())
+    return remember(attributes, category) { attributes.inDogmaCategory(category) }
+}
+
+@Composable
+internal fun TypeSummarySectionItem(
+    typeId: Int,
+    entity: TypeEntity,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    val traits by remember(typeId) { viewModel.typeTraits(typeId) }
+        .collectAsState(initial = emptyList())
+    TypeSummarySection(entity = entity, traits = traits)
+}
+
+@Composable
+internal fun TypeDetailBaseInfoSectionItem(
+    entity: TypeEntity,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    val dogmaAttributes by remember {
+        viewModel.dogmaAttributes(TypeDetailBaseInfoSectionDogmaNames)
+    }.collectAsState(initial = emptyList())
+    TypeDetailBaseInfoSection(entity = entity, dogmaAttributes = dogmaAttributes)
+}
+
+@Composable
+internal fun TypeDetailFittingSectionItem(
+    typeId: Int,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    TypeDetailFittingSection(rememberDogmaCategoryAttributes(typeId, DogmaCategory.FITTING, viewModel))
+}
+
+@Composable
+internal fun TypeDetailShieldSectionItem(
+    typeId: Int,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    TypeDetailShieldSection(rememberDogmaCategoryAttributes(typeId, DogmaCategory.SHIELD, viewModel))
+}
+
+@Composable
+internal fun TypeDetailArmorSectionItem(
+    typeId: Int,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    TypeDetailArmorSection(rememberDogmaCategoryAttributes(typeId, DogmaCategory.ARMOR, viewModel))
+}
+
+@Composable
+internal fun TypeDetailStructureSectionItem(
+    typeId: Int,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    TypeDetailStructureSection(rememberDogmaCategoryAttributes(typeId, DogmaCategory.STRUCTURE, viewModel))
+}
+
+@Composable
+internal fun TypeDetailCapacitorSectionItem(
+    typeId: Int,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    TypeDetailCapacitorSection(rememberDogmaCategoryAttributes(typeId, DogmaCategory.CAPACITOR, viewModel))
+}
+
+@Composable
+internal fun TypeDetailTargetingSectionItem(
+    typeId: Int,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    TypeDetailTargetingSection(rememberDogmaCategoryAttributes(typeId, DogmaCategory.TARGETING, viewModel))
+}
+
+@Composable
+internal fun TypeDetailNavigationSectionItem(
+    typeId: Int,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    TypeDetailNavigationSection(rememberDogmaCategoryAttributes(typeId, DogmaCategory.NAVIGATION, viewModel))
+}
+
+@Composable
+internal fun TypeDetailDronesSectionItem(
+    typeId: Int,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    TypeDetailDronesSection(rememberDogmaCategoryAttributes(typeId, DogmaCategory.DRONES, viewModel))
+}
+
+@Composable
+internal fun TypeDetailHangarsBaysSectionItem(
+    typeId: Int,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    TypeDetailHangarsBaysSection(rememberDogmaCategoryAttributes(typeId, DogmaCategory.HANGARS_BAYS, viewModel))
+}
+
+@Composable
+internal fun TypeDetailEwarResistancesSectionItem(
+    typeId: Int,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    TypeDetailEwarResistancesSection(
+        rememberDogmaCategoryAttributes(typeId, DogmaCategory.EWAR_RESISTANCES, viewModel),
+    )
+}
+
+@Composable
+internal fun TypeDetailBonusesSectionItem(
+    typeId: Int,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    TypeDetailBonusesSection(rememberDogmaCategoryAttributes(typeId, DogmaCategory.BONUSES, viewModel))
+}
+
+@Composable
+internal fun TypeDetailMiscSectionItem(
+    typeId: Int,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    val attributes by remember(typeId) { viewModel.typeAttributes(typeId) }
+        .collectAsState(initial = emptyList())
+    TypeDetailMiscSection(attributes)
+}
+
+@Composable
+internal fun TypeDetailSkillsSectionItem(
+    typeId: Int,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    val skillRequirements by remember(typeId) { viewModel.skillRequirements(typeId) }
+        .collectAsState(initial = emptyList())
+    TypeDetailSkillsSection(
+        skillRequirements = skillRequirements,
+        attributes = rememberDogmaCategoryAttributes(typeId, DogmaCategory.SKILLS, viewModel),
+    )
+}
+
+@Composable
+internal fun TypeDetailIndustrySectionItem(
+    typeId: Int,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    val blueprints by remember(typeId) { viewModel.blueprintsForProduct(typeId) }
+        .collectAsState(initial = emptyList())
+    val refiningOutputSummary by remember(typeId) { viewModel.refiningOutputSummary(typeId) }
+        .collectAsState(initial = null)
+    TypeDetailIndustrySection(
+        blueprints = blueprints,
+        refiningOutputSummary = refiningOutputSummary,
+    )
+}

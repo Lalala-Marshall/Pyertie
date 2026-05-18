@@ -9,7 +9,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.marshall.pyerite.R
 import com.marshall.pyerite.databaseHierarchyModule.DatabaseHierarchyPage
-import com.marshall.pyerite.databaseHierarchyModule.TypeDetailPage
+import com.marshall.pyerite.databaseHierarchyModule.typeDetailPage.TypeDetailPage
 
 fun NavGraphBuilder.databaseNavGraph(
     navController: NavController

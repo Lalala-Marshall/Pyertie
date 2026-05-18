@@ -2,37 +2,104 @@ package com.marshall.pyerite.databaseHierarchyModule.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.DogmaAttributeEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.GroupEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillRequirement
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeBlueprintDetail
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputSummary
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeTraitDetail
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 
 class DatabaseViewModel(
-    private val repository: DatabaseRepository
+    private val repository: DatabaseRepository,
 ) : ViewModel() {
 
     val categories = repository.getCategories()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    fun groups(categoryId: Int) =
+    private val groupsFlows = mutableMapOf<Int, StateFlow<List<GroupEntity>>>()
+
+    fun groups(categoryId: Int) = groupsFlows.getOrPut(categoryId) {
         repository.getGroups(categoryId)
+            .distinctUntilChanged()
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    }
 
-    fun types(groupId: Int) =
+    private val typesFlows = mutableMapOf<Int, StateFlow<List<TypeEntity>>>()
+
+    fun types(groupId: Int) = typesFlows.getOrPut(groupId) {
         repository.getTypes(groupId)
+            .distinctUntilChanged()
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    }
 
-    fun typeDetail(typeId: Int) =
+    private val typeDetailFlows = mutableMapOf<Int, StateFlow<TypeEntity?>>()
+
+    fun typeDetail(typeId: Int): StateFlow<TypeEntity?> = typeDetailFlows.getOrPut(typeId) {
         repository.getType(typeId)
+            .distinctUntilChanged()
             .stateIn(viewModelScope, SharingStarted.Lazily, null)
+    }
 
     val metaGroups = repository.getMetaGroups()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    fun typeAttributes(typeId: Int) =
-        repository.getTypeAttributes(typeId)
-            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    private val typeAttributesFlows = mutableMapOf<Int, StateFlow<List<TypeAttributeDetail>>>()
 
-    fun skillRequirements(typeId: Int) =
-        repository.getSkillRequirements(typeId)
-            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    fun typeAttributes(typeId: Int): StateFlow<List<TypeAttributeDetail>> =
+        typeAttributesFlows.getOrPut(typeId) {
+            repository.getTypeAttributes(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        }
 
+    private val dogmaAttributesFlows = mutableMapOf<List<String>, StateFlow<List<DogmaAttributeEntity>>>()
+
+    fun dogmaAttributes(names: List<String>): StateFlow<List<DogmaAttributeEntity>> =
+        dogmaAttributesFlows.getOrPut(names) {
+            repository.getDogmaAttributesByNames(names)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        }
+
+    private val skillRequirementsFlows = mutableMapOf<Int, StateFlow<List<SkillRequirement>>>()
+
+    fun skillRequirements(typeId: Int): StateFlow<List<SkillRequirement>> =
+        skillRequirementsFlows.getOrPut(typeId) {
+            repository.getSkillRequirements(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        }
+
+    private val typeTraitsFlows = mutableMapOf<Int, StateFlow<List<TypeTraitDetail>>>()
+
+    fun typeTraits(typeId: Int): StateFlow<List<TypeTraitDetail>> =
+        typeTraitsFlows.getOrPut(typeId) {
+            repository.getTypeTraits(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        }
+
+    private val blueprintsFlows = mutableMapOf<Int, StateFlow<List<TypeBlueprintDetail>>>()
+
+    fun blueprintsForProduct(typeId: Int): StateFlow<List<TypeBlueprintDetail>> =
+        blueprintsFlows.getOrPut(typeId) {
+            repository.getBlueprintsForProduct(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        }
+
+    private val refiningOutputFlows = mutableMapOf<Int, StateFlow<TypeRefiningOutputSummary?>>()
+
+    fun refiningOutputSummary(typeId: Int): StateFlow<TypeRefiningOutputSummary?> =
+        refiningOutputFlows.getOrPut(typeId) {
+            repository.getRefiningOutputSummary(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, null)
+        }
 }

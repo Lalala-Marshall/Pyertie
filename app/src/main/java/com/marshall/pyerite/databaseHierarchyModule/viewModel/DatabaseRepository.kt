@@ -2,11 +2,15 @@ package com.marshall.pyerite.databaseHierarchyModule.viewModel
 
 import com.marshall.pyerite.data.db.RoomProvider
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.CategoryEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.DogmaAttributeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.GroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.MetaGroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeBlueprintDetail
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeTraitDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillRequirement
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputSummary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -28,6 +32,7 @@ class DatabaseRepository(roomProvider: RoomProvider) {
     }.flowOn(Dispatchers.IO)
 
     private val typeDao = roomProvider.getDatabase().typeDao()
+    private val traitDao = roomProvider.getDatabase().traitDao()
     fun getTypes(groupId: Int): Flow<List<TypeEntity>> = flow {
         emit(typeDao.getTypesByGroup(groupId))
     }.flowOn(Dispatchers.IO)
@@ -42,6 +47,22 @@ class DatabaseRepository(roomProvider: RoomProvider) {
 
     fun getTypeAttributes(typeId: Int): Flow<List<TypeAttributeDetail>> = flow {
         emit(typeDao.getTypeAttributeDetails(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    fun getDogmaAttributesByNames(names: List<String>): Flow<List<DogmaAttributeEntity>> = flow {
+        emit(typeDao.getDogmaAttributesByNames(names))
+    }.flowOn(Dispatchers.IO)
+
+    fun getTypeTraits(typeId: Int): Flow<List<TypeTraitDetail>> = flow {
+        emit(traitDao.getTraitsForType(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    fun getBlueprintsForProduct(typeId: Int): Flow<List<TypeBlueprintDetail>> = flow {
+        emit(typeDao.getBlueprintsForProduct(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    fun getRefiningOutputSummary(typeId: Int): Flow<TypeRefiningOutputSummary?> = flow {
+        emit(typeDao.getRefiningOutputSummary(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getSkillRequirements(typeId: Int): Flow<List<SkillRequirement>> = flow {

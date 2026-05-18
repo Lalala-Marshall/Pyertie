@@ -17,5 +17,4 @@ class RoomProvider(private val context: Context) {
     }
 
     fun getDatabase(): AppDatabase = _database
-
 }
