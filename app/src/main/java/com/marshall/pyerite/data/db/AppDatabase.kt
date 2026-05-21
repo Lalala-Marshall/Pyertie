@@ -7,7 +7,12 @@ import com.marshall.pyerite.databaseHierarchyModule.room.dao.GroupDao
 import com.marshall.pyerite.databaseHierarchyModule.room.dao.MetaGroupDao
 import com.marshall.pyerite.databaseHierarchyModule.room.dao.TraitDao
 import com.marshall.pyerite.databaseHierarchyModule.room.dao.TypeDao
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintCopyingMaterialEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionMaterialEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingMaterialEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingOutputEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintResearchMaterialMaterialEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintResearchTimeMaterialEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.CategoryEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.DogmaAttributeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.DogmaCategoryEntity
@@ -29,6 +34,11 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeMaterialEnti
         TypeAttributeEntity::class,
         TraitEntity::class,
         BlueprintManufacturingOutputEntity::class,
+        BlueprintManufacturingMaterialEntity::class,
+        BlueprintInventionMaterialEntity::class,
+        BlueprintCopyingMaterialEntity::class,
+        BlueprintResearchMaterialMaterialEntity::class,
+        BlueprintResearchTimeMaterialEntity::class,
         TypeMaterialEntity::class,
     ],
     version = 1,

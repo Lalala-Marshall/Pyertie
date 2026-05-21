@@ -8,7 +8,9 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillRequirement
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeBlueprintDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeApplicableBlueprintCount
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputSummary
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningSourceCount
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeTraitDetail
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -99,6 +101,25 @@ class DatabaseViewModel(
     fun refiningOutputSummary(typeId: Int): StateFlow<TypeRefiningOutputSummary?> =
         refiningOutputFlows.getOrPut(typeId) {
             repository.getRefiningOutputSummary(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, null)
+        }
+
+    private val applicableBlueprintCountFlows =
+        mutableMapOf<Int, StateFlow<TypeApplicableBlueprintCount?>>()
+
+    fun applicableBlueprintCount(typeId: Int): StateFlow<TypeApplicableBlueprintCount?> =
+        applicableBlueprintCountFlows.getOrPut(typeId) {
+            repository.getApplicableBlueprintCount(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, null)
+        }
+
+    private val refiningSourceCountFlows = mutableMapOf<Int, StateFlow<TypeRefiningSourceCount?>>()
+
+    fun refiningSourceCount(typeId: Int): StateFlow<TypeRefiningSourceCount?> =
+        refiningSourceCountFlows.getOrPut(typeId) {
+            repository.getRefiningSourceCount(typeId)
                 .distinctUntilChanged()
                 .stateIn(viewModelScope, SharingStarted.Lazily, null)
         }

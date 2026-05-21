@@ -10,7 +10,9 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeBlueprintDet
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeTraitDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillRequirement
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeApplicableBlueprintCount
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputSummary
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningSourceCount
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -63,6 +65,14 @@ class DatabaseRepository(roomProvider: RoomProvider) {
 
     fun getRefiningOutputSummary(typeId: Int): Flow<TypeRefiningOutputSummary?> = flow {
         emit(typeDao.getRefiningOutputSummary(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    fun getApplicableBlueprintCount(typeId: Int): Flow<TypeApplicableBlueprintCount?> = flow {
+        emit(typeDao.getApplicableBlueprintCount(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    fun getRefiningSourceCount(typeId: Int): Flow<TypeRefiningSourceCount?> = flow {
+        emit(typeDao.getRefiningSourceCount(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getSkillRequirements(typeId: Int): Flow<List<SkillRequirement>> = flow {

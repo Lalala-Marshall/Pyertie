@@ -56,15 +56,18 @@ fun TypeDetailBaseInfoSection(
                 dogmaName = TypeEntity::mass.name,
                 value = { it.mass },
             ),
-        ).map { spec ->
+        ).mapNotNull { spec ->
+            val rawValue = spec.value(entity) ?: return@mapNotNull null
             val dogma = dogmaByName[spec.dogmaName]
             BaseDetailRowModel(
                 iconFileName = spec.iconFileNameOverride ?: dogma?.iconFilename,
                 label = spec.labelOverride ?: dogma?.displayName ?: spec.dogmaName,
-                value = formatMappedValue(spec.value(entity), dogma?.unitName)
+                value = formatMappedValue(rawValue, dogma?.unitName),
             )
         }
     }
+
+    if (detailItems.isEmpty()) return
 
     BaseContainer(
         title = stringResource(R.string.base_info),

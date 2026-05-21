@@ -6,7 +6,9 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.DogmaAttributeEn
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeBlueprintDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeApplicableBlueprintCount
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputSummary
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningSourceCount
 @Dao
 interface TypeDao {
     @Query("SELECT * FROM types WHERE groupID = :groupId ORDER BY type_id")
@@ -60,4 +62,27 @@ interface TypeDao {
         """
     )
     suspend fun getRefiningOutputSummary(typeId: Int): TypeRefiningOutputSummary?
+
+    @Query(
+        """
+        SELECT COUNT(DISTINCT blueprintTypeID) AS count
+        FROM (
+            SELECT blueprintTypeID FROM blueprint_manufacturing_materials WHERE typeID = :typeId
+            UNION SELECT blueprintTypeID FROM blueprint_invention_materials WHERE typeID = :typeId
+            UNION SELECT blueprintTypeID FROM blueprint_copying_materials WHERE typeID = :typeId
+            UNION SELECT blueprintTypeID FROM blueprint_research_material_materials WHERE typeID = :typeId
+            UNION SELECT blueprintTypeID FROM blueprint_research_time_materials WHERE typeID = :typeId
+        )
+        """,
+    )
+    suspend fun getApplicableBlueprintCount(typeId: Int): TypeApplicableBlueprintCount?
+
+    @Query(
+        """
+        SELECT COUNT(DISTINCT typeid) AS count
+        FROM typeMaterials
+        WHERE output_material = :typeId
+        """,
+    )
+    suspend fun getRefiningSourceCount(typeId: Int): TypeRefiningSourceCount?
 }

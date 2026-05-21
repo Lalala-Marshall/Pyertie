@@ -65,4 +65,8 @@
     <string name="type_detail_refining_output">精炼产出</string>
     <string name="type_detail_refining_output_per_unit">每 %1$d 单位</string>
     <string name="type_detail_refining_output_count">%1$d 种</string>
+    <string name="type_detail_applicable_to">适用于</string>
+    <string name="type_detail_applicable_to_subtitle">需要此物品的蓝图</string>
+    <string name="type_detail_refining_source">精炼来源</string>
+    <string name="type_detail_industry_type_count">%1$s 种</string>
 </resources>

@@ -88,6 +88,10 @@ private fun rememberVisibleTypeDetailSlots(
 ): List<TypeDetailSlot> {
     val attributes by remember(typeId) { viewModel.typeAttributes(typeId) }
         .collectAsState(initial = emptyList())
+    val applicableBlueprintCount by remember(typeId) { viewModel.applicableBlueprintCount(typeId) }
+        .collectAsState(initial = null)
+    val refiningSourceCount by remember(typeId) { viewModel.refiningSourceCount(typeId) }
+        .collectAsState(initial = null)
     val blueprints by remember(typeId) { viewModel.blueprintsForProduct(typeId) }
         .collectAsState(initial = emptyList())
     val refiningOutputSummary by remember(typeId) { viewModel.refiningOutputSummary(typeId) }
@@ -97,6 +101,8 @@ private fun rememberVisibleTypeDetailSlots(
 
     return remember(
         attributes,
+        applicableBlueprintCount,
+        refiningSourceCount,
         blueprints,
         refiningOutputSummary,
         skillRequirements,
@@ -149,7 +155,13 @@ private fun rememberVisibleTypeDetailSlots(
             ) {
                 add(TypeDetailSlot.Skills)
             }
-            if (hasIndustrySectionContent(blueprints, refiningOutputSummary)) {
+            if (hasIndustrySectionContent(
+                    blueprints,
+                    refiningOutputSummary,
+                    applicableBlueprintCount,
+                    refiningSourceCount,
+                )
+            ) {
                 add(TypeDetailSlot.Industry)
             }
         }

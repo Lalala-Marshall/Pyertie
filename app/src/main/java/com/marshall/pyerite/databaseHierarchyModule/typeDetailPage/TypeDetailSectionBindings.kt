@@ -178,11 +178,17 @@ internal fun TypeDetailIndustrySectionItem(
     typeId: Int,
     viewModel: DatabaseViewModel = koinViewModel(),
 ) {
+    val applicableBlueprintCount by remember(typeId) { viewModel.applicableBlueprintCount(typeId) }
+        .collectAsState(initial = null)
+    val refiningSourceCount by remember(typeId) { viewModel.refiningSourceCount(typeId) }
+        .collectAsState(initial = null)
     val blueprints by remember(typeId) { viewModel.blueprintsForProduct(typeId) }
         .collectAsState(initial = emptyList())
     val refiningOutputSummary by remember(typeId) { viewModel.refiningOutputSummary(typeId) }
         .collectAsState(initial = null)
     TypeDetailIndustrySection(
+        applicableBlueprintCount = applicableBlueprintCount,
+        refiningSourceCount = refiningSourceCount,
         blueprints = blueprints,
         refiningOutputSummary = refiningOutputSummary,
     )
