@@ -10,6 +10,7 @@ import androidx.navigation.navigation
 import com.marshall.pyerite.R
 import com.marshall.pyerite.databaseHierarchyModule.DatabaseHierarchyPage
 import com.marshall.pyerite.databaseHierarchyModule.typeDetailPage.TypeDetailPage
+import com.marshall.pyerite.databaseHierarchyModule.skillLevelUnlockPage.SkillLevelUnlockPage
 import com.marshall.pyerite.databaseHierarchyModule.typeVariantsPage.TypeVariantsPage
 
 fun NavGraphBuilder.databaseNavGraph(
@@ -78,6 +79,20 @@ fun NavGraphBuilder.databaseNavGraph(
         ) { backStack ->
             TypeVariantsPage(
                 typeId = backStack.arguments!!.getInt("typeId"),
+                navController = navController,
+            )
+        }
+
+        composable(
+            route = DatabaseRoute.SkillLevelUnlock.route,
+            arguments = listOf(
+                navArgument("skillTypeId") { type = NavType.IntType },
+                navArgument("level") { type = NavType.IntType },
+            ),
+        ) { backStack ->
+            SkillLevelUnlockPage(
+                skillTypeId = backStack.arguments!!.getInt("skillTypeId"),
+                level = backStack.arguments!!.getInt("level"),
                 navController = navController,
             )
         }

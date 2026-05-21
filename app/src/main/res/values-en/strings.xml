@@ -29,6 +29,7 @@
     <string name="category_misc">Misc</string>
     <string name="category_skills">Skill Requirements</string>
     <string name="category_skill_level_detail">Skill Level Details</string>
+    <string name="category_skill_level_applies">Skill Level Applies To</string>
     <string name="skill_sp_amount">%1$s SP</string>
     <string name="skill_sp_level_range">Level 0 -> %1$d</string>
     <string name="category_uncategorized">Uncategorized</string>

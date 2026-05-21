@@ -47,6 +47,7 @@ private enum class TypeDetailSlot {
     Bonuses,
     Skills,
     SkillLevelDetail,
+    SkillLevelApplies,
     Industry,
 }
 
@@ -109,6 +110,8 @@ private fun rememberVisibleTypeDetailSlots(
         .collectAsState(initial = emptyList())
     val skillLevelSpRows by remember(typeId) { viewModel.skillLevelSpRows(typeId) }
         .collectAsState(initial = emptyList())
+    val skillUnlockLevels by remember(typeId) { viewModel.skillUnlockLevels(typeId) }
+        .collectAsState(initial = emptyList())
 
     return remember(
         attributes,
@@ -120,6 +123,7 @@ private fun rememberVisibleTypeDetailSlots(
         variantCount,
         skillMiscRows,
         skillLevelSpRows,
+        skillUnlockLevels,
     ) {
         buildList {
             add(TypeDetailSlot.Title)
@@ -175,6 +179,9 @@ private fun rememberVisibleTypeDetailSlots(
             if (hasSkillLevelDetailContent(skillLevelSpRows)) {
                 add(TypeDetailSlot.SkillLevelDetail)
             }
+            if (hasSkillLevelAppliesContent(skillUnlockLevels)) {
+                add(TypeDetailSlot.SkillLevelApplies)
+            }
             if (hasIndustrySectionContent(
                     blueprints,
                     refiningOutputSummary,
@@ -224,6 +231,7 @@ private fun TypeDetailSlotContent(
         TypeDetailSlot.Bonuses -> TypeDetailBonusesSectionItem(typeId)
         TypeDetailSlot.Skills -> TypeDetailSkillsSectionItem(typeId, navController)
         TypeDetailSlot.SkillLevelDetail -> TypeDetailSkillLevelDetailSectionItem(typeId)
+        TypeDetailSlot.SkillLevelApplies -> TypeDetailSkillLevelAppliesSectionItem(typeId, navController)
         TypeDetailSlot.Industry -> TypeDetailIndustrySectionItem(typeId)
     }
 }

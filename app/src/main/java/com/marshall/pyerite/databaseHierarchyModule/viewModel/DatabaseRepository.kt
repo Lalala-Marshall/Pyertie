@@ -15,6 +15,7 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeCompatibleGr
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputSummary
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningSourceCount
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillLevelSpRow
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillUnlockTypeRow
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeSkillMiscRow
 import com.marshall.pyerite.databaseHierarchyModule.util.DogmaAttributeFormatting
 import com.marshall.pyerite.databaseHierarchyModule.util.SkillSpCalculator
@@ -122,6 +123,25 @@ class DatabaseRepository(roomProvider: RoomProvider) {
     fun getSkillLevelSpRows(typeId: Int): Flow<List<SkillLevelSpRow>> = flow {
         emit(resolveSkillLevelSpRows(typeId))
     }.flowOn(Dispatchers.IO)
+
+    fun getSkillUnlockLevels(typeId: Int): Flow<List<Int>> = flow {
+        emit(resolveSkillUnlockLevels(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    fun getTypesUnlockedBySkillAtLevel(skillTypeId: Int, level: Int): Flow<List<SkillUnlockTypeRow>> = flow {
+        emit(typeDao.getTypesUnlockedBySkillAtLevel(skillTypeId, level))
+    }.flowOn(Dispatchers.IO)
+
+    private suspend fun resolveSkillUnlockLevels(typeId: Int): List<Int> {
+        val attrs = typeDao.getTypeAttributeDetails(typeId)
+        val hasSkillAnchor = attrs.any { it.name == SKILL_MISC_ANCHOR_NAME }
+        if (!hasSkillAnchor) return emptyList()
+
+        val maxLevel = SkillSpCalculator.resolveMaxTrainableLevel(
+            attrs.find { it.name == SKILL_LEVEL_DOGMA_NAME }?.value,
+        )
+        return typeDao.getSkillUnlockLevels(typeId, maxLevel)
+    }
 
     private suspend fun resolveSkillLevelSpRows(typeId: Int): List<SkillLevelSpRow> {
         val attrs = typeDao.getTypeAttributeDetails(typeId)

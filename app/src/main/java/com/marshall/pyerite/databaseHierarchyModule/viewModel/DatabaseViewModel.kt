@@ -13,6 +13,7 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeCompatibleGr
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputSummary
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningSourceCount
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillLevelSpRow
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillUnlockTypeRow
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeSkillMiscRow
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeTraitDetail
 import kotlinx.coroutines.flow.SharingStarted
@@ -95,6 +96,24 @@ class DatabaseViewModel(
     fun skillLevelSpRows(typeId: Int): StateFlow<List<SkillLevelSpRow>> =
         skillLevelSpRowsFlows.getOrPut(typeId) {
             repository.getSkillLevelSpRows(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        }
+
+    private val skillUnlockLevelsFlows = mutableMapOf<Int, StateFlow<List<Int>>>()
+
+    fun skillUnlockLevels(typeId: Int): StateFlow<List<Int>> =
+        skillUnlockLevelsFlows.getOrPut(typeId) {
+            repository.getSkillUnlockLevels(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        }
+
+    private val skillUnlockTypesFlows = mutableMapOf<Pair<Int, Int>, StateFlow<List<SkillUnlockTypeRow>>>()
+
+    fun typesUnlockedBySkillAtLevel(skillTypeId: Int, level: Int): StateFlow<List<SkillUnlockTypeRow>> =
+        skillUnlockTypesFlows.getOrPut(skillTypeId to level) {
+            repository.getTypesUnlockedBySkillAtLevel(skillTypeId, level)
                 .distinctUntilChanged()
                 .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
         }

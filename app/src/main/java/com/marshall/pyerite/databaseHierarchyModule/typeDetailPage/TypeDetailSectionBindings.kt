@@ -197,6 +197,22 @@ internal fun TypeDetailSkillLevelDetailSectionItem(
 }
 
 @Composable
+internal fun TypeDetailSkillLevelAppliesSectionItem(
+    typeId: Int,
+    navController: NavController,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    val skillUnlockLevels by remember(typeId) { viewModel.skillUnlockLevels(typeId) }
+        .collectAsState(initial = emptyList())
+    TypeDetailSkillLevelAppliesSection(
+        levels = skillUnlockLevels,
+        onLevelClick = { level ->
+            navController.navigate(DatabaseRoute.SkillLevelUnlock.create(typeId, level))
+        },
+    )
+}
+
+@Composable
 internal fun TypeDetailSkillsSectionItem(
     typeId: Int,
     navController: NavController,
