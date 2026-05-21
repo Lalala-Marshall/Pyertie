@@ -27,4 +27,8 @@ sealed class DatabaseRoute(val route: String) {
     object SkillLevelUnlock : DatabaseRoute("database/skillLevelUnlock/{skillTypeId}/{level}") {
         fun create(skillTypeId: Int, level: Int) = "database/skillLevelUnlock/$skillTypeId/$level"
     }
+
+    object TypeApplicableBlueprints : DatabaseRoute("database/typeApplicableBlueprints/{typeId}") {
+        fun create(typeId: Int) = "database/typeApplicableBlueprints/$typeId"
+    }
 }

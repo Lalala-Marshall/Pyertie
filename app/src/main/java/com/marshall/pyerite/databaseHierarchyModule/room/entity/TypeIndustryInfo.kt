@@ -21,6 +21,24 @@ data class TypeRefiningSourceCount(
     val count: Int,
 )
 
+/** One material produced when refining the queried ore type. */
+data class TypeRefiningOutputItem(
+    val typeId: Int,
+    val name: String?,
+    val iconFilename: String?,
+    val quantity: Int?,
+)
+
+/** One ore type that refines into the queried material. */
+data class TypeRefiningSourceItem(
+    val typeId: Int,
+    val name: String?,
+    val iconFilename: String?,
+    val metaGroupId: Int?,
+    val quantityPerUnit: Int?,
+    val processSize: Int?,
+)
+
 /** chargeGroup* / launcherGroup* dogma row before group lookup. */
 data class TypeCompatibleGroupRef(
     val attributeId: Int,

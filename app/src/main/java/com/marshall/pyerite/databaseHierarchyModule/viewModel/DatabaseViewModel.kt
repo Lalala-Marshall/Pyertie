@@ -10,8 +10,10 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeBlueprintDet
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeApplicableBlueprintCount
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeCompatibleGroupDetail
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputItem
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputSummary
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningSourceCount
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningSourceItem
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillLevelSpRow
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillUnlockTypeRow
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeSkillMiscRow
@@ -162,6 +164,33 @@ class DatabaseViewModel(
             repository.getRefiningSourceCount(typeId)
                 .distinctUntilChanged()
                 .stateIn(viewModelScope, SharingStarted.Lazily, null)
+        }
+
+    private val refiningOutputListFlows = mutableMapOf<Int, StateFlow<List<TypeRefiningOutputItem>>>()
+
+    fun refiningOutputs(typeId: Int): StateFlow<List<TypeRefiningOutputItem>> =
+        refiningOutputListFlows.getOrPut(typeId) {
+            repository.getRefiningOutputs(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        }
+
+    private val refiningSourceListFlows = mutableMapOf<Int, StateFlow<List<TypeRefiningSourceItem>>>()
+
+    fun refiningSources(typeId: Int): StateFlow<List<TypeRefiningSourceItem>> =
+        refiningSourceListFlows.getOrPut(typeId) {
+            repository.getRefiningSources(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        }
+
+    private val applicableBlueprintsFlows = mutableMapOf<Int, StateFlow<List<TypeBlueprintDetail>>>()
+
+    fun applicableBlueprints(typeId: Int): StateFlow<List<TypeBlueprintDetail>> =
+        applicableBlueprintsFlows.getOrPut(typeId) {
+            repository.getApplicableBlueprints(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
         }
 
     private val compatibleGroupsFlows = mutableMapOf<Int, StateFlow<List<TypeCompatibleGroupDetail>>>()

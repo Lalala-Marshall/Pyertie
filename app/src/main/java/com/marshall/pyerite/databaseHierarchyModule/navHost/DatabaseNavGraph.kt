@@ -11,6 +11,7 @@ import com.marshall.pyerite.R
 import com.marshall.pyerite.databaseHierarchyModule.DatabaseHierarchyPage
 import com.marshall.pyerite.databaseHierarchyModule.typeDetailPage.TypeDetailPage
 import com.marshall.pyerite.databaseHierarchyModule.skillLevelUnlockPage.SkillLevelUnlockPage
+import com.marshall.pyerite.databaseHierarchyModule.typeApplicableBlueprintsPage.TypeApplicableBlueprintsPage
 import com.marshall.pyerite.databaseHierarchyModule.typeVariantsPage.TypeVariantsPage
 
 fun NavGraphBuilder.databaseNavGraph(
@@ -78,6 +79,18 @@ fun NavGraphBuilder.databaseNavGraph(
             ),
         ) { backStack ->
             TypeVariantsPage(
+                typeId = backStack.arguments!!.getInt("typeId"),
+                navController = navController,
+            )
+        }
+
+        composable(
+            route = DatabaseRoute.TypeApplicableBlueprints.route,
+            arguments = listOf(
+                navArgument("typeId") { type = NavType.IntType },
+            ),
+        ) { backStack ->
+            TypeApplicableBlueprintsPage(
                 typeId = backStack.arguments!!.getInt("typeId"),
                 navController = navController,
             )

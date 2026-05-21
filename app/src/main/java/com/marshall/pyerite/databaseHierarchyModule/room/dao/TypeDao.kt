@@ -9,7 +9,9 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeApplicableBlueprintCount
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputSummary
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeCompatibleGroupRef
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputItem
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningSourceCount
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningSourceItem
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillUnlockTypeRow
 
 @Dao
@@ -149,14 +151,86 @@ interface TypeDao {
     )
     suspend fun getApplicableBlueprintCount(typeId: Int): TypeApplicableBlueprintCount?
 
+    /** Count ore sources only (category 25 raw/compressed ore; excludes ice, moon, decorative asteroids). */
     @Query(
         """
-        SELECT COUNT(DISTINCT typeid) AS count
-        FROM typeMaterials
-        WHERE output_material = :typeId
+        SELECT COUNT(DISTINCT tm.typeid) AS count
+        FROM typeMaterials tm
+        JOIN types t ON t.type_id = tm.typeid
+        WHERE tm.output_material = :typeId
+          AND t.categoryID = 25
+          AND t.groupID NOT IN (
+              465, 903, 519,
+              1884, 1911, 1920, 1921, 1922, 1923,
+              2006, 2022, 4094, 4161, 4714
+          )
         """,
     )
     suspend fun getRefiningSourceCount(typeId: Int): TypeRefiningSourceCount?
+
+    @Query(
+        """
+        SELECT
+            output_material AS typeId,
+            output_material_name AS name,
+            output_material_icon AS iconFilename,
+            output_quantity AS quantity
+        FROM typeMaterials
+        WHERE typeid = :typeId
+        ORDER BY output_quantity DESC
+        """,
+    )
+    suspend fun getRefiningOutputs(typeId: Int): List<TypeRefiningOutputItem>
+
+    @Query(
+        """
+        SELECT
+            tm.typeid AS typeId,
+            COALESCE(t.zh_name, t.name) AS name,
+            t.icon_filename AS iconFilename,
+            t.metaGroupID AS metaGroupId,
+            tm.output_quantity AS quantityPerUnit,
+            tm.process_size AS processSize
+        FROM typeMaterials tm
+        JOIN types t ON t.type_id = tm.typeid
+        WHERE tm.output_material = :typeId
+          AND t.categoryID = 25
+          AND t.groupID NOT IN (
+              465, 903, 519,
+              1884, 1911, 1920, 1921, 1922, 1923,
+              2006, 2022, 4094, 4161, 4714
+          )
+        ORDER BY tm.output_quantity DESC
+        """,
+    )
+    suspend fun getRefiningSources(typeId: Int): List<TypeRefiningSourceItem>
+
+    @Query(
+        """
+        SELECT DISTINCT
+            blueprintTypeID AS typeId,
+            blueprintTypeName AS name,
+            blueprintTypeIcon AS iconFilename
+        FROM (
+            SELECT blueprintTypeID, blueprintTypeName, blueprintTypeIcon
+            FROM blueprint_manufacturing_materials WHERE typeID = :typeId
+            UNION
+            SELECT blueprintTypeID, blueprintTypeName, blueprintTypeIcon
+            FROM blueprint_invention_materials WHERE typeID = :typeId
+            UNION
+            SELECT blueprintTypeID, blueprintTypeName, blueprintTypeIcon
+            FROM blueprint_copying_materials WHERE typeID = :typeId
+            UNION
+            SELECT blueprintTypeID, blueprintTypeName, blueprintTypeIcon
+            FROM blueprint_research_material_materials WHERE typeID = :typeId
+            UNION
+            SELECT blueprintTypeID, blueprintTypeName, blueprintTypeIcon
+            FROM blueprint_research_time_materials WHERE typeID = :typeId
+        )
+        ORDER BY blueprintTypeID
+        """,
+    )
+    suspend fun getApplicableBlueprints(typeId: Int): List<TypeBlueprintDetail>
 
     @Query(
         """

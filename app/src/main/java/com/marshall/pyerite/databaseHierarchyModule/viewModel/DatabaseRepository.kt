@@ -12,8 +12,10 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillRequirement
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeApplicableBlueprintCount
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeCompatibleGroupDetail
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputItem
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputSummary
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningSourceCount
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningSourceItem
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillLevelSpRow
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillUnlockTypeRow
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeSkillMiscRow
@@ -85,6 +87,18 @@ class DatabaseRepository(roomProvider: RoomProvider) {
 
     fun getRefiningSourceCount(typeId: Int): Flow<TypeRefiningSourceCount?> = flow {
         emit(typeDao.getRefiningSourceCount(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    fun getRefiningOutputs(typeId: Int): Flow<List<TypeRefiningOutputItem>> = flow {
+        emit(typeDao.getRefiningOutputs(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    fun getRefiningSources(typeId: Int): Flow<List<TypeRefiningSourceItem>> = flow {
+        emit(typeDao.getRefiningSources(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    fun getApplicableBlueprints(typeId: Int): Flow<List<TypeBlueprintDetail>> = flow {
+        emit(typeDao.getApplicableBlueprints(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getCompatibleGroups(typeId: Int): Flow<List<TypeCompatibleGroupDetail>> = flow {

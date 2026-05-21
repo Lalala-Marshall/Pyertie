@@ -232,7 +232,7 @@ private fun TypeDetailSlotContent(
         TypeDetailSlot.Skills -> TypeDetailSkillsSectionItem(typeId, navController)
         TypeDetailSlot.SkillLevelDetail -> TypeDetailSkillLevelDetailSectionItem(typeId)
         TypeDetailSlot.SkillLevelApplies -> TypeDetailSkillLevelAppliesSectionItem(typeId, navController)
-        TypeDetailSlot.Industry -> TypeDetailIndustrySectionItem(typeId)
+        TypeDetailSlot.Industry -> TypeDetailIndustrySectionItem(typeId = typeId, navController = navController)
     }
 }
 

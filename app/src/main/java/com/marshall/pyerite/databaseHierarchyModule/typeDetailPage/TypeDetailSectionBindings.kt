@@ -232,6 +232,7 @@ internal fun TypeDetailSkillsSectionItem(
 @Composable
 internal fun TypeDetailIndustrySectionItem(
     typeId: Int,
+    navController: NavController,
     viewModel: DatabaseViewModel = koinViewModel(),
 ) {
     val applicableBlueprintCount by remember(typeId) { viewModel.applicableBlueprintCount(typeId) }
@@ -242,10 +243,20 @@ internal fun TypeDetailIndustrySectionItem(
         .collectAsState(initial = emptyList())
     val refiningOutputSummary by remember(typeId) { viewModel.refiningOutputSummary(typeId) }
         .collectAsState(initial = null)
+    val refiningOutputs by remember(typeId) { viewModel.refiningOutputs(typeId) }
+        .collectAsState(initial = emptyList())
+    val refiningSources by remember(typeId) { viewModel.refiningSources(typeId) }
+        .collectAsState(initial = emptyList())
+    val metaGroups by viewModel.metaGroups.collectAsState(initial = emptyList())
     TypeDetailIndustrySection(
+        typeId = typeId,
         applicableBlueprintCount = applicableBlueprintCount,
         refiningSourceCount = refiningSourceCount,
         blueprints = blueprints,
         refiningOutputSummary = refiningOutputSummary,
+        refiningOutputs = refiningOutputs,
+        refiningSources = refiningSources,
+        metaGroups = metaGroups,
+        navController = navController,
     )
 }
