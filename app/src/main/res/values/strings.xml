@@ -71,4 +71,6 @@
     <string name="type_detail_industry_type_count">%1$s 种</string>
     <string name="type_detail_compatible_with">配套使用</string>
     <string name="unknown_group">未知分组</string>
+    <string name="type_detail_variants_section">变体</string>
+    <string name="type_detail_browse_variants">浏览 %1$d 个变体</string>
 </resources>

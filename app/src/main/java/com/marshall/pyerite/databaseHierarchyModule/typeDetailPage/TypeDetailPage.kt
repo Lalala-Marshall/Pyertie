@@ -18,6 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
@@ -31,6 +32,7 @@ private enum class TypeDetailSlot {
     Summary,
     Market,
     BaseInfo,
+    Variants,
     Fitting,
     Shield,
     Armor,
@@ -50,6 +52,7 @@ private enum class TypeDetailSlot {
 @Composable
 fun TypeDetailPage(
     typeId: Int,
+    navController: NavController,
     viewModel: DatabaseViewModel = koinViewModel(),
 ) {
     val type by remember(typeId) { viewModel.typeDetail(typeId) }
@@ -71,6 +74,7 @@ fun TypeDetailPage(
                     slot = slot,
                     typeId = typeId,
                     entity = entity,
+                    navController = navController,
                 )
                 TypeDetailSlotTrailingSpacer(
                     slot = slot,
@@ -98,6 +102,8 @@ private fun rememberVisibleTypeDetailSlots(
         .collectAsState(initial = null)
     val skillRequirements by remember(typeId) { viewModel.skillRequirements(typeId) }
         .collectAsState(initial = emptyList())
+    val variantCount by remember(typeId) { viewModel.variantCount(typeId) }
+        .collectAsState(initial = 0)
 
     return remember(
         attributes,
@@ -106,12 +112,16 @@ private fun rememberVisibleTypeDetailSlots(
         blueprints,
         refiningOutputSummary,
         skillRequirements,
+        variantCount,
     ) {
         buildList {
             add(TypeDetailSlot.Title)
             add(TypeDetailSlot.Summary)
             add(TypeDetailSlot.Market)
             add(TypeDetailSlot.BaseInfo)
+            if (variantCount > 1) {
+                add(TypeDetailSlot.Variants)
+            }
             if (hasFittingSectionContent(attributes.inDogmaCategory(DogmaCategory.FITTING))) {
                 add(TypeDetailSlot.Fitting)
             }
@@ -173,6 +183,7 @@ private fun TypeDetailSlotContent(
     slot: TypeDetailSlot,
     typeId: Int,
     entity: TypeEntity,
+    navController: NavController,
 ) {
     when (slot) {
         TypeDetailSlot.Title -> {
@@ -188,6 +199,7 @@ private fun TypeDetailSlotContent(
         TypeDetailSlot.Summary -> TypeSummarySectionItem(typeId = typeId, entity = entity)
         TypeDetailSlot.Market -> TypeDetailMarketSection()
         TypeDetailSlot.BaseInfo -> TypeDetailBaseInfoSectionItem(entity = entity)
+        TypeDetailSlot.Variants -> TypeDetailVariantsSectionItem(typeId = typeId, navController = navController)
         TypeDetailSlot.Fitting -> TypeDetailFittingSectionItem(typeId)
         TypeDetailSlot.Shield -> TypeDetailShieldSectionItem(typeId)
         TypeDetailSlot.Armor -> TypeDetailArmorSectionItem(typeId)

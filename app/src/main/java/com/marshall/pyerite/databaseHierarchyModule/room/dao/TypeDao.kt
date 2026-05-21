@@ -105,4 +105,23 @@ interface TypeDao {
         """,
     )
     suspend fun getCompatibleGroupRefs(typeId: Int): List<TypeCompatibleGroupRef>
+
+    @Query(
+        """
+        SELECT COUNT(*) FROM types
+        WHERE (type_id = :rootTypeId OR variationParentTypeID = :rootTypeId)
+          AND published = 1
+        """,
+    )
+    suspend fun getVariantCount(rootTypeId: Int): Int
+
+    @Query(
+        """
+        SELECT * FROM types
+        WHERE (type_id = :rootTypeId OR variationParentTypeID = :rootTypeId)
+          AND published = 1
+        ORDER BY metaGroupID, type_id
+        """,
+    )
+    suspend fun getVariantsByRoot(rootTypeId: Int): List<TypeEntity>
 }

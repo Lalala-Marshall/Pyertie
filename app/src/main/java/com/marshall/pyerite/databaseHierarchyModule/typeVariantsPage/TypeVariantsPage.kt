@@ -1,0 +1,246 @@
+package com.marshall.pyerite.databaseHierarchyModule.typeVariantsPage
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.marshall.pyerite.R
+import com.marshall.pyerite.data.icons.IconManager
+import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.MetaGroupEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
+import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
+import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
+import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
+import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
+
+private val SectionGap = 16.dp
+private val BottomPadding = 24.dp
+private val CardCornerRadius = 16.dp
+
+private sealed class VariantListEntry(val key: String) {
+    data object Title : VariantListEntry("page:title")
+
+    data class SectionHeader(
+        val metaGroupId: Int?,
+        val title: String,
+        val addTopGap: Boolean,
+    ) : VariantListEntry("header:${metaGroupId ?: "none"}")
+
+    data class Item(
+        val metaGroupId: Int?,
+        val typeId: Int,
+        val model: BaseLazyColumnItemModel,
+        val showDivider: Boolean,
+        val indexInSection: Int,
+        val sectionItemCount: Int,
+    ) : VariantListEntry("item:${metaGroupId ?: "none"}:$typeId")
+
+    data object BottomPadding : VariantListEntry("page:bottom_padding")
+}
+
+@Composable
+fun TypeVariantsPage(
+    typeId: Int,
+    navController: NavController,
+    viewModel: DatabaseViewModel = koinViewModel(),
+    iconManager: IconManager = koinInject(),
+) {
+    val variants by remember(typeId) { viewModel.variants(typeId) }
+        .collectAsState(initial = emptyList())
+    val metaGroups by viewModel.metaGroups.collectAsState(initial = emptyList())
+
+    val unknownGroupLabel = stringResource(R.string.unknown_group)
+    val entries = remember(variants, metaGroups, unknownGroupLabel, iconManager, navController) {
+        buildVariantEntries(
+            variants = variants,
+            metaGroups = metaGroups,
+            unknownGroupLabel = unknownGroupLabel,
+            iconManager = iconManager,
+            navController = navController,
+        )
+    }
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .systemBarsPadding(),
+    ) {
+        items(
+            items = entries,
+            key = { entry -> entry.key },
+        ) { entry ->
+            VariantListEntryContent(entry = entry)
+        }
+    }
+}
+
+@Composable
+private fun VariantListEntryContent(entry: VariantListEntry) {
+    when (entry) {
+        VariantListEntry.Title -> {
+            Text(
+                text = stringResource(R.string.type_detail_variants_section),
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Black,
+                color = colorResource(R.color.text_primary),
+                modifier = Modifier.padding(start = 24.dp, top = 12.dp, bottom = 12.dp),
+            )
+        }
+
+        is VariantListEntry.SectionHeader -> {
+            Text(
+                text = entry.title,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Black,
+                color = colorResource(R.color.text_primary),
+                modifier = Modifier.padding(
+                    start = 24.dp,
+                    bottom = 4.dp,
+                    top = if (entry.addTopGap) SectionGap else 0.dp,
+                ),
+            )
+        }
+
+        is VariantListEntry.Item -> {
+            VariantSectionItemRow(
+                model = entry.model,
+                showDivider = entry.showDivider,
+                indexInSection = entry.indexInSection,
+                sectionItemCount = entry.sectionItemCount,
+            )
+        }
+
+        VariantListEntry.BottomPadding -> {
+            Spacer(Modifier.height(BottomPadding))
+        }
+    }
+}
+
+@Composable
+private fun VariantSectionItemRow(
+    model: BaseLazyColumnItemModel,
+    showDivider: Boolean,
+    indexInSection: Int,
+    sectionItemCount: Int,
+) {
+    val shape = sectionItemShape(indexInSection, sectionItemCount)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clip(shape)
+            .background(colorResource(R.color.second_background), shape),
+    ) {
+        BaseLazyColumnItem(model = model, showDivider = showDivider)
+    }
+}
+
+private fun sectionItemShape(indexInSection: Int, sectionItemCount: Int): Shape {
+    val corner = CardCornerRadius
+    return when {
+        sectionItemCount == 1 -> RoundedCornerShape(corner)
+        indexInSection == 0 -> RoundedCornerShape(topStart = corner, topEnd = corner)
+        indexInSection == sectionItemCount - 1 -> RoundedCornerShape(bottomStart = corner, bottomEnd = corner)
+        else -> RectangleShape
+    }
+}
+
+private fun buildVariantEntries(
+    variants: List<TypeEntity>,
+    metaGroups: List<MetaGroupEntity>,
+    unknownGroupLabel: String,
+    iconManager: IconManager,
+    navController: NavController,
+): List<VariantListEntry> = buildList {
+    add(VariantListEntry.Title)
+
+    if (variants.isEmpty()) {
+        add(VariantListEntry.BottomPadding)
+        return@buildList
+    }
+
+    val metaGroupMap = metaGroups.associateBy { it.id }
+    val grouped = variants.groupBy { it.metaGroupID }
+    var addTopGap = false
+
+    grouped.keys.sortedBy { it ?: Int.MAX_VALUE }.forEach { metaId ->
+        val itemsInMeta = grouped[metaId].orEmpty()
+        val sectionTitle = metaGroupMap[metaId]?.name
+            ?: metaId?.let { "$unknownGroupLabel ($it)" }
+            ?: unknownGroupLabel
+        addTopGap = appendVariantSection(
+            builder = this,
+            metaGroupId = metaId,
+            title = sectionTitle,
+            addTopGap = addTopGap,
+            types = itemsInMeta,
+            iconManager = iconManager,
+            navController = navController,
+        )
+    }
+
+    add(VariantListEntry.BottomPadding)
+}
+
+private fun appendVariantSection(
+    builder: MutableList<VariantListEntry>,
+    metaGroupId: Int?,
+    title: String,
+    addTopGap: Boolean,
+    types: List<TypeEntity>,
+    iconManager: IconManager,
+    navController: NavController,
+): Boolean {
+    if (types.isEmpty()) return addTopGap
+
+    builder.add(
+        VariantListEntry.SectionHeader(
+            metaGroupId = metaGroupId,
+            title = title,
+            addTopGap = addTopGap,
+        ),
+    )
+    types.forEachIndexed { index, type ->
+        builder.add(
+            VariantListEntry.Item(
+                metaGroupId = metaGroupId,
+                typeId = type.id,
+                model = BaseLazyColumnItemModel(
+                    iconFile = iconManager.getIconFile(type.iconFilename),
+                    itemName = type.zhName ?: type.name.orEmpty(),
+                    onClick = {
+                        navController.navigate(DatabaseRoute.TypeDetail.create(type.id))
+                    },
+                ),
+                showDivider = index < types.lastIndex,
+                indexInSection = index,
+                sectionItemCount = types.size,
+            ),
+        )
+    }
+    return true
+}

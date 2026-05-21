@@ -70,4 +70,6 @@
     <string name="type_detail_industry_type_count">%1$s types</string>
     <string name="type_detail_compatible_with">Compatible with</string>
     <string name="unknown_group">Unknown group</string>
+    <string name="type_detail_variants_section">Variants</string>
+    <string name="type_detail_browse_variants">Browse %1$d variants</string>
 </resources>

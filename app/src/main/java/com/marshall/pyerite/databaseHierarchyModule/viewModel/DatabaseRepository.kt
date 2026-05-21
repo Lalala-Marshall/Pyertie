@@ -105,6 +105,29 @@ class DatabaseRepository(roomProvider: RoomProvider) {
         emit(resolveSkillRequirements(typeId))
     }.flowOn(Dispatchers.IO)
 
+    fun getVariantCount(typeId: Int): Flow<Int> = flow {
+        emit(resolveVariantCount(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    fun getVariants(typeId: Int): Flow<List<TypeEntity>> = flow {
+        emit(resolveVariants(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    private suspend fun resolveVariationRootTypeId(typeId: Int): Int? {
+        val type = typeDao.getTypeById(typeId) ?: return null
+        return type.variationParentTypeID?.takeIf { it > 0 } ?: type.id
+    }
+
+    private suspend fun resolveVariantCount(typeId: Int): Int {
+        val rootTypeId = resolveVariationRootTypeId(typeId) ?: return 0
+        return typeDao.getVariantCount(rootTypeId)
+    }
+
+    private suspend fun resolveVariants(typeId: Int): List<TypeEntity> {
+        val rootTypeId = resolveVariationRootTypeId(typeId) ?: return emptyList()
+        return typeDao.getVariantsByRoot(rootTypeId)
+    }
+
     private suspend fun resolveSkillRequirements(
         typeId: Int,
         flattenedMap: MutableMap<Int, SkillRequirement> = mutableMapOf()

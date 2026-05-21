@@ -10,6 +10,7 @@ import androidx.navigation.navigation
 import com.marshall.pyerite.R
 import com.marshall.pyerite.databaseHierarchyModule.DatabaseHierarchyPage
 import com.marshall.pyerite.databaseHierarchyModule.typeDetailPage.TypeDetailPage
+import com.marshall.pyerite.databaseHierarchyModule.typeVariantsPage.TypeVariantsPage
 
 fun NavGraphBuilder.databaseNavGraph(
     navController: NavController
@@ -64,7 +65,20 @@ fun NavGraphBuilder.databaseNavGraph(
             )
         ) { backStack ->
             TypeDetailPage(
-                typeId = backStack.arguments!!.getInt("typeId")
+                typeId = backStack.arguments!!.getInt("typeId"),
+                navController = navController,
+            )
+        }
+
+        composable(
+            route = DatabaseRoute.TypeVariants.route,
+            arguments = listOf(
+                navArgument("typeId") { type = NavType.IntType },
+            ),
+        ) { backStack ->
+            TypeVariantsPage(
+                typeId = backStack.arguments!!.getInt("typeId"),
+                navController = navController,
             )
         }
     }

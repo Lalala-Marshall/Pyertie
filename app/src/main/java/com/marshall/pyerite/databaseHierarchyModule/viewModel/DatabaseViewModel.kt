@@ -133,4 +133,22 @@ class DatabaseViewModel(
                 .distinctUntilChanged()
                 .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
         }
+
+    private val variantCountFlows = mutableMapOf<Int, StateFlow<Int>>()
+
+    fun variantCount(typeId: Int): StateFlow<Int> =
+        variantCountFlows.getOrPut(typeId) {
+            repository.getVariantCount(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, 0)
+        }
+
+    private val variantsFlows = mutableMapOf<Int, StateFlow<List<TypeEntity>>>()
+
+    fun variants(typeId: Int): StateFlow<List<TypeEntity>> =
+        variantsFlows.getOrPut(typeId) {
+            repository.getVariants(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        }
 }

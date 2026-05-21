@@ -5,8 +5,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
+import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
+import androidx.navigation.NavController
 import org.koin.androidx.compose.koinViewModel
 
 internal enum class DogmaCategory(val categoryId: Int) {
@@ -58,6 +60,22 @@ internal fun TypeDetailBaseInfoSectionItem(
         viewModel.dogmaAttributes(TypeDetailBaseInfoSectionDogmaNames)
     }.collectAsState(initial = emptyList())
     TypeDetailBaseInfoSection(entity = entity, dogmaAttributes = dogmaAttributes)
+}
+
+@Composable
+internal fun TypeDetailVariantsSectionItem(
+    typeId: Int,
+    navController: NavController,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    val variantCount by remember(typeId) { viewModel.variantCount(typeId) }
+        .collectAsState(initial = 0)
+    TypeDetailVariantsSection(
+        variantCount = variantCount,
+        onBrowseVariants = {
+            navController.navigate(DatabaseRoute.TypeVariants.create(typeId))
+        },
+    )
 }
 
 @Composable

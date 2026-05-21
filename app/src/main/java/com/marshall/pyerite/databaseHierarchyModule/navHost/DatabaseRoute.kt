@@ -19,4 +19,8 @@ sealed class DatabaseRoute(val route: String) {
     object TypeDetail : DatabaseRoute("database/typeDetail/{typeId}") {
         fun create(typeId: Int) = "database/typeDetail/$typeId"
     }
+
+    object TypeVariants : DatabaseRoute("database/typeVariants/{typeId}") {
+        fun create(typeId: Int) = "database/typeVariants/$typeId"
+    }
 }
