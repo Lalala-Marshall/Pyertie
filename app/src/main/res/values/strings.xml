@@ -29,6 +29,9 @@
     <string name="category_targeting">锁定</string>
     <string name="category_misc">杂项</string>
     <string name="category_skills">技能需求</string>
+    <string name="category_skill_level_detail">技能等级细节</string>
+    <string name="skill_sp_amount">%1$s SP</string>
+    <string name="skill_sp_level_range">0级 -> %1$d级</string>
     <string name="category_uncategorized">未分类</string>
     <string name="category_drones">无人机</string>
     <string name="category_ai">AI属性</string>

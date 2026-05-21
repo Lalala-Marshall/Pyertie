@@ -187,6 +187,16 @@ internal fun TypeDetailMiscSectionItem(
 }
 
 @Composable
+internal fun TypeDetailSkillLevelDetailSectionItem(
+    typeId: Int,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    val skillLevelSpRows by remember(typeId) { viewModel.skillLevelSpRows(typeId) }
+        .collectAsState(initial = emptyList())
+    TypeDetailSkillLevelDetailSection(rows = skillLevelSpRows)
+}
+
+@Composable
 internal fun TypeDetailSkillsSectionItem(
     typeId: Int,
     navController: NavController,

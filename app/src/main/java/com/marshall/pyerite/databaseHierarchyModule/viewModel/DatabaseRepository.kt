@@ -14,8 +14,10 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeApplicableBl
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeCompatibleGroupDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputSummary
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningSourceCount
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillLevelSpRow
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeSkillMiscRow
 import com.marshall.pyerite.databaseHierarchyModule.util.DogmaAttributeFormatting
+import com.marshall.pyerite.databaseHierarchyModule.util.SkillSpCalculator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -26,6 +28,7 @@ class DatabaseRepository(roomProvider: RoomProvider) {
     companion object {
         /** EVE SDE anchor used to discover skill metadata attributes from the DB. */
         private const val SKILL_MISC_ANCHOR_NAME = "skillTimeConstant"
+        private const val SKILL_LEVEL_DOGMA_NAME = "skillLevel"
     }
 
     private val categoryDao = roomProvider.getDatabase().categoryDao()
@@ -115,6 +118,28 @@ class DatabaseRepository(roomProvider: RoomProvider) {
     fun getSkillMiscRows(typeId: Int): Flow<List<TypeSkillMiscRow>> = flow {
         emit(resolveSkillMiscRows(typeId))
     }.flowOn(Dispatchers.IO)
+
+    fun getSkillLevelSpRows(typeId: Int): Flow<List<SkillLevelSpRow>> = flow {
+        emit(resolveSkillLevelSpRows(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    private suspend fun resolveSkillLevelSpRows(typeId: Int): List<SkillLevelSpRow> {
+        val attrs = typeDao.getTypeAttributeDetails(typeId)
+        val skillTimeConstant = attrs.find { it.name == SKILL_MISC_ANCHOR_NAME }?.value
+            ?: return emptyList()
+        if (skillTimeConstant <= 0) return emptyList()
+
+        val maxLevel = SkillSpCalculator.resolveMaxTrainableLevel(
+            attrs.find { it.name == SKILL_LEVEL_DOGMA_NAME }?.value,
+        )
+
+        return (1..maxLevel).map { level ->
+            SkillLevelSpRow(
+                targetLevel = level,
+                spTotal = SkillSpCalculator.cumulativeSpFromZero(skillTimeConstant, level),
+            )
+        }
+    }
 
     private var cachedSkillMiscDefinitions: List<DogmaAttributeEntity>? = null
     private var cachedSkillBonusDefinitions: List<DogmaAttributeEntity>? = null

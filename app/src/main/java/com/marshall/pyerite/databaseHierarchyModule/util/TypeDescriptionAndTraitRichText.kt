@@ -66,54 +66,53 @@ private fun appendEveTraitHtml(
     linkColor: Color
 ) {
     var cursor = 0
-    val text = html
-    while (cursor < text.length) {
-        val lt = text.indexOf('<', cursor)
+    while (cursor < html.length) {
+        val lt = html.indexOf('<', cursor)
         if (lt == -1) {
-            builder.append(text.substring(cursor))
+            builder.append(html.substring(cursor))
             return
         }
         if (lt > cursor) {
-            builder.append(text.substring(cursor, lt))
+            builder.append(html.substring(cursor, lt))
         }
         when {
-            text.startsWith("<b>", lt, ignoreCase = true) -> {
+            html.startsWith("<b>", lt, ignoreCase = true) -> {
                 val innerStart = lt + 3
-                val close = indexOfIgnoreCase(text, "</b>", innerStart)
+                val close = indexOfIgnoreCase(html, "</b>", innerStart)
                 if (close == -1) {
-                    builder.append(text.substring(lt))
+                    builder.append(html.substring(lt))
                     return
                 }
                 builder.pushStyle(SpanStyle(fontWeight = FontWeight.Bold))
-                appendEveTraitHtml(builder, text.substring(innerStart, close), linkColor)
+                appendEveTraitHtml(builder, html.substring(innerStart, close), linkColor)
                 builder.pop()
                 cursor = close + 4
             }
-            text.startsWith("<a", lt, ignoreCase = true) -> {
-                val gt = text.indexOf('>', lt)
+            html.startsWith("<a", lt, ignoreCase = true) -> {
+                val gt = html.indexOf('>', lt)
                 if (gt == -1) {
-                    builder.append(text.substring(lt))
+                    builder.append(html.substring(lt))
                     return
                 }
-                val close = indexOfIgnoreCase(text, "</a>", gt + 1)
+                val close = indexOfIgnoreCase(html, "</a>", gt + 1)
                 if (close == -1) {
-                    builder.append(text.substring(lt))
+                    builder.append(html.substring(lt))
                     return
                 }
-                val inner = text.substring(gt + 1, close)
+                val inner = html.substring(gt + 1, close)
                 builder.pushStyle(SpanStyle(color = linkColor))
                 appendEveTraitHtml(builder, inner, linkColor)
                 builder.pop()
                 cursor = close + 4
             }
-            text.startsWith("</b>", lt, ignoreCase = true) ||
-                text.startsWith("</a>", lt, ignoreCase = true) -> {
-                val gt = text.indexOf('>', lt)
-                cursor = if (gt == -1) text.length else gt + 1
+            html.startsWith("</b>", lt, ignoreCase = true) ||
+                    html.startsWith("</a>", lt, ignoreCase = true) -> {
+                val gt = html.indexOf('>', lt)
+                cursor = if (gt == -1) html.length else gt + 1
             }
             else -> {
-                val gt = text.indexOf('>', lt)
-                cursor = if (gt == -1) text.length else gt + 1
+                val gt = html.indexOf('>', lt)
+                cursor = if (gt == -1) html.length else gt + 1
             }
         }
     }

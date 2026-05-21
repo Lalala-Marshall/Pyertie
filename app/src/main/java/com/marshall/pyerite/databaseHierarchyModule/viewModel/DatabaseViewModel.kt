@@ -12,6 +12,7 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeApplicableBl
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeCompatibleGroupDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputSummary
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningSourceCount
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillLevelSpRow
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeSkillMiscRow
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeTraitDetail
 import kotlinx.coroutines.flow.SharingStarted
@@ -85,6 +86,15 @@ class DatabaseViewModel(
     fun skillMiscRows(typeId: Int): StateFlow<List<TypeSkillMiscRow>> =
         skillMiscRowsFlows.getOrPut(typeId) {
             repository.getSkillMiscRows(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        }
+
+    private val skillLevelSpRowsFlows = mutableMapOf<Int, StateFlow<List<SkillLevelSpRow>>>()
+
+    fun skillLevelSpRows(typeId: Int): StateFlow<List<SkillLevelSpRow>> =
+        skillLevelSpRowsFlows.getOrPut(typeId) {
+            repository.getSkillLevelSpRows(typeId)
                 .distinctUntilChanged()
                 .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
         }
