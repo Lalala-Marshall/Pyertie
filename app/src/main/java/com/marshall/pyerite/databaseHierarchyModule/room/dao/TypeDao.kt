@@ -8,6 +8,7 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeBlueprintDet
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeApplicableBlueprintCount
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputSummary
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeCompatibleGroupRef
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningSourceCount
 @Dao
 interface TypeDao {
@@ -85,4 +86,23 @@ interface TypeDao {
         """,
     )
     suspend fun getRefiningSourceCount(typeId: Int): TypeRefiningSourceCount?
+
+    @Query(
+        """
+        SELECT
+            da.attribute_id AS attributeId,
+            da.name AS attributeName,
+            da.display_name AS attributeDisplayName,
+            da.icon_filename AS attributeIconFilename,
+            CAST(ta.value AS INTEGER) AS groupId
+        FROM typeAttributes ta
+        JOIN dogmaAttributes da ON ta.attribute_id = da.attribute_id
+        WHERE ta.type_id = :typeId
+          AND ta.value IS NOT NULL
+          AND ta.value > 0
+          AND (da.name GLOB 'chargeGroup*' OR da.name GLOB 'launcherGroup*')
+        ORDER BY da.attribute_id
+        """,
+    )
+    suspend fun getCompatibleGroupRefs(typeId: Int): List<TypeCompatibleGroupRef>
 }

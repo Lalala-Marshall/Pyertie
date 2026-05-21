@@ -9,6 +9,7 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDet
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeBlueprintDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeApplicableBlueprintCount
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeCompatibleGroupDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputSummary
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningSourceCount
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeTraitDetail
@@ -122,5 +123,14 @@ class DatabaseViewModel(
             repository.getRefiningSourceCount(typeId)
                 .distinctUntilChanged()
                 .stateIn(viewModelScope, SharingStarted.Lazily, null)
+        }
+
+    private val compatibleGroupsFlows = mutableMapOf<Int, StateFlow<List<TypeCompatibleGroupDetail>>>()
+
+    fun compatibleGroups(typeId: Int): StateFlow<List<TypeCompatibleGroupDetail>> =
+        compatibleGroupsFlows.getOrPut(typeId) {
+            repository.getCompatibleGroups(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
         }
 }

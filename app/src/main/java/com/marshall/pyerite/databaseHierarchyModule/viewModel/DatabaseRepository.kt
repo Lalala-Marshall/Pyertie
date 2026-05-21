@@ -11,6 +11,7 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeTraitDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillRequirement
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeApplicableBlueprintCount
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeCompatibleGroupDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputSummary
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningSourceCount
 import kotlinx.coroutines.Dispatchers
@@ -74,6 +75,31 @@ class DatabaseRepository(roomProvider: RoomProvider) {
     fun getRefiningSourceCount(typeId: Int): Flow<TypeRefiningSourceCount?> = flow {
         emit(typeDao.getRefiningSourceCount(typeId))
     }.flowOn(Dispatchers.IO)
+
+    fun getCompatibleGroups(typeId: Int): Flow<List<TypeCompatibleGroupDetail>> = flow {
+        emit(resolveCompatibleGroups(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    private suspend fun resolveCompatibleGroups(typeId: Int): List<TypeCompatibleGroupDetail> {
+        val refs = typeDao.getCompatibleGroupRefs(typeId)
+        if (refs.isEmpty()) return emptyList()
+        val groupsById = groupDao.getGroupsByIds(refs.map { it.groupId }.distinct())
+            .associateBy { it.id }
+        return refs.mapNotNull { ref ->
+            val group = groupsById[ref.groupId] ?: return@mapNotNull null
+            TypeCompatibleGroupDetail(
+                attributeId = ref.attributeId,
+                attributeName = ref.attributeName,
+                attributeDisplayName = ref.attributeDisplayName,
+                attributeIconFilename = ref.attributeIconFilename,
+                groupId = ref.groupId,
+                groupZhName = group.zhName,
+                groupEnName = group.enName,
+                groupName = group.name,
+                groupIconFilename = group.iconFilename,
+            )
+        }
+    }
 
     fun getSkillRequirements(typeId: Int): Flow<List<SkillRequirement>> = flow {
         emit(resolveSkillRequirements(typeId))

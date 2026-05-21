@@ -69,4 +69,6 @@
     <string name="type_detail_applicable_to_subtitle">需要此物品的蓝图</string>
     <string name="type_detail_refining_source">精炼来源</string>
     <string name="type_detail_industry_type_count">%1$s 种</string>
+    <string name="type_detail_compatible_with">配套使用</string>
+    <string name="unknown_group">未知分组</string>
 </resources>

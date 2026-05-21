@@ -68,4 +68,6 @@
     <string name="type_detail_applicable_to_subtitle">Blueprints requiring this item</string>
     <string name="type_detail_refining_source">Refining source</string>
     <string name="type_detail_industry_type_count">%1$s types</string>
+    <string name="type_detail_compatible_with">Compatible with</string>
+    <string name="unknown_group">Unknown group</string>
 </resources>

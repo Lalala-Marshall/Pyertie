@@ -157,7 +157,12 @@ internal fun TypeDetailMiscSectionItem(
 ) {
     val attributes by remember(typeId) { viewModel.typeAttributes(typeId) }
         .collectAsState(initial = emptyList())
-    TypeDetailMiscSection(attributes)
+    val compatibleGroups by remember(typeId) { viewModel.compatibleGroups(typeId) }
+        .collectAsState(initial = emptyList())
+    TypeDetailMiscSection(
+        attributes = attributes,
+        compatibleGroups = compatibleGroups,
+    )
 }
 
 @Composable
