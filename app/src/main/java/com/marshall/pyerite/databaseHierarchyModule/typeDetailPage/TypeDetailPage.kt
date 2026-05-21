@@ -215,7 +215,7 @@ private fun TypeDetailSlotContent(
         TypeDetailSlot.EwarResistances -> TypeDetailEwarResistancesSectionItem(typeId)
         TypeDetailSlot.Misc -> TypeDetailMiscSectionItem(typeId)
         TypeDetailSlot.Bonuses -> TypeDetailBonusesSectionItem(typeId)
-        TypeDetailSlot.Skills -> TypeDetailSkillsSectionItem(typeId)
+        TypeDetailSlot.Skills -> TypeDetailSkillsSectionItem(typeId, navController)
         TypeDetailSlot.Industry -> TypeDetailIndustrySectionItem(typeId)
     }
 }

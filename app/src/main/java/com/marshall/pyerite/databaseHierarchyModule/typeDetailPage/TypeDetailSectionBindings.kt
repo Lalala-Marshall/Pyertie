@@ -189,6 +189,7 @@ internal fun TypeDetailMiscSectionItem(
 @Composable
 internal fun TypeDetailSkillsSectionItem(
     typeId: Int,
+    navController: NavController,
     viewModel: DatabaseViewModel = koinViewModel(),
 ) {
     val skillRequirements by remember(typeId) { viewModel.skillRequirements(typeId) }
@@ -196,6 +197,9 @@ internal fun TypeDetailSkillsSectionItem(
     TypeDetailSkillsSection(
         skillRequirements = skillRequirements,
         attributes = rememberDogmaCategoryAttributes(typeId, DogmaCategory.SKILLS, viewModel),
+        onSkillClick = { skillTypeId ->
+            navController.navigate(DatabaseRoute.TypeDetail.create(skillTypeId))
+        },
     )
 }
 
