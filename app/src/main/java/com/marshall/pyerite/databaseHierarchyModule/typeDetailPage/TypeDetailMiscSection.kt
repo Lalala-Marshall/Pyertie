@@ -26,6 +26,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.marshall.pyerite.R
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeCompatibleGroupDetail
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeSkillMiscRow
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
 import com.marshall.pyerite.data.icons.IconManager
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
@@ -67,6 +68,7 @@ private val miscPercentFormatter = NumberFormat.getNumberInstance(Locale.US)
 fun TypeDetailMiscSection(
     attributes: List<TypeAttributeDetail>,
     compatibleGroups: List<TypeCompatibleGroupDetail> = emptyList(),
+    skillMiscRows: List<TypeSkillMiscRow> = emptyList(),
     viewModel: DatabaseViewModel = koinViewModel(),
 ) {
     val fuelTypeId = remember(attributes) {
@@ -84,8 +86,9 @@ fun TypeDetailMiscSection(
         miscSectionAttributeOrder.mapNotNull { name -> byName[name] }
     }
 
-    if (!hasMiscSectionContent(attributes, compatibleGroups)) return
+    if (!hasMiscSectionContent(attributes, compatibleGroups, skillMiscRows)) return
 
+    val hasContentBelowSkillMisc = compatibleGroups.isNotEmpty() || rows.isNotEmpty()
     val hasContentBelowCompatible = rows.isNotEmpty()
 
     BaseContainer(
@@ -93,6 +96,17 @@ fun TypeDetailMiscSection(
         useSystemBarsPadding = false,
     ) {
         Column {
+            skillMiscRows.forEachIndexed { index, row ->
+                BaseDetailRow(
+                    model = BaseDetailRowModel(
+                        iconFileName = row.iconFilename,
+                        label = row.label,
+                        value = row.value,
+                    ),
+                    showDivider = index != skillMiscRows.lastIndex || hasContentBelowSkillMisc,
+                )
+            }
+
             compatibleGroups.forEachIndexed { index, group ->
                 val showDivider = index != compatibleGroups.lastIndex || hasContentBelowCompatible
                 TypeDetailMiscCompatibleGroupRow(
@@ -189,7 +203,9 @@ internal fun hasCompatibleGroupAttributes(attributes: List<TypeAttributeDetail>)
 internal fun hasMiscSectionContent(
     attributes: List<TypeAttributeDetail>,
     compatibleGroups: List<TypeCompatibleGroupDetail> = emptyList(),
+    skillMiscRows: List<TypeSkillMiscRow> = emptyList(),
 ): Boolean {
+    if (skillMiscRows.isNotEmpty()) return true
     if (compatibleGroups.isNotEmpty() || hasCompatibleGroupAttributes(attributes)) return true
     val byName = attributes
         .filter { it.name != null && it.value != null }

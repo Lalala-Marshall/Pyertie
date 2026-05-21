@@ -14,12 +14,19 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeApplicableBl
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeCompatibleGroupDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputSummary
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningSourceCount
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeSkillMiscRow
+import com.marshall.pyerite.databaseHierarchyModule.util.DogmaAttributeFormatting
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 
 class DatabaseRepository(roomProvider: RoomProvider) {
+
+    companion object {
+        /** EVE SDE anchor used to discover skill metadata attributes from the DB. */
+        private const val SKILL_MISC_ANCHOR_NAME = "skillTimeConstant"
+    }
 
     private val categoryDao = roomProvider.getDatabase().categoryDao()
     private val metaGroupDao = roomProvider.getDatabase().metaGroupDao()
@@ -104,6 +111,130 @@ class DatabaseRepository(roomProvider: RoomProvider) {
     fun getSkillRequirements(typeId: Int): Flow<List<SkillRequirement>> = flow {
         emit(resolveSkillRequirements(typeId))
     }.flowOn(Dispatchers.IO)
+
+    fun getSkillMiscRows(typeId: Int): Flow<List<TypeSkillMiscRow>> = flow {
+        emit(resolveSkillMiscRows(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    private var cachedSkillMiscDefinitions: List<DogmaAttributeEntity>? = null
+    private var cachedSkillBonusDefinitions: List<DogmaAttributeEntity>? = null
+
+    private suspend fun getSkillMiscDefinitions(): List<DogmaAttributeEntity> {
+        cachedSkillMiscDefinitions?.let { return it }
+        return typeDao.getSkillMiscDogmaDefinitions(SKILL_MISC_ANCHOR_NAME)
+            .also { cachedSkillMiscDefinitions = it }
+    }
+
+    private suspend fun getSkillBonusDefinitions(): List<DogmaAttributeEntity> {
+        cachedSkillBonusDefinitions?.let { return it }
+        return typeDao.getSkillBonusDogmaDefinitions(SKILL_MISC_ANCHOR_NAME)
+            .also { cachedSkillBonusDefinitions = it }
+    }
+
+    private suspend fun resolveSkillMiscRows(typeId: Int): List<TypeSkillMiscRow> {
+        val metadataDefinitions = getSkillMiscDefinitions()
+        val bonusDefinitions = getSkillBonusDefinitions()
+        if (metadataDefinitions.isEmpty() && bonusDefinitions.isEmpty()) return emptyList()
+
+        val typeAttrs = typeDao.getTypeAttributeDetails(typeId)
+        val metadataRows = buildSkillMetadataRows(typeAttrs, metadataDefinitions)
+        val bonusRows = buildSkillBonusRows(typeAttrs, bonusDefinitions)
+        return metadataRows + bonusRows
+    }
+
+    private suspend fun buildSkillMetadataRows(
+        typeAttrs: List<TypeAttributeDetail>,
+        definitions: List<DogmaAttributeEntity>,
+    ): List<TypeSkillMiscRow> {
+        if (definitions.isEmpty()) return emptyList()
+
+        val definitionById = definitions.associateBy { it.id }
+        val attributeRefUnitNames = definitions
+            .mapNotNull { def ->
+                val name = def.name ?: return@mapNotNull null
+                if (name.endsWith("Attribute") && !name.startsWith("required")) def.unitName else null
+            }
+            .toSet()
+
+        val metadataAttrs = typeAttrs
+            .filter { definitionById.containsKey(it.attributeId) }
+            .sortedBy { it.attributeId }
+
+        val referencedAttributeIds = metadataAttrs.mapNotNull { attr ->
+            val def = definitionById[attr.attributeId] ?: return@mapNotNull null
+            val raw = attr.value ?: return@mapNotNull null
+            if (def.unitName in attributeRefUnitNames && raw > 0) raw.toInt() else null
+        }.distinct()
+
+        val referencedDisplayById = if (referencedAttributeIds.isEmpty()) {
+            emptyMap()
+        } else {
+            typeDao.getDogmaAttributesByIds(referencedAttributeIds).associate { ref ->
+                ref.id to (ref.displayName?.takeIf { it.isNotBlank() } ?: ref.name.orEmpty())
+            }
+        }
+
+        return metadataAttrs.mapNotNull { attr ->
+            val def = definitionById[attr.attributeId] ?: return@mapNotNull null
+            val displayValue = formatSkillMiscDisplayValue(
+                attr = attr,
+                def = def,
+                attributeRefUnitNames = attributeRefUnitNames,
+                referencedDisplayById = referencedDisplayById,
+            ) ?: return@mapNotNull null
+            toSkillMiscRow(attr, def, displayValue)
+        }
+    }
+
+    private fun buildSkillBonusRows(
+        typeAttrs: List<TypeAttributeDetail>,
+        definitions: List<DogmaAttributeEntity>,
+    ): List<TypeSkillMiscRow> {
+        if (definitions.isEmpty()) return emptyList()
+
+        val definitionById = definitions.associateBy { it.id }
+        return typeAttrs
+            .filter { definitionById.containsKey(it.attributeId) && it.value != null }
+            .sortedBy { it.attributeId }
+            .mapNotNull { attr ->
+                val def = definitionById[attr.attributeId] ?: return@mapNotNull null
+                val displayValue = formatSkillBonusDisplayValue(attr, def) ?: return@mapNotNull null
+                toSkillMiscRow(attr, def, displayValue)
+            }
+    }
+
+    private fun toSkillMiscRow(
+        attr: TypeAttributeDetail,
+        def: DogmaAttributeEntity,
+        displayValue: String,
+    ): TypeSkillMiscRow = TypeSkillMiscRow(
+        attributeId = attr.attributeId,
+        label = attr.displayName ?: def.displayName ?: attr.name.orEmpty(),
+        value = displayValue,
+        iconFilename = attr.iconFilename ?: def.iconFilename,
+    )
+
+    private fun formatSkillBonusDisplayValue(
+        attr: TypeAttributeDetail,
+        def: DogmaAttributeEntity,
+    ): String? {
+        val raw = attr.value ?: return null
+        val unit = attr.unitName ?: def.unitName
+        return DogmaAttributeFormatting.format(raw, unit)
+    }
+
+    private fun formatSkillMiscDisplayValue(
+        attr: TypeAttributeDetail,
+        def: DogmaAttributeEntity,
+        attributeRefUnitNames: Set<String?>,
+        referencedDisplayById: Map<Int, String>,
+    ): String? {
+        val raw = attr.value ?: return null
+        if (def.unitName in attributeRefUnitNames && raw > 0) {
+            return referencedDisplayById[raw.toInt()]?.takeIf { it.isNotBlank() }
+        }
+        return DogmaAttributeFormatting.format(raw, attr.unitName ?: def.unitName)
+    }
 
     fun getVariantCount(typeId: Int): Flow<Int> = flow {
         emit(resolveVariantCount(typeId))

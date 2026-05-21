@@ -104,6 +104,8 @@ private fun rememberVisibleTypeDetailSlots(
         .collectAsState(initial = emptyList())
     val variantCount by remember(typeId) { viewModel.variantCount(typeId) }
         .collectAsState(initial = 0)
+    val skillMiscRows by remember(typeId) { viewModel.skillMiscRows(typeId) }
+        .collectAsState(initial = emptyList())
 
     return remember(
         attributes,
@@ -113,6 +115,7 @@ private fun rememberVisibleTypeDetailSlots(
         refiningOutputSummary,
         skillRequirements,
         variantCount,
+        skillMiscRows,
     ) {
         buildList {
             add(TypeDetailSlot.Title)
@@ -152,7 +155,7 @@ private fun rememberVisibleTypeDetailSlots(
             if (hasDisplayableDogmaRows(attributes.inDogmaCategory(DogmaCategory.EWAR_RESISTANCES))) {
                 add(TypeDetailSlot.EwarResistances)
             }
-            if (hasMiscSectionContent(attributes)) {
+            if (hasMiscSectionContent(attributes, skillMiscRows = skillMiscRows)) {
                 add(TypeDetailSlot.Misc)
             }
             if (hasDisplayableDogmaRows(attributes.inDogmaCategory(DogmaCategory.BONUSES))) {

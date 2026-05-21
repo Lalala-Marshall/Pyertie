@@ -29,6 +29,8 @@ import com.marshall.pyerite.R
 import com.marshall.pyerite.data.icons.IconManager
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeTraitDetail
+import com.marshall.pyerite.databaseHierarchyModule.util.formatTraitBonusAnnotated
+import com.marshall.pyerite.databaseHierarchyModule.util.formatTypeDescriptionAnnotated
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
 import org.koin.compose.koinInject
 

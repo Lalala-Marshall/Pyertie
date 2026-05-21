@@ -177,9 +177,12 @@ internal fun TypeDetailMiscSectionItem(
         .collectAsState(initial = emptyList())
     val compatibleGroups by remember(typeId) { viewModel.compatibleGroups(typeId) }
         .collectAsState(initial = emptyList())
+    val skillMiscRows by remember(typeId) { viewModel.skillMiscRows(typeId) }
+        .collectAsState(initial = emptyList())
     TypeDetailMiscSection(
         attributes = attributes,
         compatibleGroups = compatibleGroups,
+        skillMiscRows = skillMiscRows,
     )
 }
 

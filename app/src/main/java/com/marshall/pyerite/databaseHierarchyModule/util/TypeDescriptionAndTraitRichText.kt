@@ -1,4 +1,4 @@
-package com.marshall.pyerite.databaseHierarchyModule.typeDetailPage
+package com.marshall.pyerite.databaseHierarchyModule.util
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
