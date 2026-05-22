@@ -17,9 +17,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.marshall.pyerite.R
 import com.marshall.pyerite.databaseHierarchyModule.util.certificateLevelDrawable
@@ -57,6 +57,13 @@ private fun SkillLevelAppliesRow(
     showDivider: Boolean,
     onClick: () -> Unit,
 ) {
+    val iconSize = dimensionResource(R.dimen.detail_row_icon_size)
+    val iconGap = dimensionResource(R.dimen.detail_row_icon_gap)
+    val rowHorizontalPadding = dimensionResource(R.dimen.detail_row_horizontal_padding)
+    val rowVerticalPadding = dimensionResource(R.dimen.detail_row_vertical_padding)
+    val chevronSize = dimensionResource(R.dimen.detail_row_chevron_size)
+    val labelTextSize = dimensionResource(R.dimen.sub_menu_label_text_size).value.sp
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -65,29 +72,29 @@ private fun SkillLevelAppliesRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 12.dp),
+                .padding(horizontal = rowHorizontalPadding, vertical = rowVerticalPadding),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(iconSize),
                 painter = painterResource(certificateLevelDrawable(level)),
                 contentDescription = null,
                 tint = Color.Unspecified,
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(iconGap))
 
             Text(
                 modifier = Modifier.weight(1f),
                 text = stringResource(R.string.skill_level, level),
                 color = colorResource(R.color.text_primary),
-                fontSize = 16.sp,
+                fontSize = labelTextSize,
             )
 
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(chevronSize),
                 tint = colorResource(R.color.hint_text),
             )
         }

@@ -14,8 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.marshall.pyerite.R
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
@@ -26,6 +26,11 @@ fun TypeDetailVariantsSection(
     onBrowseVariants: () -> Unit,
 ) {
     if (variantCount <= 1) return
+
+    val rowHorizontalPadding = dimensionResource(R.dimen.detail_row_horizontal_padding)
+    val rowVerticalPadding = dimensionResource(R.dimen.detail_row_vertical_padding)
+    val chevronSize = dimensionResource(R.dimen.detail_row_chevron_size)
+    val labelTextSize = dimensionResource(R.dimen.sub_menu_label_text_size).value.sp
 
     BaseContainer(
         title = stringResource(R.string.type_detail_variants_section),
@@ -39,19 +44,19 @@ fun TypeDetailVariantsSection(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 12.dp),
+                    .padding(horizontal = rowHorizontalPadding, vertical = rowVerticalPadding),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     modifier = Modifier.weight(1f),
                     text = stringResource(R.string.type_detail_browse_variants, variantCount),
                     color = colorResource(R.color.text_primary),
-                    fontSize = 16.sp,
+                    fontSize = labelTextSize,
                 )
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(chevronSize),
                     tint = colorResource(R.color.hint_text),
                 )
             }

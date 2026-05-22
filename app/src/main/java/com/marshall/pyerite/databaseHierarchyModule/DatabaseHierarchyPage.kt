@@ -26,8 +26,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavBackStackEntry
@@ -52,10 +54,6 @@ private fun hierarchyScrollKey(level: DatabaseLevel, parentId: Int?): String = w
     DatabaseLevel.GROUP -> "hierarchy:group:$parentId"
     DatabaseLevel.TYPE -> "hierarchy:type:$parentId"
 }
-
-private val SectionGap = 16.dp
-private val BottomPadding = 24.dp
-private val CardCornerRadius = 16.dp
 
 private sealed interface HierarchySectionKey {
     data object Published : HierarchySectionKey
@@ -239,27 +237,39 @@ private fun HierarchyListEntryContent(
     pageTitle: String,
     entry: HierarchyListEntry,
 ) {
+    val pageTitleTextSize = dimensionResource(R.dimen.list_page_title_text_size).value.sp
+    val sectionHeaderTextSize = dimensionResource(R.dimen.list_section_header_text_size).value.sp
+    val titleStartPadding = dimensionResource(R.dimen.type_detail_page_title_start_padding)
+    val titleVerticalPadding = dimensionResource(R.dimen.type_detail_page_title_vertical_padding)
+    val sectionHeaderBottomPadding = dimensionResource(R.dimen.list_section_header_bottom_padding)
+    val sectionGap = dimensionResource(R.dimen.type_detail_section_gap)
+    val bottomPadding = dimensionResource(R.dimen.type_detail_bottom_padding)
+
     when (entry) {
         HierarchyListEntry.Title -> {
             Text(
                 text = pageTitle,
-                fontSize = 24.sp,
+                fontSize = pageTitleTextSize,
                 fontWeight = FontWeight.Black,
                 color = colorResource(R.color.text_primary),
-                modifier = Modifier.padding(start = 24.dp, top = 12.dp, bottom = 12.dp),
+                modifier = Modifier.padding(
+                    start = titleStartPadding,
+                    top = titleVerticalPadding,
+                    bottom = titleVerticalPadding,
+                ),
             )
         }
 
         is HierarchyListEntry.SectionHeader -> {
             Text(
                 text = entry.title,
-                fontSize = 18.sp,
+                fontSize = sectionHeaderTextSize,
                 fontWeight = FontWeight.Black,
                 color = colorResource(R.color.text_primary),
                 modifier = Modifier.padding(
-                    start = 24.dp,
-                    bottom = 4.dp,
-                    top = if (entry.addTopGap) SectionGap else 0.dp,
+                    start = titleStartPadding,
+                    bottom = sectionHeaderBottomPadding,
+                    top = if (entry.addTopGap) sectionGap else 0.dp,
                 ),
             )
         }
@@ -274,7 +284,7 @@ private fun HierarchyListEntryContent(
         }
 
         HierarchyListEntry.BottomPadding -> {
-            Spacer(Modifier.height(BottomPadding))
+            Spacer(Modifier.height(bottomPadding))
         }
     }
 }
@@ -286,11 +296,12 @@ private fun HierarchySectionItemRow(
     indexInSection: Int,
     sectionItemCount: Int,
 ) {
-    val shape = sectionItemShape(indexInSection, sectionItemCount)
+    val cardCornerRadius = dimensionResource(R.dimen.detail_card_corner_radius)
+    val shape = sectionItemShape(indexInSection, sectionItemCount, cardCornerRadius)
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = dimensionResource(R.dimen.detail_card_horizontal_padding))
             .clip(shape)
             .background(colorResource(R.color.second_background), shape),
     ) {
@@ -298,8 +309,7 @@ private fun HierarchySectionItemRow(
     }
 }
 
-private fun sectionItemShape(indexInSection: Int, sectionItemCount: Int): Shape {
-    val corner = CardCornerRadius
+private fun sectionItemShape(indexInSection: Int, sectionItemCount: Int, corner: Dp): Shape {
     return when {
         sectionItemCount == 1 -> RoundedCornerShape(corner)
         indexInSection == 0 -> RoundedCornerShape(topStart = corner, topEnd = corner)

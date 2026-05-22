@@ -17,12 +17,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.marshall.pyerite.R
@@ -70,29 +70,41 @@ fun TypeSummarySection(
     val linkColor = colorResource(R.color.hyperlink_text)
     val traitBlocks = remember(traits) { buildTraitBlocks(traits) }
     val hasTraitUi = traitBlocks.roleTraits.isNotEmpty() || traitBlocks.skillTraitGroups.isNotEmpty()
+    val cardPadding = dimensionResource(R.dimen.detail_card_horizontal_padding)
+    val summaryIconSize = dimensionResource(R.dimen.type_detail_summary_icon_size)
+    val summaryContentGap = dimensionResource(R.dimen.type_detail_summary_content_gap)
+    val summaryTitleTextSize = dimensionResource(R.dimen.type_detail_summary_title_text_size).value.sp
+    val summaryCaptionTextSize = dimensionResource(R.dimen.type_detail_summary_caption_text_size).value.sp
+    val bodyTextSize = dimensionResource(R.dimen.type_detail_body_text_size).value.sp
+    val bodyLineHeight = dimensionResource(R.dimen.type_detail_body_line_height).value.sp
+    val dividerVerticalPadding = dimensionResource(R.dimen.type_detail_summary_divider_vertical_padding)
+    val dividerThickness = dimensionResource(R.dimen.detail_divider_thickness)
+    val innerGapLarge = dimensionResource(R.dimen.type_detail_section_inner_gap_large)
+    val innerGapMedium = dimensionResource(R.dimen.type_detail_section_inner_gap_medium)
+    val innerGapSmall = dimensionResource(R.dimen.type_detail_section_inner_gap_small)
 
     BaseContainer(useSystemBarsPadding = false) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(cardPadding)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    modifier = Modifier.size(64.dp),
+                    modifier = Modifier.size(summaryIconSize),
                     painter = entity.iconFilename?.let {
                         rememberAsyncImagePainter(iconManager.getIconFile(it))
                     } ?: painterResource(R.drawable.ic_database),
                     contentDescription = null,
                     tint = Color.Unspecified
                 )
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(summaryContentGap))
                 Column {
                     Text(
                         text = entity.zhName ?: entity.name.orEmpty(),
-                        fontSize = 20.sp,
+                        fontSize = summaryTitleTextSize,
                         fontWeight = FontWeight.Bold,
                         color = colorResource(R.color.text_primary)
                     )
                     Text(
                         text = "${entity.categoryName ?: ""} / ${entity.groupName ?: ""} / ID:${entity.id}",
-                        fontSize = 12.sp,
+                        fontSize = summaryCaptionTextSize,
                         color = colorResource(R.color.hint_text)
                     )
                 }
@@ -101,36 +113,40 @@ fun TypeSummarySection(
             val desc = entity.description
             if (!desc.isNullOrBlank()) {
                 HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 12.dp),
-                    thickness = 0.5.dp,
+                    modifier = Modifier.padding(vertical = dividerVerticalPadding),
+                    thickness = dividerThickness,
                     color = colorResource(R.color.border)
                 )
                 Text(
                     text = formatTypeDescriptionAnnotated(desc),
-                    fontSize = 14.sp,
+                    fontSize = bodyTextSize,
                     color = colorResource(R.color.text_primary),
-                    lineHeight = 20.sp
+                    lineHeight = bodyLineHeight,
                 )
             }
 
             if (hasTraitUi) {
-                Spacer(modifier = Modifier.height(if (!desc.isNullOrBlank()) 20.dp else 12.dp))
+                Spacer(
+                    modifier = Modifier.height(
+                        if (!desc.isNullOrBlank()) innerGapLarge else innerGapMedium,
+                    ),
+                )
                 if (traitBlocks.roleTraits.isNotEmpty()) {
                     Text(
                         text = stringResource(R.string.type_detail_role_bonus_header),
-                        fontSize = 14.sp,
+                        fontSize = bodyTextSize,
                         fontWeight = FontWeight.Bold,
                         color = colorResource(R.color.text_primary),
-                        lineHeight = 20.sp
+                        lineHeight = bodyLineHeight,
                     )
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(innerGapSmall))
                     traitBlocks.roleTraits.forEach { trait ->
                         TraitBulletLine(trait.content, linkColor)
                     }
                 }
                 traitBlocks.skillTraitGroups.forEachIndexed { index, (skillTypeId, list) ->
                     if (traitBlocks.roleTraits.isNotEmpty() || index > 0) {
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(innerGapMedium))
                     }
                     val skillLabel = list.firstOrNull()?.skillDisplayName().orEmpty()
                         .ifBlank {
@@ -152,11 +168,11 @@ fun TypeSummarySection(
                             pop()
                             append(stringResource(R.string.type_detail_skill_bonus_header_suffix))
                         },
-                        fontSize = 14.sp,
+                        fontSize = bodyTextSize,
                         color = colorResource(R.color.text_primary),
-                        lineHeight = 20.sp
+                        lineHeight = bodyLineHeight,
                     )
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(innerGapSmall))
                     list.forEach { trait ->
                         TraitBulletLine(trait.content, linkColor)
                     }
@@ -168,23 +184,27 @@ fun TypeSummarySection(
 
 @Composable
 private fun TraitBulletLine(content: String, linkColor: Color) {
+    val bodyTextSize = dimensionResource(R.dimen.type_detail_body_text_size).value.sp
+    val bodyLineHeight = dimensionResource(R.dimen.type_detail_body_line_height).value.sp
+    val lineVerticalPadding = dimensionResource(R.dimen.type_detail_trait_line_vertical_padding)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp),
+            .padding(vertical = lineVerticalPadding),
         verticalAlignment = Alignment.Top
     ) {
         Text(
             text = "\u00B7 ",
-            fontSize = 14.sp,
+            fontSize = bodyTextSize,
             color = colorResource(R.color.text_primary),
-            lineHeight = 20.sp
+            lineHeight = bodyLineHeight,
         )
         Text(
             text = formatTraitBonusAnnotated(content, linkColor),
-            fontSize = 14.sp,
+            fontSize = bodyTextSize,
             color = colorResource(R.color.text_primary),
-            lineHeight = 20.sp,
+            lineHeight = bodyLineHeight,
             modifier = Modifier.weight(1f)
         )
     }

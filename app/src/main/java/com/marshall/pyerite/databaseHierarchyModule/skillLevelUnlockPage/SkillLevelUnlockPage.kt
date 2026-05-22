@@ -27,9 +27,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -43,10 +45,6 @@ import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
-
-private val SectionGap = 16.dp
-private val BottomPadding = 24.dp
-private val CardCornerRadius = 16.dp
 
 private sealed class UnlockListEntry(val key: String) {
     data object Title : UnlockListEntry("page:title")
@@ -110,22 +108,36 @@ private fun UnlockListEntryContent(
     entry: UnlockListEntry,
     level: Int,
 ) {
+    val pageTitleTextSize = dimensionResource(R.dimen.list_page_title_text_size).value.sp
+    val sectionSubheaderTextSize = dimensionResource(R.dimen.list_section_subheader_text_size).value.sp
+    val titleStartPadding = dimensionResource(R.dimen.type_detail_page_title_start_padding)
+    val titleVerticalPadding = dimensionResource(R.dimen.type_detail_page_title_vertical_padding)
+    val titleIconSize = dimensionResource(R.dimen.skill_unlock_title_icon_size)
+    val titleIconGap = dimensionResource(R.dimen.skill_unlock_title_icon_gap)
+    val sectionHeaderBottomPadding = dimensionResource(R.dimen.list_section_header_bottom_padding)
+    val sectionGap = dimensionResource(R.dimen.type_detail_section_gap)
+    val bottomPadding = dimensionResource(R.dimen.type_detail_bottom_padding)
+
     when (entry) {
         UnlockListEntry.Title -> {
             Row(
-                modifier = Modifier.padding(start = 24.dp, top = 12.dp, bottom = 12.dp),
+                modifier = Modifier.padding(
+                    start = titleStartPadding,
+                    top = titleVerticalPadding,
+                    bottom = titleVerticalPadding,
+                ),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(titleIconSize),
                     painter = painterResource(certificateLevelDrawable(level)),
                     contentDescription = null,
                     tint = Color.Unspecified,
                 )
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(titleIconGap))
                 Text(
                     text = stringResource(R.string.skill_level, level),
-                    fontSize = 24.sp,
+                    fontSize = pageTitleTextSize,
                     fontWeight = FontWeight.Black,
                     color = colorResource(R.color.text_primary),
                 )
@@ -135,13 +147,13 @@ private fun UnlockListEntryContent(
         is UnlockListEntry.SectionHeader -> {
             Text(
                 text = entry.title,
-                fontSize = 14.sp,
+                fontSize = sectionSubheaderTextSize,
                 fontWeight = FontWeight.Normal,
                 color = colorResource(R.color.hint_text),
                 modifier = Modifier.padding(
-                    start = 24.dp,
-                    bottom = 4.dp,
-                    top = if (entry.addTopGap) SectionGap else 0.dp,
+                    start = titleStartPadding,
+                    bottom = sectionHeaderBottomPadding,
+                    top = if (entry.addTopGap) sectionGap else 0.dp,
                 ),
             )
         }
@@ -156,7 +168,7 @@ private fun UnlockListEntryContent(
         }
 
         UnlockListEntry.BottomPadding -> {
-            Spacer(Modifier.height(BottomPadding))
+            Spacer(Modifier.height(bottomPadding))
         }
     }
 }
@@ -168,11 +180,12 @@ private fun UnlockSectionItemRow(
     indexInSection: Int,
     sectionItemCount: Int,
 ) {
-    val shape = sectionItemShape(indexInSection, sectionItemCount)
+    val cardCornerRadius = dimensionResource(R.dimen.detail_card_corner_radius)
+    val shape = sectionItemShape(indexInSection, sectionItemCount, cardCornerRadius)
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = dimensionResource(R.dimen.detail_card_horizontal_padding))
             .clip(shape)
             .background(colorResource(R.color.second_background), shape),
     ) {
@@ -180,8 +193,7 @@ private fun UnlockSectionItemRow(
     }
 }
 
-private fun sectionItemShape(indexInSection: Int, sectionItemCount: Int): Shape {
-    val corner = CardCornerRadius
+private fun sectionItemShape(indexInSection: Int, sectionItemCount: Int, corner: Dp): Shape {
     return when {
         sectionItemCount == 1 -> RoundedCornerShape(corner)
         indexInSection == 0 -> RoundedCornerShape(topStart = corner, topEnd = corner)

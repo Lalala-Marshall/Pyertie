@@ -19,8 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.marshall.pyerite.R
@@ -153,6 +153,10 @@ private fun TypeDetailDefenseLayerSection(
 
     if (!hasDefenseSectionContent(attributes)) return
 
+    val rowHorizontalPadding = dimensionResource(R.dimen.detail_row_horizontal_padding)
+    val rowVerticalPadding = dimensionResource(R.dimen.detail_row_vertical_padding)
+    val resistanceExtraPadding = dimensionResource(R.dimen.defense_row_extra_horizontal_padding)
+
     BaseContainer(
         title = title,
         useSystemBarsPadding = false,
@@ -162,7 +166,7 @@ private fun TypeDetailDefenseLayerSection(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 12.dp),
+                        .padding(horizontal = rowHorizontalPadding, vertical = rowVerticalPadding),
                 ) {
                     resistances.forEach { resistance ->
                         ResistanceBar(
@@ -170,7 +174,7 @@ private fun TypeDetailDefenseLayerSection(
                             iconManager = iconManager,
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(horizontal = 4.dp),
+                                .padding(horizontal = resistanceExtraPadding),
                         )
                     }
                 }
@@ -206,6 +210,12 @@ private fun ResistanceBar(
     val percent = ((1 - (attr.value ?: 0.0)) * 100.0).roundToInt().coerceIn(0, 100)
     val brightWeight = percent.coerceAtLeast(0)
     val dimWeight = (100 - percent).coerceAtLeast(0)
+    val statIconSize = dimensionResource(R.dimen.defense_stat_icon_size)
+    val statLabelGap = dimensionResource(R.dimen.defense_stat_label_gap)
+    val barGroupGap = dimensionResource(R.dimen.defense_bar_group_gap)
+    val barHeight = dimensionResource(R.dimen.defense_bar_height)
+    val barCornerRadius = dimensionResource(R.dimen.defense_bar_corner_radius)
+    val valueTextSize = dimensionResource(R.dimen.sub_menu_value_text_size).value.sp
 
     Column(modifier = modifier) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -213,31 +223,31 @@ private fun ResistanceBar(
                 Icon(
                     painter = rememberAsyncImagePainter(iconManager.getIconFile(iconFileName)),
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(statIconSize),
                     tint = Color.Unspecified,
                 )
             }
             Text(
                 text = "$percent%",
-                fontSize = 14.sp,
+                fontSize = valueTextSize,
                 color = colorResource(R.color.text_primary),
-                modifier = Modifier.padding(start = 4.dp),
+                modifier = Modifier.padding(start = statLabelGap),
             )
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(barGroupGap))
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(14.dp)
-                .clip(RoundedCornerShape(3.dp)),
+                .height(barHeight)
+                .clip(RoundedCornerShape(barCornerRadius)),
         ) {
             if (brightWeight > 0) {
                 Spacer(
                     modifier = Modifier
                         .weight(brightWeight.toFloat())
-                        .height(14.dp)
+                        .height(barHeight)
                         .background(activeColor),
                 )
             }
@@ -245,7 +255,7 @@ private fun ResistanceBar(
                 Spacer(
                     modifier = Modifier
                         .weight(dimWeight.toFloat())
-                        .height(14.dp)
+                        .height(barHeight)
                         .background(inactiveColor),
                 )
             }

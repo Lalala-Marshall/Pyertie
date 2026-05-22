@@ -306,6 +306,11 @@ private fun IndustryPrimaryRowContent(
     val chevronSize = dimensionResource(R.dimen.detail_row_chevron_size)
     val trailingGap = dimensionResource(R.dimen.detail_row_trailing_gap)
     val labelSubtitleSpacing = dimensionResource(R.dimen.detail_row_label_subtitle_spacing)
+    val labelTextSize = dimensionResource(R.dimen.sub_menu_label_text_size).value.sp
+    val labelLineHeight = dimensionResource(R.dimen.sub_menu_label_line_height).value.sp
+    val subtitleTextSize = dimensionResource(R.dimen.detail_row_label_subtitle_text_size).value.sp
+    val subtitleLineHeight = dimensionResource(R.dimen.detail_row_label_subtitle_line_height).value.sp
+    val valueTextSize = dimensionResource(R.dimen.sub_menu_value_text_size).value.sp
 
     Row(
         modifier = Modifier
@@ -328,14 +333,14 @@ private fun IndustryPrimaryRowContent(
                 Text(
                     text = label,
                     color = colorResource(R.color.text_primary),
-                    fontSize = 16.sp,
-                    lineHeight = 20.sp,
+                    fontSize = labelTextSize,
+                    lineHeight = labelLineHeight,
                 )
                 Text(
                     text = labelSubtitle,
                     color = colorResource(R.color.text_caption),
-                    fontSize = 12.sp,
-                    lineHeight = 16.sp,
+                    fontSize = subtitleTextSize,
+                    lineHeight = subtitleLineHeight,
                 )
             }
         } else {
@@ -343,8 +348,8 @@ private fun IndustryPrimaryRowContent(
                 modifier = Modifier.weight(1f),
                 text = label,
                 color = colorResource(R.color.text_primary),
-                fontSize = 16.sp,
-                lineHeight = 20.sp,
+                fontSize = labelTextSize,
+                lineHeight = labelLineHeight,
             )
         }
 
@@ -353,7 +358,7 @@ private fun IndustryPrimaryRowContent(
         Text(
             text = value,
             color = colorResource(R.color.hint_text),
-            fontSize = 14.sp,
+            fontSize = valueTextSize,
         )
 
         Spacer(modifier = Modifier.width(trailingGap))

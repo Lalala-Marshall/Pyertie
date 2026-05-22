@@ -9,6 +9,8 @@
     <dimen name="detail_row_trailing_gap">4dp</dimen>
     <dimen name="detail_row_title_value_gap">24dp</dimen>
     <dimen name="detail_row_label_subtitle_spacing">2dp</dimen>
+    <dimen name="detail_row_label_subtitle_text_size">12sp</dimen>
+    <dimen name="detail_row_label_subtitle_line_height">16sp</dimen>
     <dimen name="detail_divider_start_padding">12dp</dimen>
     <dimen name="detail_divider_thickness">0.5dp</dimen>
 
@@ -17,6 +19,16 @@
     <dimen name="sub_menu_label_text_size">16sp</dimen>
     <dimen name="sub_menu_label_line_height">20sp</dimen>
     <dimen name="sub_menu_value_text_size">14sp</dimen>
+
+    <!-- List / hierarchy page typography -->
+    <dimen name="list_page_title_text_size">24sp</dimen>
+    <dimen name="list_section_header_text_size">18sp</dimen>
+    <dimen name="list_section_subheader_text_size">14sp</dimen>
+    <dimen name="list_section_header_bottom_padding">4dp</dimen>
+
+    <!-- Skill unlock page title row -->
+    <dimen name="skill_unlock_title_icon_size">32dp</dimen>
+    <dimen name="skill_unlock_title_icon_gap">12dp</dimen>
 
     <!-- Type detail page section spacing -->
     <dimen name="type_detail_section_gap">16dp</dimen>
@@ -27,4 +39,36 @@
     <!-- Detail card (matches BaseContainer card) -->
     <dimen name="detail_card_corner_radius">16dp</dimen>
     <dimen name="detail_card_horizontal_padding">16dp</dimen>
+
+    <!-- Type summary (basic section) -->
+    <dimen name="type_detail_summary_icon_size">64dp</dimen>
+    <dimen name="type_detail_summary_title_text_size">20sp</dimen>
+    <dimen name="type_detail_summary_caption_text_size">12sp</dimen>
+    <dimen name="type_detail_body_text_size">14sp</dimen>
+    <dimen name="type_detail_body_line_height">20sp</dimen>
+    <dimen name="type_detail_summary_content_gap">16dp</dimen>
+    <dimen name="type_detail_summary_divider_vertical_padding">12dp</dimen>
+    <dimen name="type_detail_section_inner_gap_large">20dp</dimen>
+    <dimen name="type_detail_section_inner_gap_medium">12dp</dimen>
+    <dimen name="type_detail_section_inner_gap_small">6dp</dimen>
+    <dimen name="type_detail_trait_line_vertical_padding">2dp</dimen>
+
+    <!-- Market section -->
+    <dimen name="type_detail_market_card_vertical_padding">14dp</dimen>
+    <dimen name="type_detail_market_divider_height">64dp</dimen>
+    <dimen name="type_detail_market_footnote_horizontal_padding">16dp</dimen>
+    <dimen name="type_detail_market_footnote_bottom_padding">14dp</dimen>
+    <dimen name="type_detail_market_footnote_text_size">12sp</dimen>
+    <dimen name="type_detail_market_footnote_line_height">16sp</dimen>
+    <dimen name="type_detail_market_stat_horizontal_padding">8dp</dimen>
+    <dimen name="type_detail_market_stat_value_text_size">20sp</dimen>
+    <dimen name="type_detail_market_stat_caption_text_size">11sp</dimen>
+
+    <!-- Defense info bars -->
+    <dimen name="defense_stat_icon_size">18dp</dimen>
+    <dimen name="defense_stat_label_gap">4dp</dimen>
+    <dimen name="defense_bar_group_gap">4dp</dimen>
+    <dimen name="defense_bar_height">14dp</dimen>
+    <dimen name="defense_bar_corner_radius">3dp</dimen>
+    <dimen name="defense_row_extra_horizontal_padding">4dp</dimen>
 </resources>

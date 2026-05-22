@@ -244,7 +244,7 @@ private fun TypeDetailSlotContent(
         TypeDetailSlot.Title -> {
             Text(
                 text = stringResource(R.string.type_info),
-                fontSize = 24.sp,
+                fontSize = dimensionResource(R.dimen.list_page_title_text_size).value.sp,
                 fontWeight = FontWeight.Black,
                 color = colorResource(R.color.text_primary),
                 modifier = Modifier.padding(
