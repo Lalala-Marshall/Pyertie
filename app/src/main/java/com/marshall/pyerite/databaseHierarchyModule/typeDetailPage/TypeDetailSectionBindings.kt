@@ -260,3 +260,4 @@ internal fun TypeDetailIndustrySectionItem(
         navController = navController,
     )
 }
+

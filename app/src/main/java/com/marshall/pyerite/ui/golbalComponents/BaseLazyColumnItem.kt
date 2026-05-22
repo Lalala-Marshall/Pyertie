@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
@@ -75,8 +76,8 @@ fun ItemDivider() {
     HorizontalDivider(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 12.dp),
-        thickness = 0.5.dp,
+            .padding(start = dimensionResource(R.dimen.detail_divider_start_padding)),
+        thickness = dimensionResource(R.dimen.detail_divider_thickness),
         color = colorResource(R.color.border),
     )
 }

@@ -1,12 +1,13 @@
 package com.marshall.pyerite.databaseHierarchyModule.typeDetailPage
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -14,9 +15,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
@@ -24,10 +25,7 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
 import org.koin.androidx.compose.koinViewModel
 
-private val SectionGap = 16.dp
-private val BottomPadding = 24.dp
-
-private enum class TypeDetailSlot {
+internal enum class TypeDetailSlot {
     Title,
     Summary,
     Market,
@@ -62,16 +60,15 @@ fun TypeDetailPage(
 
     type?.let { entity ->
         val visibleSlots = rememberVisibleTypeDetailSlots(typeId, viewModel)
+        val scrollState = rememberScrollState()
 
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .systemBarsPadding(),
+                .systemBarsPadding()
+                .verticalScroll(scrollState),
         ) {
-            items(
-                items = visibleSlots,
-                key = { slot -> slot.name },
-            ) { slot ->
+            visibleSlots.forEach { slot ->
                 TypeDetailSlotContent(
                     slot = slot,
                     typeId = typeId,
@@ -209,7 +206,11 @@ private fun TypeDetailSlotContent(
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Black,
                 color = colorResource(R.color.text_primary),
-                modifier = Modifier.padding(start = 24.dp, top = 12.dp, bottom = 12.dp),
+                modifier = Modifier.padding(
+                    start = dimensionResource(R.dimen.type_detail_page_title_start_padding),
+                    top = dimensionResource(R.dimen.type_detail_page_title_vertical_padding),
+                    bottom = dimensionResource(R.dimen.type_detail_page_title_vertical_padding),
+                ),
             )
         }
 
@@ -232,7 +233,10 @@ private fun TypeDetailSlotContent(
         TypeDetailSlot.Skills -> TypeDetailSkillsSectionItem(typeId, navController)
         TypeDetailSlot.SkillLevelDetail -> TypeDetailSkillLevelDetailSectionItem(typeId)
         TypeDetailSlot.SkillLevelApplies -> TypeDetailSkillLevelAppliesSectionItem(typeId, navController)
-        TypeDetailSlot.Industry -> TypeDetailIndustrySectionItem(typeId = typeId, navController = navController)
+        TypeDetailSlot.Industry -> TypeDetailIndustrySectionItem(
+            typeId = typeId,
+            navController = navController,
+        )
     }
 }
 
@@ -243,10 +247,11 @@ private fun TypeDetailSlotTrailingSpacer(
 ) {
     when (slot) {
         TypeDetailSlot.Title -> Unit
-        else -> Spacer(
-            Modifier.height(
-                if (isLastSlot) BottomPadding else SectionGap,
-            ),
-        )
+        else -> {
+            val gap = dimensionResource(
+                if (isLastSlot) R.dimen.type_detail_bottom_padding else R.dimen.type_detail_section_gap,
+            )
+            Spacer(Modifier.height(gap))
+        }
     }
 }

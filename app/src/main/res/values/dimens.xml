@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shared detail / list row layout -->
+    <dimen name="detail_row_icon_size">24dp</dimen>
+    <dimen name="detail_row_icon_gap">8dp</dimen>
+    <dimen name="detail_row_horizontal_padding">12dp</dimen>
+    <dimen name="detail_row_vertical_padding">12dp</dimen>
+    <dimen name="detail_row_chevron_size">20dp</dimen>
+    <dimen name="detail_row_trailing_gap">4dp</dimen>
+    <dimen name="detail_row_title_value_gap">24dp</dimen>
+    <dimen name="detail_row_label_subtitle_spacing">2dp</dimen>
+    <dimen name="detail_divider_start_padding">12dp</dimen>
+    <dimen name="detail_divider_thickness">0.5dp</dimen>
+
+    <!-- Submenu row (nested under an expandable header) -->
+    <dimen name="sub_menu_leading_indent">16dp</dimen>
+    <dimen name="sub_menu_label_text_size">16sp</dimen>
+    <dimen name="sub_menu_label_line_height">20sp</dimen>
+    <dimen name="sub_menu_value_text_size">14sp</dimen>
+
+    <!-- Type detail page section spacing -->
+    <dimen name="type_detail_section_gap">16dp</dimen>
+    <dimen name="type_detail_bottom_padding">24dp</dimen>
+    <dimen name="type_detail_page_title_start_padding">24dp</dimen>
+    <dimen name="type_detail_page_title_vertical_padding">12dp</dimen>
+
+    <!-- Detail card (matches BaseContainer card) -->
+    <dimen name="detail_card_corner_radius">16dp</dimen>
+    <dimen name="detail_card_horizontal_padding">16dp</dimen>
+</resources>
