@@ -21,12 +21,13 @@ fun NavGraphBuilder.databaseNavGraph(
         route = DatabaseRoute.Root.route,
         startDestination = DatabaseRoute.Category.route
     ) {
-        composable(DatabaseRoute.Category.route) {
+        composable(DatabaseRoute.Category.route) { backStackEntry ->
             DatabaseHierarchyPage(
                 title = stringResource(R.string.database),
                 level = DatabaseLevel.CATEGORY,
                 parentId = null,
-                navController = navController
+                navController = navController,
+                backStackEntry = backStackEntry,
             )
         }
 
@@ -36,12 +37,13 @@ fun NavGraphBuilder.databaseNavGraph(
                 navArgument("categoryId") { type = NavType.IntType },
                 navArgument("categoryName") { type = NavType.StringType }
             )
-        ) { backStack ->
+        ) { backStackEntry ->
             DatabaseHierarchyPage(
-                title = backStack.arguments?.getString("categoryName") ?: stringResource(R.string.group),
+                title = backStackEntry.arguments?.getString("categoryName") ?: stringResource(R.string.group),
                 level = DatabaseLevel.GROUP,
-                parentId = backStack.arguments!!.getInt("categoryId"),
-                navController = navController
+                parentId = backStackEntry.arguments!!.getInt("categoryId"),
+                navController = navController,
+                backStackEntry = backStackEntry,
             )
         }
 
@@ -51,12 +53,13 @@ fun NavGraphBuilder.databaseNavGraph(
                 navArgument("groupId") { type = NavType.IntType },
                 navArgument("groupName") { type = NavType.StringType }
             )
-        ) { backStack ->
+        ) { backStackEntry ->
             DatabaseHierarchyPage(
-                title = backStack.arguments?.getString("groupName") ?: stringResource(R.string.type),
+                title = backStackEntry.arguments?.getString("groupName") ?: stringResource(R.string.type),
                 level = DatabaseLevel.TYPE,
-                parentId = backStack.arguments!!.getInt("groupId"),
-                navController = navController
+                parentId = backStackEntry.arguments!!.getInt("groupId"),
+                navController = navController,
+                backStackEntry = backStackEntry,
             )
         }
 
@@ -65,10 +68,11 @@ fun NavGraphBuilder.databaseNavGraph(
             arguments = listOf(
                 navArgument("typeId") { type = NavType.IntType }
             )
-        ) { backStack ->
+        ) { backStackEntry ->
             TypeDetailPage(
-                typeId = backStack.arguments!!.getInt("typeId"),
+                typeId = backStackEntry.arguments!!.getInt("typeId"),
                 navController = navController,
+                backStackEntry = backStackEntry,
             )
         }
 

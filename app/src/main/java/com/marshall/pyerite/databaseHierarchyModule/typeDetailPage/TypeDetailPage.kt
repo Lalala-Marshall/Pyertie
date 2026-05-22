@@ -6,21 +6,26 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
+import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -53,15 +58,21 @@ internal enum class TypeDetailSlot {
 fun TypeDetailPage(
     typeId: Int,
     navController: NavController,
-    viewModel: DatabaseViewModel = koinViewModel(),
+    backStackEntry: NavBackStackEntry,
 ) {
+    val databaseBackStackEntry = remember(backStackEntry) {
+        navController.getBackStackEntry(DatabaseRoute.Root.route)
+    }
+    val viewModel: DatabaseViewModel = koinViewModel(viewModelStoreOwner = databaseBackStackEntry)
+
+    val scrollState = rememberTypeDetailScrollState(typeId, viewModel)
+
     val type by remember(typeId) { viewModel.typeDetail(typeId) }
         .collectAsState(initial = null)
 
-    type?.let { entity ->
-        val visibleSlots = rememberVisibleTypeDetailSlots(typeId, viewModel)
-        val scrollState = rememberScrollState()
+    val visibleSlots = rememberVisibleTypeDetailSlots(typeId, viewModel)
 
+    type?.let { entity ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -82,6 +93,36 @@ fun TypeDetailPage(
             }
         }
     }
+}
+
+@Composable
+private fun rememberTypeDetailScrollState(
+    typeId: Int,
+    viewModel: DatabaseViewModel,
+): ScrollState {
+    val scrollState = remember(typeId) {
+        ScrollState(viewModel.typeDetailScrollOffset(typeId))
+    }
+
+    DisposableEffect(typeId, scrollState) {
+        onDispose {
+            viewModel.saveTypeDetailScrollOffset(typeId, scrollState.value)
+        }
+    }
+
+    LaunchedEffect(typeId) {
+        val target = viewModel.typeDetailScrollOffset(typeId)
+        if (target <= 0) return@LaunchedEffect
+        snapshotFlow { scrollState.maxValue }.collect { max ->
+            if (max <= 0) return@collect
+            val desired = target.coerceAtMost(max)
+            if (scrollState.value < desired) {
+                scrollState.scrollTo(desired)
+            }
+        }
+    }
+
+    return scrollState
 }
 
 @Composable

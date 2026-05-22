@@ -219,4 +219,26 @@ class DatabaseViewModel(
                 .distinctUntilChanged()
                 .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
         }
+
+    private val typeDetailScrollOffsets = mutableMapOf<Int, Int>()
+
+    fun typeDetailScrollOffset(typeId: Int): Int = typeDetailScrollOffsets[typeId] ?: 0
+
+    fun saveTypeDetailScrollOffset(typeId: Int, offset: Int) {
+        typeDetailScrollOffsets[typeId] = offset
+    }
+
+    private val hierarchyScrollPositions = mutableMapOf<String, HierarchyScrollPosition>()
+
+    fun hierarchyScrollPosition(scrollKey: String): HierarchyScrollPosition =
+        hierarchyScrollPositions[scrollKey] ?: HierarchyScrollPosition()
+
+    fun saveHierarchyScrollPosition(scrollKey: String, index: Int, offset: Int) {
+        hierarchyScrollPositions[scrollKey] = HierarchyScrollPosition(index, offset)
+    }
 }
+
+data class HierarchyScrollPosition(
+    val index: Int = 0,
+    val offset: Int = 0,
+)

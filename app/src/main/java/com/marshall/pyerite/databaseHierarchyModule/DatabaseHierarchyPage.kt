@@ -9,14 +9,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
@@ -26,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.data.icons.IconManager
@@ -36,10 +41,17 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.GroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.MetaGroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
+import com.marshall.pyerite.databaseHierarchyModule.viewModel.HierarchyScrollPosition
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+
+private fun hierarchyScrollKey(level: DatabaseLevel, parentId: Int?): String = when (level) {
+    DatabaseLevel.CATEGORY -> "hierarchy:category"
+    DatabaseLevel.GROUP -> "hierarchy:group:$parentId"
+    DatabaseLevel.TYPE -> "hierarchy:type:$parentId"
+}
 
 private val SectionGap = 16.dp
 private val BottomPadding = 24.dp
@@ -103,9 +115,15 @@ fun DatabaseHierarchyPage(
     level: DatabaseLevel,
     parentId: Int?,
     navController: NavController,
-    viewModel: DatabaseViewModel = koinViewModel(),
+    backStackEntry: NavBackStackEntry,
     iconManager: IconManager = koinInject(),
 ) {
+    val databaseBackStackEntry = remember(backStackEntry) {
+        navController.getBackStackEntry(DatabaseRoute.Root.route)
+    }
+    val viewModel: DatabaseViewModel = koinViewModel(viewModelStoreOwner = databaseBackStackEntry)
+    val scrollKey = hierarchyScrollKey(level, parentId)
+    val listState = rememberHierarchyLazyListState(scrollKey, viewModel)
     val categories by if (level == DatabaseLevel.CATEGORY) {
         viewModel.categories.collectAsState(initial = emptyList())
     } else {
@@ -158,6 +176,7 @@ fun DatabaseHierarchyPage(
     }
 
     LazyColumn(
+        state = listState,
         modifier = Modifier
             .fillMaxSize()
             .systemBarsPadding(),
@@ -172,6 +191,47 @@ fun DatabaseHierarchyPage(
             )
         }
     }
+}
+
+@Composable
+private fun rememberHierarchyLazyListState(
+    scrollKey: String,
+    viewModel: DatabaseViewModel,
+): LazyListState {
+    val saved: HierarchyScrollPosition = viewModel.hierarchyScrollPosition(scrollKey)
+    val listState = remember(scrollKey) {
+        LazyListState(
+            firstVisibleItemIndex = saved.index,
+            firstVisibleItemScrollOffset = saved.offset,
+        )
+    }
+
+    DisposableEffect(scrollKey, listState) {
+        onDispose {
+            viewModel.saveHierarchyScrollPosition(
+                scrollKey = scrollKey,
+                index = listState.firstVisibleItemIndex,
+                offset = listState.firstVisibleItemScrollOffset,
+            )
+        }
+    }
+
+    LaunchedEffect(scrollKey) {
+        val targetIndex = viewModel.hierarchyScrollPosition(scrollKey).index
+        val targetOffset = viewModel.hierarchyScrollPosition(scrollKey).offset
+        if (targetIndex <= 0 && targetOffset <= 0) return@LaunchedEffect
+        snapshotFlow { listState.layoutInfo.totalItemsCount }.collect { count ->
+            if (count <= 0) return@collect
+            val index = targetIndex.coerceIn(0, count - 1)
+            val currentIndex = listState.firstVisibleItemIndex
+            val currentOffset = listState.firstVisibleItemScrollOffset
+            if (currentIndex < index || (currentIndex == index && currentOffset < targetOffset)) {
+                listState.scrollToItem(index, targetOffset)
+            }
+        }
+    }
+
+    return listState
 }
 
 @Composable
