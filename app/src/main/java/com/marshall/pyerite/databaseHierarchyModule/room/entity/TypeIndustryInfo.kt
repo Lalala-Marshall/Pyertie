@@ -6,6 +6,30 @@ data class TypeBlueprintDetail(
     val iconFilename: String?,
 )
 
+/** Product manufactured by a blueprint (one row per blueprint in SDE). */
+data class BlueprintManufacturingProduct(
+    val typeId: Int,
+    val name: String?,
+    val iconFilename: String?,
+    val quantity: Int?,
+)
+
+/** Material required to manufacture from a blueprint. */
+data class BlueprintManufacturingMaterial(
+    val typeId: Int,
+    val name: String?,
+    val iconFilename: String?,
+    val quantity: Int?,
+)
+
+/** Skill required to manufacture from a blueprint. */
+data class BlueprintManufacturingSkill(
+    val typeId: Int,
+    val name: String?,
+    val iconFilename: String?,
+    val level: Int?,
+)
+
 data class TypeRefiningOutputSummary(
     val processSize: Int?,
     val outputMaterialCount: Int,

@@ -230,6 +230,30 @@ internal fun TypeDetailSkillsSectionItem(
 }
 
 @Composable
+internal fun TypeDetailManufacturingSectionItem(
+    typeId: Int,
+    navController: NavController,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    val products by remember(typeId) { viewModel.blueprintManufacturingProducts(typeId) }
+        .collectAsState(initial = emptyList())
+    val materials by remember(typeId) { viewModel.blueprintManufacturingMaterials(typeId) }
+        .collectAsState(initial = emptyList())
+    val skills by remember(typeId) { viewModel.blueprintManufacturingSkills(typeId) }
+        .collectAsState(initial = emptyList())
+    val manufacturingTime by remember(typeId) { viewModel.blueprintManufacturingTime(typeId) }
+        .collectAsState(initial = null)
+    TypeDetailManufacturingSection(
+        typeId = typeId,
+        products = products,
+        materials = materials,
+        skills = skills,
+        manufacturingTimeSeconds = manufacturingTime,
+        navController = navController,
+    )
+}
+
+@Composable
 internal fun TypeDetailIndustrySectionItem(
     typeId: Int,
     navController: NavController,

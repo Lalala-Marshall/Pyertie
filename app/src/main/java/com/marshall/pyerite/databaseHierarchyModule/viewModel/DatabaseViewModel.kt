@@ -6,6 +6,9 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.DogmaAttributeEn
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.GroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillRequirement
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingMaterial
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingProduct
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingSkill
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeBlueprintDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeApplicableBlueprintCount
@@ -191,6 +194,45 @@ class DatabaseViewModel(
             repository.getApplicableBlueprints(typeId)
                 .distinctUntilChanged()
                 .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        }
+
+    private val blueprintManufacturingProductFlows =
+        mutableMapOf<Int, StateFlow<List<BlueprintManufacturingProduct>>>()
+
+    fun blueprintManufacturingProducts(typeId: Int): StateFlow<List<BlueprintManufacturingProduct>> =
+        blueprintManufacturingProductFlows.getOrPut(typeId) {
+            repository.getBlueprintManufacturingProducts(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        }
+
+    private val blueprintManufacturingMaterialFlows =
+        mutableMapOf<Int, StateFlow<List<BlueprintManufacturingMaterial>>>()
+
+    fun blueprintManufacturingMaterials(typeId: Int): StateFlow<List<BlueprintManufacturingMaterial>> =
+        blueprintManufacturingMaterialFlows.getOrPut(typeId) {
+            repository.getBlueprintManufacturingMaterials(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        }
+
+    private val blueprintManufacturingSkillFlows =
+        mutableMapOf<Int, StateFlow<List<BlueprintManufacturingSkill>>>()
+
+    fun blueprintManufacturingSkills(typeId: Int): StateFlow<List<BlueprintManufacturingSkill>> =
+        blueprintManufacturingSkillFlows.getOrPut(typeId) {
+            repository.getBlueprintManufacturingSkills(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        }
+
+    private val blueprintManufacturingTimeFlows = mutableMapOf<Int, StateFlow<Int?>>()
+
+    fun blueprintManufacturingTime(typeId: Int): StateFlow<Int?> =
+        blueprintManufacturingTimeFlows.getOrPut(typeId) {
+            repository.getBlueprintManufacturingTime(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, null)
         }
 
     private val compatibleGroupsFlows = mutableMapOf<Int, StateFlow<List<TypeCompatibleGroupDetail>>>()

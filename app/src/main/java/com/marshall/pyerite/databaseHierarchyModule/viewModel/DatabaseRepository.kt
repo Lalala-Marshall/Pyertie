@@ -6,6 +6,9 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.DogmaAttributeEn
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.GroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.MetaGroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingMaterial
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingProduct
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingSkill
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeBlueprintDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeTraitDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillRequirement
@@ -99,6 +102,22 @@ class DatabaseRepository(roomProvider: RoomProvider) {
 
     fun getApplicableBlueprints(typeId: Int): Flow<List<TypeBlueprintDetail>> = flow {
         emit(typeDao.getApplicableBlueprints(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    fun getBlueprintManufacturingProducts(typeId: Int): Flow<List<BlueprintManufacturingProduct>> = flow {
+        emit(typeDao.getBlueprintManufacturingProducts(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    fun getBlueprintManufacturingMaterials(typeId: Int): Flow<List<BlueprintManufacturingMaterial>> = flow {
+        emit(typeDao.getBlueprintManufacturingMaterials(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    fun getBlueprintManufacturingSkills(typeId: Int): Flow<List<BlueprintManufacturingSkill>> = flow {
+        emit(typeDao.getBlueprintManufacturingSkills(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    fun getBlueprintManufacturingTime(typeId: Int): Flow<Int?> = flow {
+        emit(typeDao.getBlueprintManufacturingTime(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getCompatibleGroups(typeId: Int): Flow<List<TypeCompatibleGroupDetail>> = flow {

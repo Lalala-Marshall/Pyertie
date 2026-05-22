@@ -79,4 +79,11 @@
     <string name="unknown_group">未知分组</string>
     <string name="type_detail_variants_section">变体</string>
     <string name="type_detail_browse_variants">浏览 %1$d 个变体</string>
+
+    <string name="type_detail_section_manufacturing">制造</string>
+    <string name="type_detail_manufacturing_product">产品</string>
+    <string name="type_detail_manufacturing_product_quantity_name">%1$d × %2$s</string>
+    <string name="type_detail_manufacturing_materials">所需材料</string>
+    <string name="type_detail_manufacturing_skills">所需技能</string>
+    <string name="type_detail_manufacturing_time">制造时间</string>
 </resources>

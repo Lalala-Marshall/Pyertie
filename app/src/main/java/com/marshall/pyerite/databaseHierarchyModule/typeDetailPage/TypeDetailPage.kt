@@ -52,6 +52,7 @@ internal enum class TypeDetailSlot {
     SkillLevelDetail,
     SkillLevelApplies,
     Industry,
+    Manufacturing,
 }
 
 @Composable
@@ -150,6 +151,16 @@ private fun rememberVisibleTypeDetailSlots(
         .collectAsState(initial = emptyList())
     val skillUnlockLevels by remember(typeId) { viewModel.skillUnlockLevels(typeId) }
         .collectAsState(initial = emptyList())
+    val type by remember(typeId) { viewModel.typeDetail(typeId) }
+        .collectAsState(initial = null)
+    val manufacturingProducts by remember(typeId) { viewModel.blueprintManufacturingProducts(typeId) }
+        .collectAsState(initial = emptyList())
+    val manufacturingMaterials by remember(typeId) { viewModel.blueprintManufacturingMaterials(typeId) }
+        .collectAsState(initial = emptyList())
+    val manufacturingSkills by remember(typeId) { viewModel.blueprintManufacturingSkills(typeId) }
+        .collectAsState(initial = emptyList())
+    val manufacturingTime by remember(typeId) { viewModel.blueprintManufacturingTime(typeId) }
+        .collectAsState(initial = null)
 
     return remember(
         attributes,
@@ -162,6 +173,11 @@ private fun rememberVisibleTypeDetailSlots(
         skillMiscRows,
         skillLevelSpRows,
         skillUnlockLevels,
+        type,
+        manufacturingProducts,
+        manufacturingMaterials,
+        manufacturingSkills,
+        manufacturingTime,
     ) {
         buildList {
             add(TypeDetailSlot.Title)
@@ -229,6 +245,16 @@ private fun rememberVisibleTypeDetailSlots(
             ) {
                 add(TypeDetailSlot.Industry)
             }
+            if (hasManufacturingSectionContent(
+                    categoryId = type?.categoryID,
+                    products = manufacturingProducts,
+                    materials = manufacturingMaterials,
+                    skills = manufacturingSkills,
+                    manufacturingTimeSeconds = manufacturingTime,
+                )
+            ) {
+                add(TypeDetailSlot.Manufacturing)
+            }
         }
     }
 }
@@ -275,6 +301,10 @@ private fun TypeDetailSlotContent(
         TypeDetailSlot.SkillLevelDetail -> TypeDetailSkillLevelDetailSectionItem(typeId)
         TypeDetailSlot.SkillLevelApplies -> TypeDetailSkillLevelAppliesSectionItem(typeId, navController)
         TypeDetailSlot.Industry -> TypeDetailIndustrySectionItem(
+            typeId = typeId,
+            navController = navController,
+        )
+        TypeDetailSlot.Manufacturing -> TypeDetailManufacturingSectionItem(
             typeId = typeId,
             navController = navController,
         )

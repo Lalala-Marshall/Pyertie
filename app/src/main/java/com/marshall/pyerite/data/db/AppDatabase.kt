@@ -11,6 +11,8 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintCopying
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionMaterialEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingMaterialEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingOutputEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingSkillEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintProcessTimeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintResearchMaterialMaterialEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintResearchTimeMaterialEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.CategoryEntity
@@ -35,6 +37,8 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeMaterialEnti
         TraitEntity::class,
         BlueprintManufacturingOutputEntity::class,
         BlueprintManufacturingMaterialEntity::class,
+        BlueprintManufacturingSkillEntity::class,
+        BlueprintProcessTimeEntity::class,
         BlueprintInventionMaterialEntity::class,
         BlueprintCopyingMaterialEntity::class,
         BlueprintResearchMaterialMaterialEntity::class,

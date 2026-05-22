@@ -4,6 +4,9 @@ import androidx.room.Dao
 import androidx.room.Query
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.DogmaAttributeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingMaterial
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingProduct
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingSkill
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeBlueprintDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeApplicableBlueprintCount
@@ -411,4 +414,60 @@ interface TypeDao {
         """,
     )
     suspend fun getTypesUnlockedBySkillAtLevel(skillTypeId: Int, level: Int): List<SkillUnlockTypeRow>
+
+    @Query(
+        """
+        SELECT
+            typeID AS typeId,
+            typeName AS name,
+            typeIcon AS iconFilename,
+            quantity
+        FROM blueprint_manufacturing_output
+        WHERE blueprintTypeID = :blueprintTypeId
+        """,
+    )
+    suspend fun getBlueprintManufacturingProducts(
+        blueprintTypeId: Int,
+    ): List<BlueprintManufacturingProduct>
+
+    @Query(
+        """
+        SELECT
+            typeID AS typeId,
+            typeName AS name,
+            typeIcon AS iconFilename,
+            quantity
+        FROM blueprint_manufacturing_materials
+        WHERE blueprintTypeID = :blueprintTypeId
+        ORDER BY quantity DESC, typeID
+        """,
+    )
+    suspend fun getBlueprintManufacturingMaterials(
+        blueprintTypeId: Int,
+    ): List<BlueprintManufacturingMaterial>
+
+    @Query(
+        """
+        SELECT
+            typeID AS typeId,
+            typeName AS name,
+            typeIcon AS iconFilename,
+            level
+        FROM blueprint_manufacturing_skills
+        WHERE blueprintTypeID = :blueprintTypeId
+        ORDER BY level DESC, typeID
+        """,
+    )
+    suspend fun getBlueprintManufacturingSkills(
+        blueprintTypeId: Int,
+    ): List<BlueprintManufacturingSkill>
+
+    @Query(
+        """
+        SELECT manufacturing_time
+        FROM blueprint_process_time
+        WHERE blueprintTypeID = :blueprintTypeId
+        """,
+    )
+    suspend fun getBlueprintManufacturingTime(blueprintTypeId: Int): Int?
 }
