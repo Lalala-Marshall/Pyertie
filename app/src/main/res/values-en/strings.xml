@@ -92,6 +92,10 @@
     <string name="type_detail_time_research_time">Research time</string>
     <string name="type_detail_blueprint_research_level_count">%1$d levels</string>
 
+    <string name="type_detail_section_copy">Copy</string>
+    <string name="type_detail_copy_time">Copy time</string>
+    <string name="type_detail_copy_max_runs">Max runs per copy</string>
+
     <string name="duration_part_years">%1$dy</string>
     <string name="duration_part_months">%1$dmo</string>
     <string name="duration_part_days">%1$dd</string>

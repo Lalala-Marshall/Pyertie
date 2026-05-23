@@ -55,6 +55,7 @@ internal enum class TypeDetailSlot {
     Manufacturing,
     MaterialResearch,
     TimeResearch,
+    Copy,
 }
 
 @Composable
@@ -167,6 +168,8 @@ private fun rememberVisibleTypeDetailSlots(
         .collectAsState(initial = null)
     val researchTimeTime by remember(typeId) { viewModel.blueprintResearchTimeTime(typeId) }
         .collectAsState(initial = null)
+    val copyDetail by remember(typeId) { viewModel.blueprintCopyDetail(typeId) }
+        .collectAsState(initial = null)
 
     return remember(
         attributes,
@@ -186,6 +189,7 @@ private fun rememberVisibleTypeDetailSlots(
         manufacturingTime,
         researchMaterialTime,
         researchTimeTime,
+        copyDetail,
     ) {
         buildList {
             add(TypeDetailSlot.Title)
@@ -277,6 +281,13 @@ private fun rememberVisibleTypeDetailSlots(
             ) {
                 add(TypeDetailSlot.TimeResearch)
             }
+            if (hasCopySectionContent(
+                    categoryId = type?.categoryID,
+                    copyDetail = copyDetail,
+                )
+            ) {
+                add(TypeDetailSlot.Copy)
+            }
         }
     }
 }
@@ -332,6 +343,7 @@ private fun TypeDetailSlotContent(
         )
         TypeDetailSlot.MaterialResearch -> TypeDetailMaterialResearchSectionItem(typeId = typeId)
         TypeDetailSlot.TimeResearch -> TypeDetailTimeResearchSectionItem(typeId = typeId)
+        TypeDetailSlot.Copy -> TypeDetailCopySectionItem(typeId = typeId)
     }
 }
 

@@ -280,6 +280,16 @@ internal fun TypeDetailTimeResearchSectionItem(
 }
 
 @Composable
+internal fun TypeDetailCopySectionItem(
+    typeId: Int,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    val copyDetail by remember(typeId) { viewModel.blueprintCopyDetail(typeId) }
+        .collectAsState(initial = null)
+    TypeDetailBlueprintCopySection(copyDetail = copyDetail)
+}
+
+@Composable
 internal fun TypeDetailIndustrySectionItem(
     typeId: Int,
     navController: NavController,

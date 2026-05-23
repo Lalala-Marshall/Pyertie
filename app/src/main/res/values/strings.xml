@@ -93,6 +93,10 @@
     <string name="type_detail_time_research_time">研究时间</string>
     <string name="type_detail_blueprint_research_level_count">%1$d 级</string>
 
+    <string name="type_detail_section_copy">复制</string>
+    <string name="type_detail_copy_time">复制时间</string>
+    <string name="type_detail_copy_max_runs">每次复制的最大流程数</string>
+
     <string name="duration_part_years">%1$d年</string>
     <string name="duration_part_months">%1$d月</string>
     <string name="duration_part_days">%1$d日</string>

@@ -6,6 +6,7 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.DogmaAttributeEn
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.GroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.MetaGroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintCopyDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingMaterial
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingProduct
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingSkill
@@ -126,6 +127,10 @@ class DatabaseRepository(roomProvider: RoomProvider) {
 
     fun getBlueprintResearchTimeTime(typeId: Int): Flow<Int?> = flow {
         emit(typeDao.getBlueprintResearchTimeTime(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    fun getBlueprintCopyDetail(typeId: Int): Flow<BlueprintCopyDetail?> = flow {
+        emit(typeDao.getBlueprintCopyDetail(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getCompatibleGroups(typeId: Int): Flow<List<TypeCompatibleGroupDetail>> = flow {

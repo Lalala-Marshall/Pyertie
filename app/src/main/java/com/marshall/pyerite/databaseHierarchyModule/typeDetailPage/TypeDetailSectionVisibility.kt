@@ -2,6 +2,7 @@ package com.marshall.pyerite.databaseHierarchyModule.typeDetailPage
 
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeApplicableBlueprintCount
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintCopyDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingMaterial
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingProduct
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingSkill
@@ -58,6 +59,15 @@ internal fun hasTimeResearchSectionContent(
     categoryId: Int?,
     researchTimeTimeSeconds: Int?,
 ): Boolean = hasBlueprintResearchSectionContent(categoryId, researchTimeTimeSeconds)
+
+internal fun hasCopySectionContent(
+    categoryId: Int?,
+    copyDetail: BlueprintCopyDetail?,
+): Boolean {
+    if (categoryId != BLUEPRINT_CATEGORY_ID) return false
+    return (copyDetail?.copyingTimeSeconds ?: 0) > 0 ||
+        (copyDetail?.maxRunsPerCopy ?: 0) > 0
+}
 
 internal fun hasManufacturingSectionContent(
     categoryId: Int?,

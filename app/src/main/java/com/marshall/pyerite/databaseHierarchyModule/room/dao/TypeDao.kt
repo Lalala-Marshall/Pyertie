@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.DogmaAttributeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintCopyDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingMaterial
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingProduct
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingSkill
@@ -488,4 +489,13 @@ interface TypeDao {
         """,
     )
     suspend fun getBlueprintResearchTimeTime(blueprintTypeId: Int): Int?
+
+    @Query(
+        """
+        SELECT copying_time AS copyingTimeSeconds, maxRunsPerCopy AS maxRunsPerCopy
+        FROM blueprint_process_time
+        WHERE blueprintTypeID = :blueprintTypeId
+        """,
+    )
+    suspend fun getBlueprintCopyDetail(blueprintTypeId: Int): BlueprintCopyDetail?
 }

@@ -36,6 +36,12 @@ data class BlueprintResearchLevelTime(
     val cumulativeTimeSeconds: Int,
 )
 
+/** Blueprint copy time and max manufacturing runs per copy. */
+data class BlueprintCopyDetail(
+    val copyingTimeSeconds: Int?,
+    val maxRunsPerCopy: Int?,
+)
+
 data class TypeRefiningOutputSummary(
     val processSize: Int?,
     val outputMaterialCount: Int,

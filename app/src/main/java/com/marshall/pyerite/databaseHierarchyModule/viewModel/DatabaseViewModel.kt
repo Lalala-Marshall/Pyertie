@@ -6,6 +6,7 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.DogmaAttributeEn
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.GroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillRequirement
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintCopyDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingMaterial
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingProduct
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingSkill
@@ -249,6 +250,15 @@ class DatabaseViewModel(
     fun blueprintResearchTimeTime(typeId: Int): StateFlow<Int?> =
         blueprintResearchTimeTimeFlows.getOrPut(typeId) {
             repository.getBlueprintResearchTimeTime(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, null)
+        }
+
+    private val blueprintCopyDetailFlows = mutableMapOf<Int, StateFlow<BlueprintCopyDetail?>>()
+
+    fun blueprintCopyDetail(typeId: Int): StateFlow<BlueprintCopyDetail?> =
+        blueprintCopyDetailFlows.getOrPut(typeId) {
+            repository.getBlueprintCopyDetail(typeId)
                 .distinctUntilChanged()
                 .stateIn(viewModelScope, SharingStarted.Lazily, null)
         }
