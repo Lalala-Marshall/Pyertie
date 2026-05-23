@@ -97,6 +97,12 @@
     <string name="type_detail_copy_time">复制时间</string>
     <string name="type_detail_copy_max_runs">每次复制的最大流程数</string>
 
+    <string name="type_detail_section_invention">发明</string>
+    <string name="type_detail_invention_success_rate">成功率: %1$s</string>
+    <string name="type_detail_invention_materials">所需材料</string>
+    <string name="type_detail_invention_skills">所需技能</string>
+    <string name="type_detail_invention_time">发明时间</string>
+
     <string name="duration_part_years">%1$d年</string>
     <string name="duration_part_months">%1$d月</string>
     <string name="duration_part_days">%1$d日</string>

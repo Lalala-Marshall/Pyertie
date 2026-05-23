@@ -3,6 +3,7 @@ package com.marshall.pyerite.databaseHierarchyModule.typeDetailPage
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintResearchLevelTime
 import java.text.NumberFormat
 import java.util.Locale
+import kotlin.math.roundToInt
 
 internal fun formatRefiningSourceLabel(
     name: String?,
@@ -18,6 +19,21 @@ internal fun formatRefiningSourceLabel(
 
 internal fun formatIndustryCount(count: Int): String =
     NumberFormat.getNumberInstance(Locale.getDefault()).format(count)
+
+private val inventionProbabilityFormatter = NumberFormat.getNumberInstance(Locale.getDefault()).apply {
+    minimumFractionDigits = 0
+    maximumFractionDigits = 1
+}
+
+internal fun formatInventionProbability(probability: Double?): String {
+    if (probability == null) return ""
+    val percent = probability * 100.0
+    return if (percent == percent.roundToInt().toDouble()) {
+        "${percent.roundToInt()}%"
+    } else {
+        "${inventionProbabilityFormatter.format(percent)}%"
+    }
+}
 
 internal fun buildBlueprintResearchLevelTimes(
     baseTimeSeconds: Int,

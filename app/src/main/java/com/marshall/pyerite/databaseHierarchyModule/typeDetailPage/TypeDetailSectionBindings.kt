@@ -290,6 +290,30 @@ internal fun TypeDetailCopySectionItem(
 }
 
 @Composable
+internal fun TypeDetailInventionSectionItem(
+    typeId: Int,
+    navController: NavController,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    val products by remember(typeId) { viewModel.blueprintInventionProducts(typeId) }
+        .collectAsState(initial = emptyList())
+    val materials by remember(typeId) { viewModel.blueprintInventionMaterials(typeId) }
+        .collectAsState(initial = emptyList())
+    val skills by remember(typeId) { viewModel.blueprintInventionSkills(typeId) }
+        .collectAsState(initial = emptyList())
+    val inventionTime by remember(typeId) { viewModel.blueprintInventionTime(typeId) }
+        .collectAsState(initial = null)
+    TypeDetailInventionSection(
+        typeId = typeId,
+        products = products,
+        materials = materials,
+        skills = skills,
+        inventionTimeSeconds = inventionTime,
+        navController = navController,
+    )
+}
+
+@Composable
 internal fun TypeDetailIndustrySectionItem(
     typeId: Int,
     navController: NavController,

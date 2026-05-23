@@ -9,6 +9,8 @@ import com.marshall.pyerite.databaseHierarchyModule.room.dao.TraitDao
 import com.marshall.pyerite.databaseHierarchyModule.room.dao.TypeDao
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintCopyingMaterialEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionMaterialEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionProductEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionSkillEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingMaterialEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingOutputEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingSkillEntity
@@ -40,6 +42,8 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeMaterialEnti
         BlueprintManufacturingSkillEntity::class,
         BlueprintProcessTimeEntity::class,
         BlueprintInventionMaterialEntity::class,
+        BlueprintInventionProductEntity::class,
+        BlueprintInventionSkillEntity::class,
         BlueprintCopyingMaterialEntity::class,
         BlueprintResearchMaterialMaterialEntity::class,
         BlueprintResearchTimeMaterialEntity::class,

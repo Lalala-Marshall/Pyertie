@@ -5,6 +5,9 @@ import androidx.room.Query
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.DogmaAttributeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintCopyDetail
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionMaterial
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionProduct
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionSkill
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingMaterial
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingProduct
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingSkill
@@ -498,4 +501,62 @@ interface TypeDao {
         """,
     )
     suspend fun getBlueprintCopyDetail(blueprintTypeId: Int): BlueprintCopyDetail?
+
+    @Query(
+        """
+        SELECT
+            typeID AS typeId,
+            typeName AS name,
+            typeIcon AS iconFilename,
+            quantity,
+            probability
+        FROM blueprint_invention_products
+        WHERE blueprintTypeID = :blueprintTypeId
+        ORDER BY probability DESC, typeID
+        """,
+    )
+    suspend fun getBlueprintInventionProducts(
+        blueprintTypeId: Int,
+    ): List<BlueprintInventionProduct>
+
+    @Query(
+        """
+        SELECT
+            typeID AS typeId,
+            typeName AS name,
+            typeIcon AS iconFilename,
+            quantity
+        FROM blueprint_invention_materials
+        WHERE blueprintTypeID = :blueprintTypeId
+        ORDER BY quantity DESC, typeID
+        """,
+    )
+    suspend fun getBlueprintInventionMaterials(
+        blueprintTypeId: Int,
+    ): List<BlueprintInventionMaterial>
+
+    @Query(
+        """
+        SELECT
+            typeID AS typeId,
+            typeName AS name,
+            typeIcon AS iconFilename,
+            level
+        FROM blueprint_invention_skills
+        WHERE blueprintTypeID = :blueprintTypeId
+        ORDER BY level DESC, typeID
+        """,
+    )
+    suspend fun getBlueprintInventionSkills(
+        blueprintTypeId: Int,
+    ): List<BlueprintInventionSkill>
+
+    @Query(
+        """
+        SELECT invention_time
+        FROM blueprint_process_time
+        WHERE blueprintTypeID = :blueprintTypeId
+        """,
+    )
+    suspend fun getBlueprintInventionTime(blueprintTypeId: Int): Int?
 }

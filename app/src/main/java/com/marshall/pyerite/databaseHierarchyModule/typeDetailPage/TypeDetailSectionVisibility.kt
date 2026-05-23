@@ -3,6 +3,9 @@ package com.marshall.pyerite.databaseHierarchyModule.typeDetailPage
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeApplicableBlueprintCount
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintCopyDetail
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionMaterial
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionProduct
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionSkill
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingMaterial
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingProduct
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingSkill
@@ -67,6 +70,20 @@ internal fun hasCopySectionContent(
     if (categoryId != BLUEPRINT_CATEGORY_ID) return false
     return (copyDetail?.copyingTimeSeconds ?: 0) > 0 ||
         (copyDetail?.maxRunsPerCopy ?: 0) > 0
+}
+
+internal fun hasInventionSectionContent(
+    categoryId: Int?,
+    products: List<BlueprintInventionProduct>,
+    materials: List<BlueprintInventionMaterial>,
+    skills: List<BlueprintInventionSkill>,
+    inventionTimeSeconds: Int?,
+): Boolean {
+    if (categoryId != BLUEPRINT_CATEGORY_ID) return false
+    return products.isNotEmpty() ||
+        materials.isNotEmpty() ||
+        skills.isNotEmpty() ||
+        (inventionTimeSeconds != null && inventionTimeSeconds > 0)
 }
 
 internal fun hasManufacturingSectionContent(

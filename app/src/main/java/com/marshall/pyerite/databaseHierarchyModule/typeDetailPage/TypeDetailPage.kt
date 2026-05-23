@@ -56,6 +56,7 @@ internal enum class TypeDetailSlot {
     MaterialResearch,
     TimeResearch,
     Copy,
+    Invention,
 }
 
 @Composable
@@ -170,6 +171,14 @@ private fun rememberVisibleTypeDetailSlots(
         .collectAsState(initial = null)
     val copyDetail by remember(typeId) { viewModel.blueprintCopyDetail(typeId) }
         .collectAsState(initial = null)
+    val inventionProducts by remember(typeId) { viewModel.blueprintInventionProducts(typeId) }
+        .collectAsState(initial = emptyList())
+    val inventionMaterials by remember(typeId) { viewModel.blueprintInventionMaterials(typeId) }
+        .collectAsState(initial = emptyList())
+    val inventionSkills by remember(typeId) { viewModel.blueprintInventionSkills(typeId) }
+        .collectAsState(initial = emptyList())
+    val inventionTime by remember(typeId) { viewModel.blueprintInventionTime(typeId) }
+        .collectAsState(initial = null)
 
     return remember(
         attributes,
@@ -190,6 +199,10 @@ private fun rememberVisibleTypeDetailSlots(
         researchMaterialTime,
         researchTimeTime,
         copyDetail,
+        inventionProducts,
+        inventionMaterials,
+        inventionSkills,
+        inventionTime,
     ) {
         buildList {
             add(TypeDetailSlot.Title)
@@ -288,6 +301,16 @@ private fun rememberVisibleTypeDetailSlots(
             ) {
                 add(TypeDetailSlot.Copy)
             }
+            if (hasInventionSectionContent(
+                    categoryId = type?.categoryID,
+                    products = inventionProducts,
+                    materials = inventionMaterials,
+                    skills = inventionSkills,
+                    inventionTimeSeconds = inventionTime,
+                )
+            ) {
+                add(TypeDetailSlot.Invention)
+            }
         }
     }
 }
@@ -344,6 +367,10 @@ private fun TypeDetailSlotContent(
         TypeDetailSlot.MaterialResearch -> TypeDetailMaterialResearchSectionItem(typeId = typeId)
         TypeDetailSlot.TimeResearch -> TypeDetailTimeResearchSectionItem(typeId = typeId)
         TypeDetailSlot.Copy -> TypeDetailCopySectionItem(typeId = typeId)
+        TypeDetailSlot.Invention -> TypeDetailInventionSectionItem(
+            typeId = typeId,
+            navController = navController,
+        )
     }
 }
 

@@ -12,7 +12,7 @@ class PyeriteApp : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        DatabaseInitializer.init(this)  // 保留原始 DB 拷贝
+        DatabaseInitializer.init(this)
         startKoin {
             androidContext(this@PyeriteApp)
             modules(

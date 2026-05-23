@@ -7,6 +7,9 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.GroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.MetaGroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintCopyDetail
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionMaterial
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionProduct
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionSkill
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingMaterial
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingProduct
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingSkill
@@ -131,6 +134,22 @@ class DatabaseRepository(roomProvider: RoomProvider) {
 
     fun getBlueprintCopyDetail(typeId: Int): Flow<BlueprintCopyDetail?> = flow {
         emit(typeDao.getBlueprintCopyDetail(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    fun getBlueprintInventionProducts(typeId: Int): Flow<List<BlueprintInventionProduct>> = flow {
+        emit(typeDao.getBlueprintInventionProducts(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    fun getBlueprintInventionMaterials(typeId: Int): Flow<List<BlueprintInventionMaterial>> = flow {
+        emit(typeDao.getBlueprintInventionMaterials(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    fun getBlueprintInventionSkills(typeId: Int): Flow<List<BlueprintInventionSkill>> = flow {
+        emit(typeDao.getBlueprintInventionSkills(typeId))
+    }.flowOn(Dispatchers.IO)
+
+    fun getBlueprintInventionTime(typeId: Int): Flow<Int?> = flow {
+        emit(typeDao.getBlueprintInventionTime(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getCompatibleGroups(typeId: Int): Flow<List<TypeCompatibleGroupDetail>> = flow {

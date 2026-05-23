@@ -7,6 +7,9 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.GroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillRequirement
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintCopyDetail
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionMaterial
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionProduct
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionSkill
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingMaterial
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingProduct
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingSkill
@@ -259,6 +262,45 @@ class DatabaseViewModel(
     fun blueprintCopyDetail(typeId: Int): StateFlow<BlueprintCopyDetail?> =
         blueprintCopyDetailFlows.getOrPut(typeId) {
             repository.getBlueprintCopyDetail(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, null)
+        }
+
+    private val blueprintInventionProductFlows =
+        mutableMapOf<Int, StateFlow<List<BlueprintInventionProduct>>>()
+
+    fun blueprintInventionProducts(typeId: Int): StateFlow<List<BlueprintInventionProduct>> =
+        blueprintInventionProductFlows.getOrPut(typeId) {
+            repository.getBlueprintInventionProducts(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        }
+
+    private val blueprintInventionMaterialFlows =
+        mutableMapOf<Int, StateFlow<List<BlueprintInventionMaterial>>>()
+
+    fun blueprintInventionMaterials(typeId: Int): StateFlow<List<BlueprintInventionMaterial>> =
+        blueprintInventionMaterialFlows.getOrPut(typeId) {
+            repository.getBlueprintInventionMaterials(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        }
+
+    private val blueprintInventionSkillFlows =
+        mutableMapOf<Int, StateFlow<List<BlueprintInventionSkill>>>()
+
+    fun blueprintInventionSkills(typeId: Int): StateFlow<List<BlueprintInventionSkill>> =
+        blueprintInventionSkillFlows.getOrPut(typeId) {
+            repository.getBlueprintInventionSkills(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        }
+
+    private val blueprintInventionTimeFlows = mutableMapOf<Int, StateFlow<Int?>>()
+
+    fun blueprintInventionTime(typeId: Int): StateFlow<Int?> =
+        blueprintInventionTimeFlows.getOrPut(typeId) {
+            repository.getBlueprintInventionTime(typeId)
                 .distinctUntilChanged()
                 .stateIn(viewModelScope, SharingStarted.Lazily, null)
         }

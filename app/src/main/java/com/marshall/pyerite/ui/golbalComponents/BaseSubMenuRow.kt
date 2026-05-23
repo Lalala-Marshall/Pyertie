@@ -1,6 +1,7 @@
 package com.marshall.pyerite.ui.golbalComponents
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,6 +29,8 @@ import java.io.File
 
 data class BaseSubMenuRowModel(
     val label: String,
+    /** Secondary line under [label], left-aligned (e.g. success rate caption). */
+    val labelHint: String = "",
     val value: String = "",
     val iconRes: Int = R.drawable.ic_database,
     val iconFile: File? = null,
@@ -74,6 +77,9 @@ fun BaseSubMenuRowContent(
     val trailingGap = dimensionResource(R.dimen.detail_row_trailing_gap)
     val labelTextSize = dimensionResource(R.dimen.sub_menu_label_text_size).value.sp
     val labelLineHeight = dimensionResource(R.dimen.sub_menu_label_line_height).value.sp
+    val labelHintTextSize = dimensionResource(R.dimen.detail_row_label_subtitle_text_size).value.sp
+    val labelHintLineHeight = dimensionResource(R.dimen.detail_row_label_subtitle_line_height).value.sp
+    val labelHintSpacing = dimensionResource(R.dimen.detail_row_label_subtitle_spacing)
     val valueTextSize = dimensionResource(R.dimen.sub_menu_value_text_size).value.sp
 
     Row(
@@ -94,13 +100,33 @@ fun BaseSubMenuRowContent(
             iconManager = iconManager,
         )
 
-        Text(
-            modifier = Modifier.weight(1f),
-            text = model.label,
-            color = colorResource(R.color.text_primary),
-            fontSize = labelTextSize,
-            lineHeight = labelLineHeight,
-        )
+        if (model.labelHint.isNotEmpty()) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(labelHintSpacing),
+            ) {
+                Text(
+                    text = model.label,
+                    color = colorResource(R.color.text_primary),
+                    fontSize = labelTextSize,
+                    lineHeight = labelLineHeight,
+                )
+                Text(
+                    text = model.labelHint,
+                    color = colorResource(R.color.hint_text),
+                    fontSize = labelHintTextSize,
+                    lineHeight = labelHintLineHeight,
+                )
+            }
+        } else {
+            Text(
+                modifier = Modifier.weight(1f),
+                text = model.label,
+                color = colorResource(R.color.text_primary),
+                fontSize = labelTextSize,
+                lineHeight = labelLineHeight,
+            )
+        }
 
         if (model.value.isNotEmpty()) {
             Spacer(modifier = Modifier.width(titleValueGap))

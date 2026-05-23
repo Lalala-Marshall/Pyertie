@@ -42,6 +42,31 @@ data class BlueprintCopyDetail(
     val maxRunsPerCopy: Int?,
 )
 
+/** Blueprint invented by an invention blueprint. */
+data class BlueprintInventionProduct(
+    val typeId: Int,
+    val name: String?,
+    val iconFilename: String?,
+    val quantity: Int?,
+    val probability: Double?,
+)
+
+/** Material required to invent from a blueprint. */
+data class BlueprintInventionMaterial(
+    val typeId: Int,
+    val name: String?,
+    val iconFilename: String?,
+    val quantity: Int?,
+)
+
+/** Skill required to invent from a blueprint. */
+data class BlueprintInventionSkill(
+    val typeId: Int,
+    val name: String?,
+    val iconFilename: String?,
+    val level: Int?,
+)
+
 data class TypeRefiningOutputSummary(
     val processSize: Int?,
     val outputMaterialCount: Int,

@@ -96,6 +96,12 @@
     <string name="type_detail_copy_time">Copy time</string>
     <string name="type_detail_copy_max_runs">Max runs per copy</string>
 
+    <string name="type_detail_section_invention">Invention</string>
+    <string name="type_detail_invention_success_rate">Success rate: %1$s</string>
+    <string name="type_detail_invention_materials">Materials required</string>
+    <string name="type_detail_invention_skills">Skills required</string>
+    <string name="type_detail_invention_time">Invention time</string>
+
     <string name="duration_part_years">%1$dy</string>
     <string name="duration_part_months">%1$dmo</string>
     <string name="duration_part_days">%1$dd</string>
