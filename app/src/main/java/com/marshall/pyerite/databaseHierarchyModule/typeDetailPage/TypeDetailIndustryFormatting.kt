@@ -1,5 +1,6 @@
 package com.marshall.pyerite.databaseHierarchyModule.typeDetailPage
 
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintMaterialResearchLevelTime
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -18,22 +19,20 @@ internal fun formatRefiningSourceLabel(
 internal fun formatIndustryCount(count: Int): String =
     NumberFormat.getNumberInstance(Locale.getDefault()).format(count)
 
-/** EVE blueprint process time column is stored in seconds. */
-internal fun formatDurationFromSeconds(seconds: Int?): String {
-    if (seconds == null || seconds <= 0) return ""
-    return formatDurationFromMilliseconds(seconds.toDouble() * 1000.0)
-}
-
-internal fun formatDurationFromMilliseconds(rawValue: Double): String {
-    var totalSeconds = (rawValue / 1000.0).toInt().coerceAtLeast(0)
-    val hours = totalSeconds / 3600
-    totalSeconds %= 3600
-    val minutes = totalSeconds / 60
-    val secs = totalSeconds % 60
-
-    return buildString {
-        if (hours > 0) append("${hours}h ")
-        if (minutes > 0 || hours > 0) append("${minutes}m ")
-        append("${secs}s")
-    }.trim()
+internal fun buildMaterialResearchLevelTimes(
+    baseTimeSeconds: Int,
+    levelTimeModifiers: IntArray,
+    timeDivisor: Int,
+): List<BlueprintMaterialResearchLevelTime> {
+    if (baseTimeSeconds <= 0 || timeDivisor <= 0 || levelTimeModifiers.size <= 1) {
+        return emptyList()
+    }
+    val maxLevel = levelTimeModifiers.lastIndex
+    return (1..maxLevel).map { level ->
+        val cumulativeSeconds = baseTimeSeconds * levelTimeModifiers[level] / timeDivisor
+        BlueprintMaterialResearchLevelTime(
+            level = level,
+            cumulativeTimeSeconds = cumulativeSeconds,
+        )
+    }
 }

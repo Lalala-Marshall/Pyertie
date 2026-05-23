@@ -19,7 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -39,6 +38,7 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufac
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingProduct
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingSkill
 import com.marshall.pyerite.data.icons.IconManager
+import com.marshall.pyerite.databaseHierarchyModule.util.formatDurationFromSeconds
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
 import com.marshall.pyerite.ui.golbalComponents.BaseSubMenuRow
 import com.marshall.pyerite.ui.golbalComponents.BaseSubMenuRowModel
@@ -58,9 +58,7 @@ fun TypeDetailManufacturingSection(
     navController: NavController,
     iconManager: IconManager = koinInject(),
 ) {
-    val formattedTime = remember(manufacturingTimeSeconds) {
-        formatDurationFromSeconds(manufacturingTimeSeconds)
-    }
+    val formattedTime = formatDurationFromSeconds(manufacturingTimeSeconds)
     if (products.isEmpty() && materials.isEmpty() && skills.isEmpty() && formattedTime.isEmpty()) {
         return
     }

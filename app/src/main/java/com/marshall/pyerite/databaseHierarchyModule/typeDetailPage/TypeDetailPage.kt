@@ -53,6 +53,7 @@ internal enum class TypeDetailSlot {
     SkillLevelApplies,
     Industry,
     Manufacturing,
+    MaterialResearch,
 }
 
 @Composable
@@ -161,6 +162,8 @@ private fun rememberVisibleTypeDetailSlots(
         .collectAsState(initial = emptyList())
     val manufacturingTime by remember(typeId) { viewModel.blueprintManufacturingTime(typeId) }
         .collectAsState(initial = null)
+    val researchMaterialTime by remember(typeId) { viewModel.blueprintResearchMaterialTime(typeId) }
+        .collectAsState(initial = null)
 
     return remember(
         attributes,
@@ -178,6 +181,7 @@ private fun rememberVisibleTypeDetailSlots(
         manufacturingMaterials,
         manufacturingSkills,
         manufacturingTime,
+        researchMaterialTime,
     ) {
         buildList {
             add(TypeDetailSlot.Title)
@@ -255,6 +259,13 @@ private fun rememberVisibleTypeDetailSlots(
             ) {
                 add(TypeDetailSlot.Manufacturing)
             }
+            if (hasMaterialResearchSectionContent(
+                    categoryId = type?.categoryID,
+                    researchMaterialTimeSeconds = researchMaterialTime,
+                )
+            ) {
+                add(TypeDetailSlot.MaterialResearch)
+            }
         }
     }
 }
@@ -308,6 +319,7 @@ private fun TypeDetailSlotContent(
             typeId = typeId,
             navController = navController,
         )
+        TypeDetailSlot.MaterialResearch -> TypeDetailMaterialResearchSectionItem(typeId = typeId)
     }
 }
 

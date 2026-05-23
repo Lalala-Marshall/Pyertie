@@ -86,4 +86,16 @@
     <string name="type_detail_manufacturing_materials">所需材料</string>
     <string name="type_detail_manufacturing_skills">所需技能</string>
     <string name="type_detail_manufacturing_time">制造时间</string>
+
+    <string name="type_detail_section_material_research">材料研究</string>
+    <string name="type_detail_material_research_time">研究时间</string>
+    <string name="type_detail_material_research_level_range">0级 -> %1$d级</string>
+    <string name="type_detail_material_research_level_count">%1$d 级</string>
+
+    <string name="duration_part_years">%1$d年</string>
+    <string name="duration_part_months">%1$d月</string>
+    <string name="duration_part_days">%1$d日</string>
+    <string name="duration_part_hours">%1$d时</string>
+    <string name="duration_part_minutes">%1$d分</string>
+    <string name="duration_part_seconds">%1$d秒</string>
 </resources>

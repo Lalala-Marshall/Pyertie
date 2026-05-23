@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- EVE ME research cumulative time modifiers for levels 0–10 (eve-industry.org). -->
+  <integer-array name="material_research_level_time_modifiers">
+    <item>0</item>
+    <item>105</item>
+    <item>250</item>
+    <item>595</item>
+    <item>1414</item>
+    <item>3360</item>
+    <item>8000</item>
+    <item>19000</item>
+    <item>45255</item>
+    <item>107700</item>
+    <item>256000</item>
+  </integer-array>
+</resources>

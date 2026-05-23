@@ -470,4 +470,13 @@ interface TypeDao {
         """,
     )
     suspend fun getBlueprintManufacturingTime(blueprintTypeId: Int): Int?
+
+    @Query(
+        """
+        SELECT research_material_time
+        FROM blueprint_process_time
+        WHERE blueprintTypeID = :blueprintTypeId
+        """,
+    )
+    suspend fun getBlueprintResearchMaterialTime(blueprintTypeId: Int): Int?
 }

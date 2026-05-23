@@ -85,4 +85,16 @@
     <string name="type_detail_manufacturing_materials">Materials required</string>
     <string name="type_detail_manufacturing_skills">Skills required</string>
     <string name="type_detail_manufacturing_time">Manufacturing time</string>
+
+    <string name="type_detail_section_material_research">Material research</string>
+    <string name="type_detail_material_research_time">Research time</string>
+    <string name="type_detail_material_research_level_range">Lv. 0 -> %1$d</string>
+    <string name="type_detail_material_research_level_count">%1$d levels</string>
+
+    <string name="duration_part_years">%1$dy</string>
+    <string name="duration_part_months">%1$dmo</string>
+    <string name="duration_part_days">%1$dd</string>
+    <string name="duration_part_hours">%1$dh</string>
+    <string name="duration_part_minutes">%1$dm</string>
+    <string name="duration_part_seconds">%1$ds</string>
 </resources>

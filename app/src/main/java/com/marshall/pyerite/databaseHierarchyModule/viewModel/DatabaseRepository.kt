@@ -120,6 +120,10 @@ class DatabaseRepository(roomProvider: RoomProvider) {
         emit(typeDao.getBlueprintManufacturingTime(typeId))
     }.flowOn(Dispatchers.IO)
 
+    fun getBlueprintResearchMaterialTime(typeId: Int): Flow<Int?> = flow {
+        emit(typeDao.getBlueprintResearchMaterialTime(typeId))
+    }.flowOn(Dispatchers.IO)
+
     fun getCompatibleGroups(typeId: Int): Flow<List<TypeCompatibleGroupDetail>> = flow {
         emit(resolveCompatibleGroups(typeId))
     }.flowOn(Dispatchers.IO)

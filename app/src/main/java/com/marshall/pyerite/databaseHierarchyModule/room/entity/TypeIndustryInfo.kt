@@ -30,6 +30,12 @@ data class BlueprintManufacturingSkill(
     val level: Int?,
 )
 
+/** One ME research level and cumulative seconds from level 0. */
+data class BlueprintMaterialResearchLevelTime(
+    val level: Int,
+    val cumulativeTimeSeconds: Int,
+)
+
 data class TypeRefiningOutputSummary(
     val processSize: Int?,
     val outputMaterialCount: Int,

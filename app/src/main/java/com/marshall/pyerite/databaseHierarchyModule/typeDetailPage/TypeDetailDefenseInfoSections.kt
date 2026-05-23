@@ -26,6 +26,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.marshall.pyerite.R
 import com.marshall.pyerite.data.icons.IconManager
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
+import com.marshall.pyerite.databaseHierarchyModule.util.formatDurationFromMilliseconds
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
 import com.marshall.pyerite.ui.golbalComponents.BaseDetailRow
 import com.marshall.pyerite.ui.golbalComponents.BaseDetailRowModel
@@ -263,23 +264,10 @@ private fun ResistanceBar(
     }
 }
 
+@Composable
 private fun TypeAttributeDetail.formatDefenseDetailValue(formatSecondsAsDuration: Boolean): String =
     if (formatSecondsAsDuration && unitName == "s") {
-        formatShieldRechargeTime(value)
+        formatDurationFromMilliseconds(value)
     } else {
         formatMappedValue(value, unitName)
     }
-
-private fun formatShieldRechargeTime(rawValue: Double?): String {
-    var totalSeconds = ((rawValue ?: 0.0) / 1000.0).roundToInt().coerceAtLeast(0)
-    val hours = totalSeconds / 3600
-    totalSeconds %= 3600
-    val minutes = totalSeconds / 60
-    val seconds = totalSeconds % 60
-
-    return buildString {
-        if (hours > 0) append("${hours}h ")
-        if (minutes > 0 || hours > 0) append("${minutes}m ")
-        append("${seconds}s")
-    }.trim()
-}
