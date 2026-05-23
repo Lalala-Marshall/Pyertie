@@ -244,6 +244,15 @@ class DatabaseViewModel(
                 .stateIn(viewModelScope, SharingStarted.Lazily, null)
         }
 
+    private val blueprintResearchTimeTimeFlows = mutableMapOf<Int, StateFlow<Int?>>()
+
+    fun blueprintResearchTimeTime(typeId: Int): StateFlow<Int?> =
+        blueprintResearchTimeTimeFlows.getOrPut(typeId) {
+            repository.getBlueprintResearchTimeTime(typeId)
+                .distinctUntilChanged()
+                .stateIn(viewModelScope, SharingStarted.Lazily, null)
+        }
+
     private val compatibleGroupsFlows = mutableMapOf<Int, StateFlow<List<TypeCompatibleGroupDetail>>>()
 
     fun compatibleGroups(typeId: Int): StateFlow<List<TypeCompatibleGroupDetail>> =

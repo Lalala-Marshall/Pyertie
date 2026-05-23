@@ -30,8 +30,8 @@ data class BlueprintManufacturingSkill(
     val level: Int?,
 )
 
-/** One ME research level and cumulative seconds from level 0. */
-data class BlueprintMaterialResearchLevelTime(
+/** One blueprint ME/TE research level and cumulative seconds from level 0. */
+data class BlueprintResearchLevelTime(
     val level: Int,
     val cumulativeTimeSeconds: Int,
 )

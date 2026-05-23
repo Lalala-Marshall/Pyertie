@@ -89,8 +89,9 @@
 
     <string name="type_detail_section_material_research">材料研究</string>
     <string name="type_detail_material_research_time">研究时间</string>
-    <string name="type_detail_material_research_level_range">0级 -> %1$d级</string>
-    <string name="type_detail_material_research_level_count">%1$d 级</string>
+    <string name="type_detail_section_time_research">时间研究</string>
+    <string name="type_detail_time_research_time">研究时间</string>
+    <string name="type_detail_blueprint_research_level_count">%1$d 级</string>
 
     <string name="duration_part_years">%1$d年</string>
     <string name="duration_part_months">%1$d月</string>

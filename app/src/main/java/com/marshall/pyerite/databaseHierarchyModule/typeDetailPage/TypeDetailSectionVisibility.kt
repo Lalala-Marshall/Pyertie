@@ -41,13 +41,23 @@ internal fun shouldShowIndustryCount(count: Int?): Boolean = (count ?: 0) > 0
 /** EVE SDE category for blueprint types. */
 internal const val BLUEPRINT_CATEGORY_ID = 9
 
+internal fun hasBlueprintResearchSectionContent(
+    categoryId: Int?,
+    baseTimeSeconds: Int?,
+): Boolean {
+    if (categoryId != BLUEPRINT_CATEGORY_ID) return false
+    return (baseTimeSeconds ?: 0) > 0
+}
+
 internal fun hasMaterialResearchSectionContent(
     categoryId: Int?,
     researchMaterialTimeSeconds: Int?,
-): Boolean {
-    if (categoryId != BLUEPRINT_CATEGORY_ID) return false
-    return (researchMaterialTimeSeconds ?: 0) > 0
-}
+): Boolean = hasBlueprintResearchSectionContent(categoryId, researchMaterialTimeSeconds)
+
+internal fun hasTimeResearchSectionContent(
+    categoryId: Int?,
+    researchTimeTimeSeconds: Int?,
+): Boolean = hasBlueprintResearchSectionContent(categoryId, researchTimeTimeSeconds)
 
 internal fun hasManufacturingSectionContent(
     categoryId: Int?,

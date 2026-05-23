@@ -5,5 +5,6 @@
     <integer name="duration_hours_per_day">24</integer>
     <integer name="duration_days_per_month">30</integer>
     <integer name="duration_days_per_year">365</integer>
-    <integer name="material_research_time_divisor">105</integer>
+    <integer name="blueprint_research_time_divisor">105</integer>
+    <integer name="blueprint_time_efficiency_research_level_step">2</integer>
 </resources>

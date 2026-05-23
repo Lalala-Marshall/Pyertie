@@ -267,6 +267,19 @@ internal fun TypeDetailMaterialResearchSectionItem(
 }
 
 @Composable
+internal fun TypeDetailTimeResearchSectionItem(
+    typeId: Int,
+    viewModel: DatabaseViewModel = koinViewModel(),
+) {
+    val researchTimeTime by remember(typeId) { viewModel.blueprintResearchTimeTime(typeId) }
+        .collectAsState(initial = null)
+    TypeDetailTimeResearchSection(
+        typeId = typeId,
+        researchTimeTimeSeconds = researchTimeTime,
+    )
+}
+
+@Composable
 internal fun TypeDetailIndustrySectionItem(
     typeId: Int,
     navController: NavController,

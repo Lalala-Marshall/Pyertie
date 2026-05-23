@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <!-- EVE ME research cumulative time modifiers for levels 0–10 (eve-industry.org). -->
-  <integer-array name="material_research_level_time_modifiers">
+  <!-- EVE blueprint ME/TE research cumulative time modifiers for levels 0–10 (eve-industry.org). -->
+  <integer-array name="blueprint_research_level_time_modifiers">
     <item>0</item>
     <item>105</item>
     <item>250</item>

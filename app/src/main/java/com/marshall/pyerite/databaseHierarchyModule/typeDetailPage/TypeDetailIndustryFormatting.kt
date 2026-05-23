@@ -1,6 +1,6 @@
 package com.marshall.pyerite.databaseHierarchyModule.typeDetailPage
 
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintMaterialResearchLevelTime
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintResearchLevelTime
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -19,18 +19,18 @@ internal fun formatRefiningSourceLabel(
 internal fun formatIndustryCount(count: Int): String =
     NumberFormat.getNumberInstance(Locale.getDefault()).format(count)
 
-internal fun buildMaterialResearchLevelTimes(
+internal fun buildBlueprintResearchLevelTimes(
     baseTimeSeconds: Int,
     levelTimeModifiers: IntArray,
     timeDivisor: Int,
-): List<BlueprintMaterialResearchLevelTime> {
+): List<BlueprintResearchLevelTime> {
     if (baseTimeSeconds <= 0 || timeDivisor <= 0 || levelTimeModifiers.size <= 1) {
         return emptyList()
     }
     val maxLevel = levelTimeModifiers.lastIndex
     return (1..maxLevel).map { level ->
         val cumulativeSeconds = baseTimeSeconds * levelTimeModifiers[level] / timeDivisor
-        BlueprintMaterialResearchLevelTime(
+        BlueprintResearchLevelTime(
             level = level,
             cumulativeTimeSeconds = cumulativeSeconds,
         )

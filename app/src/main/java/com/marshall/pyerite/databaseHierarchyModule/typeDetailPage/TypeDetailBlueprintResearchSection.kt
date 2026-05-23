@@ -1,6 +1,7 @@
 package com.marshall.pyerite.databaseHierarchyModule.typeDetailPage
 
 import android.annotation.SuppressLint
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -39,57 +40,62 @@ import com.marshall.pyerite.ui.golbalComponents.BaseContainer
 import com.marshall.pyerite.ui.golbalComponents.BaseSubMenuValueRow
 import com.marshall.pyerite.ui.golbalComponents.BaseSubMenuValueRowModel
 
-private val MaterialResearchExpandAnimation = expandVertically(expandFrom = Alignment.Top)
-private val MaterialResearchCollapseAnimation = shrinkVertically(shrinkTowards = Alignment.Top)
+private val BlueprintResearchExpandAnimation = expandVertically(expandFrom = Alignment.Top)
+private val BlueprintResearchCollapseAnimation = shrinkVertically(shrinkTowards = Alignment.Top)
 
 @SuppressLint("LocalContextResourcesRead")
 @Composable
-fun TypeDetailMaterialResearchSection(
+fun TypeDetailBlueprintResearchSection(
     typeId: Int,
-    researchMaterialTimeSeconds: Int?,
+    baseTimeSeconds: Int?,
+    @StringRes sectionTitleRes: Int,
+    @StringRes researchTimeLabelRes: Int,
+    researchLevelStep: Int = 1,
 ) {
     val context = LocalContext.current
     val levelTimeModifiers = remember {
-        context.resources.getIntArray(R.array.material_research_level_time_modifiers)
+        context.resources.getIntArray(R.array.blueprint_research_level_time_modifiers)
     }
-    val timeDivisor = integerResource(R.integer.material_research_time_divisor)
+    val timeDivisor = integerResource(R.integer.blueprint_research_time_divisor)
     val maxResearchLevel = levelTimeModifiers.lastIndex
-    val levelTimes = buildMaterialResearchLevelTimes(
-        baseTimeSeconds = researchMaterialTimeSeconds ?: 0,
+    val levelTimes = buildBlueprintResearchLevelTimes(
+        baseTimeSeconds = baseTimeSeconds ?: 0,
         levelTimeModifiers = levelTimeModifiers,
         timeDivisor = timeDivisor,
     )
     if (levelTimes.isEmpty()) return
 
-    var researchTimeExpanded by rememberSaveable(typeId) { mutableStateOf(false) }
+    var researchTimeExpanded by rememberSaveable(typeId, sectionTitleRes) { mutableStateOf(false) }
+    val maxDisplayLevel = maxResearchLevel * researchLevelStep
     val levelCountLabel = stringResource(
-        R.string.type_detail_material_research_level_count,
-        maxResearchLevel,
+        R.string.type_detail_blueprint_research_level_count,
+        maxDisplayLevel,
     )
 
     BaseContainer(
-        title = stringResource(R.string.type_detail_section_material_research),
+        title = stringResource(sectionTitleRes),
         useSystemBarsPadding = false,
     ) {
         Column {
-            MaterialResearchExpandableHeaderRow(
-                label = stringResource(R.string.type_detail_material_research_time),
+            BlueprintResearchExpandableHeaderRow(
+                label = stringResource(researchTimeLabelRes),
                 value = levelCountLabel,
                 expanded = researchTimeExpanded,
                 onClick = { researchTimeExpanded = !researchTimeExpanded },
             )
             AnimatedVisibility(
                 visible = researchTimeExpanded,
-                enter = MaterialResearchExpandAnimation,
-                exit = MaterialResearchCollapseAnimation,
+                enter = BlueprintResearchExpandAnimation,
+                exit = BlueprintResearchCollapseAnimation,
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     levelTimes.forEachIndexed { index, levelTime ->
+                        val displayLevel = levelTime.level * researchLevelStep
                         BaseSubMenuValueRow(
                             model = BaseSubMenuValueRowModel(
                                 label = stringResource(
-                                    R.string.type_detail_material_research_level_range,
-                                    levelTime.level,
+                                    R.string.skill_level,
+                                    displayLevel,
                                 ),
                                 value = formatDurationFromSeconds(levelTime.cumulativeTimeSeconds),
                             ),
@@ -103,7 +109,7 @@ fun TypeDetailMaterialResearchSection(
 }
 
 @Composable
-private fun MaterialResearchExpandableHeaderRow(
+private fun BlueprintResearchExpandableHeaderRow(
     label: String,
     value: String,
     expanded: Boolean,
@@ -114,7 +120,7 @@ private fun MaterialResearchExpandableHeaderRow(
             .fillMaxWidth()
             .clickable(onClick = onClick),
     ) {
-        MaterialResearchPrimaryRowContent(
+        BlueprintResearchPrimaryRowContent(
             label = label,
             value = value,
             trailingIcon = if (expanded) {
@@ -130,7 +136,7 @@ private fun MaterialResearchExpandableHeaderRow(
 }
 
 @Composable
-private fun MaterialResearchPrimaryRowContent(
+private fun BlueprintResearchPrimaryRowContent(
     label: String,
     value: String,
     trailingIcon: ImageVector,
