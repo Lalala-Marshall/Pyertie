@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Download latest EstamelGG/EveSDE_2.0 release (sde.zip + icons.zip), refresh
-E:\\Marshall\\eve_sde.
+D:\\Coding\\sde.
 
 **Phase A (update check only):** Compare remote build metadata (``metadata.json``,
 release ``body`` JSON, or tag) to app ``assets/latest.txt``. No SQLite file diff;
@@ -38,7 +38,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 NORMALIZE_SCRIPT = REPO_ROOT / "tools" / "normalize_sqlite_boolean_to_integer.py"
 
-DEFAULT_EVE_SDE_ROOT = Path(r"E:\Marshall\eve_sde")
+DEFAULT_EVE_SDE_ROOT = Path(r"D:\Coding\sde")
 GITHUB_API_LATEST = "https://api.github.com/repos/EstamelGG/EveSDE_2.0/releases/latest"
 GITHUB_HTML_LATEST = "https://github.com/EstamelGG/EveSDE_2.0/releases/latest"
 USER_AGENT = "Pyertie-SDE-Sync/1.0 (github.com/EstamelGG/EveSDE_2.0 consumer)"
@@ -486,7 +486,7 @@ def main() -> int:
         "--eve-sde-root",
         type=Path,
         default=DEFAULT_EVE_SDE_ROOT,
-        help="Root folder to wipe, download zips into, and unzip sde.zip (default: E:\\Marshall\\eve_sde)",
+        help="Root folder to wipe, download zips into, and unzip sde.zip (default: D:\\Coding\\sde)",
     )
     p.add_argument(
         "--yes",
