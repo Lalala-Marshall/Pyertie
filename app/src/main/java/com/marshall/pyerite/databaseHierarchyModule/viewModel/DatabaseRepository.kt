@@ -1,6 +1,9 @@
 package com.marshall.pyerite.databaseHierarchyModule.viewModel
 
 import com.marshall.pyerite.data.db.RoomProvider
+import com.marshall.pyerite.localization.ContentLanguage
+import com.marshall.pyerite.localization.LocaleController
+import com.marshall.pyerite.localization.displayName
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.CategoryEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.DogmaAttributeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.GroupEntity
@@ -33,7 +36,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 
-class DatabaseRepository(roomProvider: RoomProvider) {
+class DatabaseRepository(
+    private val roomProvider: RoomProvider,
+    private val localeController: LocaleController,
+) {
 
     companion object {
         /** EVE SDE anchor used to discover skill metadata attributes from the DB. */
@@ -41,21 +47,19 @@ class DatabaseRepository(roomProvider: RoomProvider) {
         private const val SKILL_LEVEL_DOGMA_NAME = "skillLevel"
     }
 
-    private val categoryDao = roomProvider.getDatabase().categoryDao()
-    private val metaGroupDao = roomProvider.getDatabase().metaGroupDao()
+    private val categoryDao get() = roomProvider.getDatabase().categoryDao()
+    private val metaGroupDao get() = roomProvider.getDatabase().metaGroupDao()
+    private val groupDao get() = roomProvider.getDatabase().groupDao()
+    private val typeDao get() = roomProvider.getDatabase().typeDao()
+    private val traitDao get() = roomProvider.getDatabase().traitDao()
 
     fun getCategories(): Flow<List<CategoryEntity>> = flow {
         emit(categoryDao.getCategories())
     }.flowOn(Dispatchers.IO)
 
-
-    private val groupDao = roomProvider.getDatabase().groupDao()
     fun getGroups(categoryId: Int): Flow<List<GroupEntity>> = flow {
         emit(groupDao.getGroupsByCategory(categoryId))
     }.flowOn(Dispatchers.IO)
-
-    private val typeDao = roomProvider.getDatabase().typeDao()
-    private val traitDao = roomProvider.getDatabase().traitDao()
     fun getTypes(groupId: Int): Flow<List<TypeEntity>> = flow {
         emit(typeDao.getTypesByGroup(groupId))
     }.flowOn(Dispatchers.IO)
@@ -169,9 +173,9 @@ class DatabaseRepository(roomProvider: RoomProvider) {
                 attributeDisplayName = ref.attributeDisplayName,
                 attributeIconFilename = ref.attributeIconFilename,
                 groupId = ref.groupId,
-                groupZhName = group.zhName,
-                groupEnName = group.enName,
-                groupName = group.name,
+                zhName = group.zhName,
+                enName = group.enName,
+                name = group.name,
                 groupIconFilename = group.iconFilename,
             )
         }
@@ -228,14 +232,25 @@ class DatabaseRepository(roomProvider: RoomProvider) {
 
     private var cachedSkillMiscDefinitions: List<DogmaAttributeEntity>? = null
     private var cachedSkillBonusDefinitions: List<DogmaAttributeEntity>? = null
+    private var cachedDefinitionsLanguage: ContentLanguage = localeController.contentLanguage
+
+    private fun syncDefinitionsLanguage() {
+        val current = localeController.contentLanguage
+        if (current == cachedDefinitionsLanguage) return
+        cachedDefinitionsLanguage = current
+        cachedSkillMiscDefinitions = null
+        cachedSkillBonusDefinitions = null
+    }
 
     private suspend fun getSkillMiscDefinitions(): List<DogmaAttributeEntity> {
+        syncDefinitionsLanguage()
         cachedSkillMiscDefinitions?.let { return it }
         return typeDao.getSkillMiscDogmaDefinitions(SKILL_MISC_ANCHOR_NAME)
             .also { cachedSkillMiscDefinitions = it }
     }
 
     private suspend fun getSkillBonusDefinitions(): List<DogmaAttributeEntity> {
+        syncDefinitionsLanguage()
         cachedSkillBonusDefinitions?.let { return it }
         return typeDao.getSkillBonusDogmaDefinitions(SKILL_MISC_ANCHOR_NAME)
             .also { cachedSkillBonusDefinitions = it }
@@ -389,7 +404,7 @@ class DatabaseRepository(roomProvider: RoomProvider) {
                     if (skillType != null) {
                         flattenedMap[skillTypeId] = SkillRequirement(
                             typeId = skillTypeId,
-                            name = skillType.zhName ?: skillType.name ?: "Unknown Skill",
+                            name = skillType.displayName(localeController).ifBlank { "Unknown Skill" },
                             level = skillLevel,
                             iconFilename = skillType.iconFilename
                         )

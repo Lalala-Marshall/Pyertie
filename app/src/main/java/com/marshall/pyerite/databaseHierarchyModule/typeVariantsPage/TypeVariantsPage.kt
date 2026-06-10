@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.data.icons.IconManager
+import com.marshall.pyerite.localization.LocaleController
+import com.marshall.pyerite.localization.displayName
 import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.MetaGroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
@@ -66,19 +68,30 @@ fun TypeVariantsPage(
     navController: NavController,
     viewModel: DatabaseViewModel = koinViewModel(),
     iconManager: IconManager = koinInject(),
+    localeController: LocaleController = koinInject(),
 ) {
     val variants by remember(typeId) { viewModel.variants(typeId) }
         .collectAsState(initial = emptyList())
     val metaGroups by viewModel.metaGroups.collectAsState(initial = emptyList())
 
     val unknownGroupLabel = stringResource(R.string.unknown_group)
-    val entries = remember(variants, metaGroups, unknownGroupLabel, iconManager, navController) {
+    val contentLanguage = localeController.contentLanguage
+    val entries = remember(
+        variants,
+        metaGroups,
+        unknownGroupLabel,
+        contentLanguage,
+        iconManager,
+        navController,
+        localeController,
+    ) {
         buildVariantEntries(
             variants = variants,
             metaGroups = metaGroups,
             unknownGroupLabel = unknownGroupLabel,
             iconManager = iconManager,
             navController = navController,
+            localeController = localeController,
         )
     }
 
@@ -185,6 +198,7 @@ private fun buildVariantEntries(
     unknownGroupLabel: String,
     iconManager: IconManager,
     navController: NavController,
+    localeController: LocaleController,
 ): List<VariantListEntry> = buildList {
     add(VariantListEntry.Title)
 
@@ -210,6 +224,7 @@ private fun buildVariantEntries(
             types = itemsInMeta,
             iconManager = iconManager,
             navController = navController,
+            localeController = localeController,
         )
     }
 
@@ -224,6 +239,7 @@ private fun appendVariantSection(
     types: List<TypeEntity>,
     iconManager: IconManager,
     navController: NavController,
+    localeController: LocaleController,
 ): Boolean {
     if (types.isEmpty()) return addTopGap
 
@@ -241,7 +257,7 @@ private fun appendVariantSection(
                 typeId = type.id,
                 model = BaseLazyColumnItemModel(
                     iconFile = iconManager.getIconFile(type.iconFilename),
-                    itemName = type.zhName ?: type.name.orEmpty(),
+                    itemName = type.displayName(localeController),
                     onClick = {
                         navController.navigate(DatabaseRoute.TypeDetail.create(type.id))
                     },

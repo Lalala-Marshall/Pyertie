@@ -1,5 +1,7 @@
 package com.marshall.pyerite.databaseHierarchyModule.room.entity
 
+import com.marshall.pyerite.localization.LocalizableName
+
 data class TypeBlueprintDetail(
     val typeId: Int,
     val name: String?,
@@ -116,8 +118,8 @@ data class TypeCompatibleGroupDetail(
     val attributeDisplayName: String?,
     val attributeIconFilename: String?,
     val groupId: Int,
-    val groupZhName: String?,
-    val groupEnName: String?,
-    val groupName: String?,
+    override val zhName: String?,
+    override val enName: String?,
+    override val name: String?,
     val groupIconFilename: String?,
-)
+) : LocalizableName

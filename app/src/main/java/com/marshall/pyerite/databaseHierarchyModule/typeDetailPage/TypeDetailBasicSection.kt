@@ -27,6 +27,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.marshall.pyerite.R
 import com.marshall.pyerite.data.icons.IconManager
+import com.marshall.pyerite.localization.LocaleController
+import com.marshall.pyerite.localization.displayName
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeTraitDetail
 import com.marshall.pyerite.databaseHierarchyModule.util.formatTraitBonusAnnotated
@@ -56,16 +58,12 @@ private fun buildTraitBlocks(traits: List<TypeTraitDetail>): TraitBlocks {
     return TraitBlocks(roleTraits, skillTraitGroups)
 }
 
-private fun TypeTraitDetail.skillDisplayName(): String =
-    skillZhName?.takeIf { it.isNotBlank() }
-        ?: skillEnName?.takeIf { it.isNotBlank() }
-        ?: ""
-
 @Composable
 fun TypeSummarySection(
     entity: TypeEntity,
     traits: List<TypeTraitDetail>,
-    iconManager: IconManager = koinInject()
+    iconManager: IconManager = koinInject(),
+    localeController: LocaleController = koinInject(),
 ) {
     val linkColor = colorResource(R.color.hyperlink_text)
     val traitBlocks = remember(traits) { buildTraitBlocks(traits) }
@@ -97,7 +95,7 @@ fun TypeSummarySection(
                 Spacer(modifier = Modifier.width(summaryContentGap))
                 Column {
                     Text(
-                        text = entity.zhName ?: entity.name.orEmpty(),
+                        text = entity.displayName(localeController),
                         fontSize = summaryTitleTextSize,
                         fontWeight = FontWeight.Bold,
                         color = colorResource(R.color.text_primary)
@@ -148,7 +146,7 @@ fun TypeSummarySection(
                     if (traitBlocks.roleTraits.isNotEmpty() || index > 0) {
                         Spacer(modifier = Modifier.height(innerGapMedium))
                     }
-                    val skillLabel = list.firstOrNull()?.skillDisplayName().orEmpty()
+                    val skillLabel = list.firstOrNull()?.displayName(localeController).orEmpty()
                         .ifBlank {
                             stringResource(
                                 R.string.type_detail_skill_bonus_unknown_name,

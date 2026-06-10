@@ -37,6 +37,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.data.icons.IconManager
+import com.marshall.pyerite.localization.LocaleController
+import com.marshall.pyerite.localization.displayName
 import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
 import com.marshall.pyerite.databaseHierarchyModule.util.certificateLevelDrawable
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillUnlockTypeRow
@@ -74,18 +76,28 @@ fun SkillLevelUnlockPage(
     navController: NavController,
     viewModel: DatabaseViewModel = koinViewModel(),
     iconManager: IconManager = koinInject(),
+    localeController: LocaleController = koinInject(),
 ) {
     val unlockTypes by remember(skillTypeId, level) {
         viewModel.typesUnlockedBySkillAtLevel(skillTypeId, level)
     }.collectAsState(initial = emptyList())
 
     val uncategorizedLabel = stringResource(R.string.category_uncategorized)
-    val entries = remember(unlockTypes, uncategorizedLabel, iconManager, navController) {
+    val contentLanguage = localeController.contentLanguage
+    val entries = remember(
+        unlockTypes,
+        uncategorizedLabel,
+        contentLanguage,
+        iconManager,
+        navController,
+        localeController,
+    ) {
         buildUnlockEntries(
             unlockTypes = unlockTypes,
             uncategorizedLabel = uncategorizedLabel,
             iconManager = iconManager,
             navController = navController,
+            localeController = localeController,
         )
     }
 
@@ -207,6 +219,7 @@ private fun buildUnlockEntries(
     uncategorizedLabel: String,
     iconManager: IconManager,
     navController: NavController,
+    localeController: LocaleController,
 ): List<UnlockListEntry> = buildList {
     add(UnlockListEntry.Title)
 
@@ -235,6 +248,7 @@ private fun buildUnlockEntries(
             types = itemsInCategory,
             iconManager = iconManager,
             navController = navController,
+            localeController = localeController,
         )
     }
 
@@ -249,6 +263,7 @@ private fun appendUnlockSection(
     types: List<SkillUnlockTypeRow>,
     iconManager: IconManager,
     navController: NavController,
+    localeController: LocaleController,
 ): Boolean {
     if (types.isEmpty()) return addTopGap
 
@@ -266,7 +281,7 @@ private fun appendUnlockSection(
                 typeId = type.typeId,
                 model = BaseLazyColumnItemModel(
                     iconFile = iconManager.getIconFile(type.iconFilename),
-                    itemName = type.zhName ?: type.name.orEmpty(),
+                    itemName = type.displayName(localeController),
                     onClick = {
                         navController.navigate(DatabaseRoute.TypeDetail.create(type.typeId))
                     },

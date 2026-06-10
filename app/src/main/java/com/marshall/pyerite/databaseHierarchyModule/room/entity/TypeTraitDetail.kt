@@ -9,6 +9,6 @@ data class TypeTraitDetail(
     val skill: Int,
     val importance: Int?,
     val bonusType: String?,
-    val skillZhName: String?,
-    val skillEnName: String?,
+    val zhName: String?,
+    val enName: String?,
 )

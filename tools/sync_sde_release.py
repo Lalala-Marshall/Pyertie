@@ -8,7 +8,7 @@ release ``body`` JSON, or tag) to app ``assets/latest.txt``. No SQLite file diff
 no comparing two DBs to decide whether to download.
 
 **Phase B (after a real update):** Unzip upstream DB, then run
-``normalize_sqlite_boolean_to_integer`` on ``item_db_zh.sqlite`` (declared
+``normalize_sqlite_boolean_to_integer`` on ``item_db_zh.sqlite`` and ``item_db_en.sqlite`` (declared
 **BOOLEAN** column types -> **INTEGER** for Room affinity). **``--source``** is
 always the file from ``sde.zip``; output is a copy with rewritten DDL only where
 needed. Then replace debug assets (same filenames; no ``.bak.*``).
@@ -51,7 +51,8 @@ ASSET_METADATA = "metadata.json"
 APP_DEBUG_ASSETS_DIR = REPO_ROOT / "app" / "src" / "debug" / "assets"
 APP_DEBUG_DB_DIR = APP_DEBUG_ASSETS_DIR / "db"
 APP_DEBUG_ICONS_DIR = APP_DEBUG_ASSETS_DIR / "icons"
-APP_DB = APP_DEBUG_DB_DIR / "item_db_zh.sqlite"
+APP_DB_ZH = APP_DEBUG_DB_DIR / "item_db_zh.sqlite"
+APP_DB_EN = APP_DEBUG_DB_DIR / "item_db_en.sqlite"
 # Bundled release metadata for future sync compares (JSON, same schema as upstream latest.txt / latest.log).
 APP_LATEST = APP_DEBUG_ASSETS_DIR / "latest.txt"
 # Older syncs wrote metadata next to the DB; still read for version compare until replaced.
@@ -59,26 +60,33 @@ LEGACY_APP_LATEST = APP_DEBUG_DB_DIR / "latest.txt"
 APP_ICONS_ZIP = APP_DEBUG_ICONS_DIR / "icons.zip"
 
 
-def find_remote_db_and_meta(eve: Path) -> tuple[Path, Path]:
-    """Paths to item_db_zh.sqlite and build metadata after *sde.zip* is extracted into *eve*."""
-    nested_db = eve / "sde" / "db" / "item_db_zh.sqlite"
-    flat_db = eve / "db" / "item_db_zh.sqlite"
-    if nested_db.is_file():
-        meta_root = eve / "sde"
-        db_path = nested_db
-    elif flat_db.is_file():
-        meta_root = eve
-        db_path = flat_db
-    else:
-        names = sorted(p.name for p in eve.iterdir()) if eve.is_dir() else []
-        raise SystemExit(
-            "Missing item_db_zh.sqlite after unzip. "
-            f"Tried {nested_db} and {flat_db}. Top-level in {eve!r}: {names!r}"
-        )
+def _resolve_sde_db_root(eve: Path) -> Path:
+    nested = eve / "sde" / "db"
+    flat = eve / "db"
+    if (nested / "item_db_zh.sqlite").is_file():
+        return nested
+    if (flat / "item_db_zh.sqlite").is_file():
+        return flat
+    names = sorted(p.name for p in eve.iterdir()) if eve.is_dir() else []
+    raise SystemExit(
+        "Missing item_db_zh.sqlite after unzip. "
+        f"Tried {nested / 'item_db_zh.sqlite'} and {flat / 'item_db_zh.sqlite'}. "
+        f"Top-level in {eve!r}: {names!r}"
+    )
+
+
+def find_remote_dbs_and_meta(eve: Path) -> tuple[Path, Path, Path]:
+    """Paths to zh/en SQLite and build metadata after *sde.zip* is extracted into *eve*."""
+    db_root = _resolve_sde_db_root(eve)
+    zh_db = db_root / "item_db_zh.sqlite"
+    en_db = db_root / "item_db_en.sqlite"
+    if not en_db.is_file():
+        raise SystemExit(f"Missing item_db_en.sqlite under {db_root} after unzip.")
+    meta_root = db_root.parent
     for name in ("latest.txt", "latest.log"):
         p = meta_root / name
         if p.is_file():
-            return db_path, p
+            return zh_db, en_db, p
     raise SystemExit(f"No latest.txt or latest.log under {meta_root} after unzip.")
 
 
@@ -480,6 +488,26 @@ def replace_asset(src: Path, dest: Path) -> None:
     shutil.copy2(src, dest)
 
 
+def normalize_and_replace_db(remote_db: Path, app_db: Path) -> int:
+    """Normalize upstream SQLite for Room and copy into app debug assets."""
+    normalized = remote_db.with_name(f"{remote_db.stem}.normalized.sqlite")
+    cmd = [
+        sys.executable,
+        str(NORMALIZE_SCRIPT),
+        "--source",
+        str(remote_db),
+        "--output",
+        str(normalized),
+    ]
+    print("Running:", " ".join(cmd))
+    r = subprocess.run(cmd, cwd=str(REPO_ROOT))
+    if r.returncode != 0:
+        return r.returncode
+    replace_asset(normalized, app_db)
+    print(f"[+] Replaced {app_db}")
+    return 0
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument(
@@ -568,6 +596,7 @@ def main() -> int:
     if args.dry_run:
         print("[dry-run] Would wipe (if update):", eve)
         print("[dry-run] Would download:", ASSET_SDE, "and icons zip (only if update)")
+        print("[dry-run] Would normalize + copy:", APP_DB_ZH.name, "and", APP_DB_EN.name)
         print("[dry-run] remote (compare):", remote_cmp)
         print("[dry-run] app (bundled):  ", app_meta)
         print("[dry-run] would_update:   ", args.force or remote_is_newer(remote_cmp, app_meta))
@@ -594,7 +623,7 @@ def main() -> int:
     with zipfile.ZipFile(sde_zip) as zf:
         zf.extractall(eve)
 
-    remote_db, remote_latest = find_remote_db_and_meta(eve)
+    remote_zh_db, remote_en_db, remote_latest = find_remote_dbs_and_meta(eve)
 
     remote_meta = load_latest(remote_latest)
     if not remote_meta:
@@ -602,22 +631,13 @@ def main() -> int:
 
     print("[+] Newer SDE detected; normalizing BOOLEAN -> INTEGER for Room ...")
     APP_DEBUG_DB_DIR.mkdir(parents=True, exist_ok=True)
-    normalized = remote_db.with_name("item_db_zh.normalized.sqlite")
-    cmd = [
-        sys.executable,
-        str(NORMALIZE_SCRIPT),
-        "--source",
-        str(remote_db),
-        "--output",
-        str(normalized),
-    ]
-    print("Running:", " ".join(cmd))
-    r = subprocess.run(cmd, cwd=str(REPO_ROOT))
-    if r.returncode != 0:
-        return r.returncode
-
-    replace_asset(normalized, APP_DB)
-    print(f"[+] Replaced {APP_DB}")
+    for remote_db, app_db in (
+        (remote_zh_db, APP_DB_ZH),
+        (remote_en_db, APP_DB_EN),
+    ):
+        r = normalize_and_replace_db(remote_db, app_db)
+        if r != 0:
+            return r
 
     APP_DEBUG_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
     if LEGACY_APP_LATEST.is_file():

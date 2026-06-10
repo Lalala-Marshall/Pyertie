@@ -4,6 +4,6 @@ import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 val databaseHierarchyModule = module {
-    single { DatabaseRepository(get()) }
-    viewModel { DatabaseViewModel(get()) }
+    single { DatabaseRepository(get(), get()) }
+    viewModel { DatabaseViewModel(get(), get()) }
 }

@@ -36,6 +36,8 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.data.icons.IconManager
+import com.marshall.pyerite.localization.LocaleController
+import com.marshall.pyerite.localization.displayName
 import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseLevel
 import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.CategoryEntity
@@ -115,6 +117,7 @@ fun DatabaseHierarchyPage(
     navController: NavController,
     backStackEntry: NavBackStackEntry,
     iconManager: IconManager = koinInject(),
+    localeController: LocaleController = koinInject(),
 ) {
     val databaseBackStackEntry = remember(backStackEntry) {
         navController.getBackStackEntry(DatabaseRoute.Root.route)
@@ -149,6 +152,7 @@ fun DatabaseHierarchyPage(
     val publishedTitle = stringResource(R.string.published)
     val unpublishedTitle = stringResource(R.string.unpublished)
 
+    val contentLanguage = localeController.contentLanguage
     val entries = remember(
         level,
         categories,
@@ -157,8 +161,10 @@ fun DatabaseHierarchyPage(
         metaGroups,
         publishedTitle,
         unpublishedTitle,
+        contentLanguage,
         iconManager,
         navController,
+        localeController,
     ) {
         buildHierarchyEntries(
             level = level,
@@ -170,6 +176,7 @@ fun DatabaseHierarchyPage(
             unpublishedTitle = unpublishedTitle,
             iconManager = iconManager,
             navController = navController,
+            localeController = localeController,
         )
     }
 
@@ -328,6 +335,7 @@ private fun buildHierarchyEntries(
     unpublishedTitle: String,
     iconManager: IconManager,
     navController: NavController,
+    localeController: LocaleController,
 ): List<HierarchyListEntry> = buildList {
     add(HierarchyListEntry.Title)
 
@@ -338,10 +346,10 @@ private fun buildHierarchyEntries(
                 publishedTitle = publishedTitle,
                 unpublishedTitle = unpublishedTitle,
                 published = categories.filter { it.published == true }.map {
-                    HierarchyRowKey.Category(it.id) to createCategoryModel(it, iconManager, navController)
+                    HierarchyRowKey.Category(it.id) to createCategoryModel(it, iconManager, navController, localeController)
                 },
                 unpublished = categories.filter { it.published != true }.map {
-                    HierarchyRowKey.Category(it.id) to createCategoryModel(it, iconManager, navController)
+                    HierarchyRowKey.Category(it.id) to createCategoryModel(it, iconManager, navController, localeController)
                 },
             )
         }
@@ -352,10 +360,10 @@ private fun buildHierarchyEntries(
                 publishedTitle = publishedTitle,
                 unpublishedTitle = unpublishedTitle,
                 published = groups.filter { it.published == true }.map {
-                    HierarchyRowKey.Group(it.id) to createGroupModel(it, iconManager, navController)
+                    HierarchyRowKey.Group(it.id) to createGroupModel(it, iconManager, navController, localeController)
                 },
                 unpublished = groups.filter { it.published != true }.map {
-                    HierarchyRowKey.Group(it.id) to createGroupModel(it, iconManager, navController)
+                    HierarchyRowKey.Group(it.id) to createGroupModel(it, iconManager, navController, localeController)
                 },
             )
         }
@@ -380,14 +388,14 @@ private fun buildHierarchyEntries(
                         title = metaName,
                         addTopGap = addTopGap,
                         rows = itemsInMeta.map {
-                            HierarchyRowKey.Type(it.id) to createTypeModel(it, iconManager, navController)
+                            HierarchyRowKey.Type(it.id) to createTypeModel(it, iconManager, navController, localeController)
                         },
                     )
                 }
             }
 
             val unpublished = types.filter { it.published != true }.map {
-                HierarchyRowKey.Type(it.id) to createTypeModel(it, iconManager, navController)
+                HierarchyRowKey.Type(it.id) to createTypeModel(it, iconManager, navController, localeController)
             }
             appendSection(
                 builder = this,
@@ -461,12 +469,13 @@ private fun createCategoryModel(
     category: CategoryEntity,
     iconManager: IconManager,
     navController: NavController,
+    localeController: LocaleController,
 ) = BaseLazyColumnItemModel(
     iconFile = iconManager.getIconFile(category.iconFilename),
-    itemName = category.zhName ?: category.name.orEmpty(),
+    itemName = category.displayName(localeController),
     onClick = {
         navController.navigate(
-            DatabaseRoute.Group.create(category.id, category.zhName ?: category.name.orEmpty()),
+            DatabaseRoute.Group.create(category.id, category.displayName(localeController)),
         )
     },
 )
@@ -475,12 +484,13 @@ private fun createGroupModel(
     group: GroupEntity,
     iconManager: IconManager,
     navController: NavController,
+    localeController: LocaleController,
 ) = BaseLazyColumnItemModel(
     iconFile = iconManager.getIconFile(group.iconFilename),
-    itemName = group.zhName ?: group.name.orEmpty(),
+    itemName = group.displayName(localeController),
     onClick = {
         navController.navigate(
-            DatabaseRoute.Type.create(group.id, group.zhName ?: group.name.orEmpty()),
+            DatabaseRoute.Type.create(group.id, group.displayName(localeController)),
         )
     },
 )
@@ -489,9 +499,10 @@ private fun createTypeModel(
     type: TypeEntity,
     iconManager: IconManager,
     navController: NavController,
+    localeController: LocaleController,
 ) = BaseLazyColumnItemModel(
     iconFile = iconManager.getIconFile(type.iconFilename),
-    itemName = type.zhName ?: type.name.orEmpty(),
+    itemName = type.displayName(localeController),
     onClick = {
         navController.navigate(DatabaseRoute.TypeDetail.create(type.id))
     },

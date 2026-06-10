@@ -29,6 +29,8 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeCompatibleGr
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeSkillMiscRow
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
 import com.marshall.pyerite.data.icons.IconManager
+import com.marshall.pyerite.localization.LocaleController
+import com.marshall.pyerite.localization.displayName
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
 import com.marshall.pyerite.ui.golbalComponents.BaseDetailRow
 import com.marshall.pyerite.ui.golbalComponents.BaseDetailRowModel
@@ -70,6 +72,7 @@ fun TypeDetailMiscSection(
     compatibleGroups: List<TypeCompatibleGroupDetail> = emptyList(),
     skillMiscRows: List<TypeSkillMiscRow> = emptyList(),
     viewModel: DatabaseViewModel = koinViewModel(),
+    localeController: LocaleController = koinInject(),
 ) {
     val fuelTypeId = remember(attributes) {
         attributes.find { it.name == JUMP_DRIVE_CONSUMPTION_TYPE }?.value?.toInt()
@@ -77,7 +80,7 @@ fun TypeDetailMiscSection(
     val fuelType by remember(fuelTypeId) {
         if (fuelTypeId != null) viewModel.typeDetail(fuelTypeId) else flowOf(null)
     }.collectAsState(initial = null)
-    val fuelTypeName = fuelType?.zhName ?: fuelType?.enName ?: fuelType?.name
+    val fuelTypeName = fuelType?.displayName(localeController)?.takeIf { it.isNotBlank() }
 
     val rows = remember(attributes) {
         val byName = attributes
@@ -112,6 +115,7 @@ fun TypeDetailMiscSection(
                 TypeDetailMiscCompatibleGroupRow(
                     group = group,
                     showDivider = showDivider,
+                    localeController = localeController,
                 )
             }
 
@@ -135,12 +139,14 @@ fun TypeDetailMiscSection(
 private fun TypeDetailMiscCompatibleGroupRow(
     group: TypeCompatibleGroupDetail,
     showDivider: Boolean,
+    localeController: LocaleController,
     iconManager: IconManager = koinInject(),
 ) {
     val label = group.attributeDisplayName?.takeIf { it.isNotBlank() }
         ?: stringResource(R.string.type_detail_compatible_with)
-    val groupDisplayName = group.groupZhName ?: group.groupEnName ?: group.groupName
-        ?: stringResource(R.string.unknown_group)
+    val groupDisplayName = group.displayName(localeController).ifBlank {
+        stringResource(R.string.unknown_group)
+    }
     val iconFileName = group.groupIconFilename?.takeIf { fileName ->
         iconManager.getIconFile(fileName) != null
     } ?: group.attributeIconFilename?.takeIf { fileName ->

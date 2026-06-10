@@ -1,19 +1,23 @@
 package com.marshall.pyerite.data.db
 
 import android.content.Context
+import com.marshall.pyerite.localization.SdeDatabase
 import java.io.FileOutputStream
 
 object DatabaseInitializer {
 
-    private const val DB_NAME = "item_db_zh.sqlite"
-
     fun init(context: Context) {
-        val dbFile = context.getDatabasePath(DB_NAME)
+        ensureDatabase(context, SdeDatabase.ZH_FILE_NAME)
+        ensureDatabase(context, SdeDatabase.EN_FILE_NAME)
+    }
+
+    private fun ensureDatabase(context: Context, dbName: String) {
+        val dbFile = context.getDatabasePath(dbName)
         if (dbFile.exists()) return
 
         dbFile.parentFile?.mkdirs()
 
-        context.assets.open("db/$DB_NAME").use { input ->
+        context.assets.open("db/$dbName").use { input ->
             FileOutputStream(dbFile).use { output ->
                 input.copyTo(output)
             }

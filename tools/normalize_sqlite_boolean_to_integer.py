@@ -7,8 +7,8 @@ This tool detects BOOLEAN via PRAGMA table_info, rebuilds only those tables usin
 CREATE TABLE derived from sqlite_master (with BOOLEAN replaced by INTEGER), copies
 rows, then re-applies non-auto indexes from the pre-rebuild catalog.
 
-Does not copy into Android assets; sync_sde_release.py passes --output next to the
-extracted upstream DB.
+Does not copy into Android assets; sync_sde_release.py normalizes both
+item_db_zh.sqlite and item_db_en.sqlite from the extracted upstream bundle.
 """
 
 from __future__ import annotations

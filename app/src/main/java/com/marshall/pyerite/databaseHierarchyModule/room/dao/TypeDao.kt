@@ -343,6 +343,7 @@ interface TypeDao {
         SELECT DISTINCT
             typeId,
             zhName,
+            enName,
             name,
             iconFilename,
             categoryId,
@@ -351,6 +352,7 @@ interface TypeDao {
             SELECT
                 t.type_id AS typeId,
                 t.zh_name AS zhName,
+                t.en_name AS enName,
                 t.name AS name,
                 t.icon_filename AS iconFilename,
                 t.categoryID AS categoryId,
@@ -364,7 +366,7 @@ interface TypeDao {
               AND CAST(ta_l.value AS INTEGER) = :level
               AND t.published = 1
             UNION
-            SELECT t.type_id, t.zh_name, t.name, t.icon_filename, t.categoryID, t.category_name
+            SELECT t.type_id, t.zh_name, t.en_name, t.name, t.icon_filename, t.categoryID, t.category_name
             FROM types t
             INNER JOIN typeAttributes ta_s ON ta_s.type_id = t.type_id
             INNER JOIN dogmaAttributes da_s ON ta_s.attribute_id = da_s.attribute_id AND da_s.name = 'requiredSkill2'
@@ -374,7 +376,7 @@ interface TypeDao {
               AND CAST(ta_l.value AS INTEGER) = :level
               AND t.published = 1
             UNION
-            SELECT t.type_id, t.zh_name, t.name, t.icon_filename, t.categoryID, t.category_name
+            SELECT t.type_id, t.zh_name, t.en_name, t.name, t.icon_filename, t.categoryID, t.category_name
             FROM types t
             INNER JOIN typeAttributes ta_s ON ta_s.type_id = t.type_id
             INNER JOIN dogmaAttributes da_s ON ta_s.attribute_id = da_s.attribute_id AND da_s.name = 'requiredSkill3'
@@ -384,7 +386,7 @@ interface TypeDao {
               AND CAST(ta_l.value AS INTEGER) = :level
               AND t.published = 1
             UNION
-            SELECT t.type_id, t.zh_name, t.name, t.icon_filename, t.categoryID, t.category_name
+            SELECT t.type_id, t.zh_name, t.en_name, t.name, t.icon_filename, t.categoryID, t.category_name
             FROM types t
             INNER JOIN typeAttributes ta_s ON ta_s.type_id = t.type_id
             INNER JOIN dogmaAttributes da_s ON ta_s.attribute_id = da_s.attribute_id AND da_s.name = 'requiredSkill4'
@@ -394,7 +396,7 @@ interface TypeDao {
               AND CAST(ta_l.value AS INTEGER) = :level
               AND t.published = 1
             UNION
-            SELECT t.type_id, t.zh_name, t.name, t.icon_filename, t.categoryID, t.category_name
+            SELECT t.type_id, t.zh_name, t.en_name, t.name, t.icon_filename, t.categoryID, t.category_name
             FROM types t
             INNER JOIN typeAttributes ta_s ON ta_s.type_id = t.type_id
             INNER JOIN dogmaAttributes da_s ON ta_s.attribute_id = da_s.attribute_id AND da_s.name = 'requiredSkill5'
@@ -404,7 +406,7 @@ interface TypeDao {
               AND CAST(ta_l.value AS INTEGER) = :level
               AND t.published = 1
             UNION
-            SELECT t.type_id, t.zh_name, t.name, t.icon_filename, t.categoryID, t.category_name
+            SELECT t.type_id, t.zh_name, t.en_name, t.name, t.icon_filename, t.categoryID, t.category_name
             FROM types t
             INNER JOIN typeAttributes ta_s ON ta_s.type_id = t.type_id
             INNER JOIN dogmaAttributes da_s ON ta_s.attribute_id = da_s.attribute_id AND da_s.name = 'requiredSkill6'
