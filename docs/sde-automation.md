@@ -12,6 +12,7 @@
 
 1. **推送本仓库到 GitHub**（若尚未推送 workflow 与脚本变更）。
 2. 打开 **Actions → Sync SDE → Run workflow**，手动跑一次。
+   - 若 bundled 已是最新，也会从 `app/src/main/assets/` **发布 GitHub Release**（首次必需）
    - 检测 `EstamelGG/EveSDE_2.0` 是否有新版本
    - 下载、normalize、写入 `app/src/main/assets/`
    - 创建/更新 GitHub Release（`sde-build-<build_number>`）

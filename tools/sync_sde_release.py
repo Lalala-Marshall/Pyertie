@@ -627,6 +627,8 @@ def main() -> int:
     if not args.force and not remote_is_newer(remote_cmp, app_meta):
         print("[=] App bundle is already up to date (vs GitHub metadata). No download, no asset changes.")
         print("    Remote:", version_key(remote_cmp), "App:", version_key(app_meta or {}))
+        if args.publish_release or args.commit_assets:
+            return finalize_from_existing_bundled(app_meta, remote_cmp, args)
         return 0
 
     print("[+] Remote newer than bundled app (or --force); downloading SDE and icons ...")
@@ -672,15 +674,68 @@ def main() -> int:
     print(f"[+] Replaced {APP_ICONS_ZIP}")
 
     publish_meta = build_pyertie_release_meta(merged)
+    return finalize_publish_and_commit(publish_meta, args)
+
+
+def bundled_assets_ready() -> bool:
+    return all(
+        path.is_file()
+        for path in (APP_DB_ZH, APP_DB_EN, APP_ICONS_ZIP, APP_LATEST)
+    )
+
+
+def expected_release_asset_names() -> tuple[str, ...]:
+    return (
+        PYERITE_RELEASE_ASSET_META,
+        PYERITE_RELEASE_ASSET_DB_ZH,
+        PYERITE_RELEASE_ASSET_DB_EN,
+        PYERITE_RELEASE_ASSET_ICONS,
+    )
+
+
+def release_has_all_assets(release: dict) -> bool:
+    names = {
+        a.get("name")
+        for a in (release.get("assets") or [])
+        if isinstance(a, dict)
+    }
+    return all(name in names for name in expected_release_asset_names())
+
+
+def load_or_build_publish_meta(source_meta: dict) -> dict:
+    if APP_LATEST_JSON.is_file():
+        cached = load_latest(APP_LATEST_JSON)
+        if cached and str(cached.get("build_number")) == str(source_meta.get("build_number")):
+            return cached
+    return build_pyertie_release_meta(source_meta)
+
+
+def finalize_publish_and_commit(publish_meta: dict, args: argparse.Namespace) -> int:
     APP_LATEST_JSON.write_text(json.dumps(publish_meta, indent=2) + "\n", encoding="utf-8")
     print(f"[+] Wrote {APP_LATEST_JSON}")
-
     if args.publish_release:
         publish_pyertie_github_release(publish_meta)
     if args.commit_assets:
-        commit_bundled_assets(str(merged.get("build_number", "?")))
-
+        commit_bundled_assets(str(publish_meta.get("build_number", "?")))
     return 0
+
+
+def finalize_from_existing_bundled(
+    app_meta: dict | None,
+    remote_cmp: dict,
+    args: argparse.Namespace,
+) -> int:
+    if not bundled_assets_ready():
+        print(
+            "[!] Bundled assets are incomplete under app/src/main/assets; "
+            "cannot publish GitHub Release.",
+            file=sys.stderr,
+        )
+        return 1
+    source_meta = app_meta or remote_cmp
+    publish_meta = load_or_build_publish_meta(source_meta)
+    print("[+] Bundled assets are current; publishing GitHub Release from existing files ...")
+    return finalize_publish_and_commit(publish_meta, args)
 
 
 def pyertie_repo_slug() -> str:
@@ -763,13 +818,20 @@ def _github_upload_release_asset(upload_url_template: str, file_path: Path, toke
         headers={
             "User-Agent": USER_AGENT,
             "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
             "Content-Type": "application/octet-stream",
             "Content-Length": str(len(body)),
         },
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=1800) as resp:
-        resp.read()
+    try:
+        with urllib.request.urlopen(req, timeout=1800) as resp:
+            resp.read()
+    except urllib.error.HTTPError as e:
+        err_body = e.read().decode("utf-8", errors="replace")
+        raise SystemExit(
+            f"Upload failed for {file_path.name}: HTTP {e.code}: {err_body}"
+        ) from e
 
 
 def publish_pyertie_github_release(publish_meta: dict) -> None:
@@ -798,6 +860,17 @@ def publish_pyertie_github_release(publish_meta: dict) -> None:
         print(f"[+] Created GitHub release {tag}")
     else:
         print(f"[=] GitHub release {tag} already exists; refreshing assets")
+
+    release_id = release.get("id")
+    if release_id:
+        refreshed = _github_get_json(f"{api}/releases/{release_id}", token)
+        if isinstance(refreshed, dict):
+            release = refreshed
+
+    if release_has_all_assets(release) and not os.environ.get("SDE_FORCE_REPUBLISH"):
+        print(f"[=] GitHub release {tag} already has all assets; skipping upload")
+        print("    Set SDE_FORCE_REPUBLISH=1 to replace assets anyway.")
+        return
 
     upload_url = str(release.get("upload_url") or "")
     if not upload_url:
