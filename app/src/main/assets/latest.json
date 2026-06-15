@@ -31,5 +31,13 @@
       "file": "sde_db_ru.zip",
       "sha256": "8462bd17edf5762decab3ff2919c73c9c4fc112d8743ff63aec7b686634120ba"
     }
+  },
+  "tag_name": "sde-build-3393779",
+  "assets_base_url": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3393779/",
+  "assets": {
+    "latest.json": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3393779/latest.json",
+    "item_db_zh.sqlite": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3393779/item_db_zh.sqlite",
+    "item_db_en.sqlite": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3393779/item_db_en.sqlite",
+    "icons.zip": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3393779/icons.zip"
   }
 }
