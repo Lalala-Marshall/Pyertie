@@ -17,6 +17,13 @@ class RoomProvider(
     private var cachedDatabase: AppDatabase? = null
 
     @Synchronized
+    fun closeAndInvalidate() {
+        cachedDatabase?.close()
+        cachedDatabase = null
+        cachedDbName = null
+    }
+
+    @Synchronized
     fun getDatabase(): AppDatabase {
         val dbName = resolveDatabaseFileName()
         val existing = cachedDatabase

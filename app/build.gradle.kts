@@ -74,6 +74,10 @@ dependencies {
     // Koin
     implementation(libs.koin.android)
     implementation(libs.koin.compose)
+
+    // Retrofit2 + OkHttp
+    implementation(libs.retrofit2)
+    implementation(libs.okhttp)
 }
 
 ksp {

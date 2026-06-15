@@ -109,4 +109,13 @@
     <string name="duration_part_hours">%1$d时</string>
     <string name="duration_part_minutes">%1$d分</string>
     <string name="duration_part_seconds">%1$d秒</string>
+
+    <string name="sde_update_download">下载数据库更新</string>
+    <string name="sde_update_downloading_title">正在下载数据库</string>
+    <string name="sde_update_downloading">下载进度 %1$d%%</string>
+    <string name="sde_update_complete">更新完成</string>
+    <string name="sde_update_complete_message">数据库已更新，无需重启应用。</string>
+    <string name="sde_update_failed_title">更新失败</string>
+    <string name="sde_update_error">更新失败：%1$s</string>
+    <string name="sde_update_ok">确定</string>
 </resources>

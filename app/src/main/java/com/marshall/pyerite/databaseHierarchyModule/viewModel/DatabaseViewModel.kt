@@ -27,19 +27,30 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillLevelSpRow
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillUnlockTypeRow
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeSkillMiscRow
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeTraitDetail
+import com.marshall.pyerite.data.sde.SdeUpdateRepository
 import com.marshall.pyerite.localization.ContentLanguage
 import com.marshall.pyerite.localization.LocaleController
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class DatabaseViewModel(
     private val repository: DatabaseRepository,
     private val localeController: LocaleController,
+    private val sdeUpdateRepository: SdeUpdateRepository,
 ) : ViewModel() {
 
     private var contentLanguage: ContentLanguage = localeController.contentLanguage
+
+    init {
+        viewModelScope.launch {
+            sdeUpdateRepository.contentRefreshed.collect {
+                clearCachedFlows()
+            }
+        }
+    }
 
     private var categoriesFlow: StateFlow<List<CategoryEntity>>? = null
 

@@ -42,8 +42,16 @@ data class SdeReleaseMeta(
             sdeSha256 = json.optString("sde_sha256").ifBlank { null },
         )
 
-        fun fromAssets(context: Context): SdeReleaseMeta? = try {
-            context.assets.open(ASSET_LATEST).bufferedReader().use { reader ->
+        fun fromAssets(context: Context): SdeReleaseMeta? {
+            for (assetName in listOf(ASSET_LATEST, "latest.json")) {
+                val meta = readFromAsset(context, assetName) ?: continue
+                return meta
+            }
+            return null
+        }
+
+        private fun readFromAsset(context: Context, assetName: String): SdeReleaseMeta? = try {
+            context.assets.open(assetName).bufferedReader().use { reader ->
                 fromJsonObject(JSONObject(reader.readText()))
             }
         } catch (_: Exception) {

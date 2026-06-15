@@ -5,5 +5,5 @@ import org.koin.dsl.module
 
 val databaseHierarchyModule = module {
     single { DatabaseRepository(get(), get()) }
-    viewModel { DatabaseViewModel(get(), get()) }
+    viewModel { DatabaseViewModel(get(), get(), get()) }
 }

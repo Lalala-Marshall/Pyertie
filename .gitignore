@@ -18,3 +18,4 @@ local.properties
 
 # AI
 /.cursor/*
+/.eve_sde_cache/

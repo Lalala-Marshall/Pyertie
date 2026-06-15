@@ -13,7 +13,9 @@ no comparing two DBs to decide whether to download.
 always the file from ``sde.zip``; output is a copy with rewritten DDL only where
 needed. Then replace debug assets (same filenames; no ``.bak.*``).
 
-Cloud upload: not implemented (placeholder message).
+Cloud upload: ``--publish-release`` creates/updates a GitHub Release on this repo
+with ``latest.json``, both SQLite DBs, and ``icons.zip``. ``--commit-assets`` commits
+``app/src/main/assets`` (CI).
 
 Requires: public GitHub for downloads. Use --yes to allow wiping eve_sde root.
 """
@@ -38,7 +40,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 NORMALIZE_SCRIPT = REPO_ROOT / "tools" / "normalize_sqlite_boolean_to_integer.py"
 
-DEFAULT_EVE_SDE_ROOT = Path(r"D:\Coding\sde")
+DEFAULT_EVE_SDE_ROOT = Path(os.environ.get("EVE_SDE_ROOT", str(REPO_ROOT / ".eve_sde_cache")))
 GITHUB_API_LATEST = "https://api.github.com/repos/EstamelGG/EveSDE_2.0/releases/latest"
 GITHUB_HTML_LATEST = "https://github.com/EstamelGG/EveSDE_2.0/releases/latest"
 USER_AGENT = "Pyertie-SDE-Sync/1.0 (github.com/EstamelGG/EveSDE_2.0 consumer)"
@@ -48,16 +50,22 @@ ASSET_ICONS_PRIMARY = "icons.zip"
 ASSET_ICONS_ALT = "icon.zip"
 ASSET_METADATA = "metadata.json"
 
-APP_DEBUG_ASSETS_DIR = REPO_ROOT / "app" / "src" / "debug" / "assets"
-APP_DEBUG_DB_DIR = APP_DEBUG_ASSETS_DIR / "db"
-APP_DEBUG_ICONS_DIR = APP_DEBUG_ASSETS_DIR / "icons"
-APP_DB_ZH = APP_DEBUG_DB_DIR / "item_db_zh.sqlite"
-APP_DB_EN = APP_DEBUG_DB_DIR / "item_db_en.sqlite"
-# Bundled release metadata for future sync compares (JSON, same schema as upstream latest.txt / latest.log).
-APP_LATEST = APP_DEBUG_ASSETS_DIR / "latest.txt"
+APP_ASSETS_DIR = REPO_ROOT / "app" / "src" / "main" / "assets"
+APP_DB_DIR = APP_ASSETS_DIR / "db"
+APP_ICONS_DIR = APP_ASSETS_DIR / "icons"
+APP_DB_ZH = APP_DB_DIR / "item_db_zh.sqlite"
+APP_DB_EN = APP_DB_DIR / "item_db_en.sqlite"
+# Bundled release metadata for sync compares (JSON, same schema as upstream latest.txt / latest.log).
+APP_LATEST = APP_ASSETS_DIR / "latest.txt"
+APP_LATEST_JSON = APP_ASSETS_DIR / "latest.json"
 # Older syncs wrote metadata next to the DB; still read for version compare until replaced.
-LEGACY_APP_LATEST = APP_DEBUG_DB_DIR / "latest.txt"
-APP_ICONS_ZIP = APP_DEBUG_ICONS_DIR / "icons.zip"
+LEGACY_APP_LATEST = APP_DB_DIR / "latest.txt"
+APP_ICONS_ZIP = APP_ICONS_DIR / "icons.zip"
+
+PYERITE_RELEASE_ASSET_DB_ZH = "item_db_zh.sqlite"
+PYERITE_RELEASE_ASSET_DB_EN = "item_db_en.sqlite"
+PYERITE_RELEASE_ASSET_ICONS = "icons.zip"
+PYERITE_RELEASE_ASSET_META = "latest.json"
 
 
 def _resolve_sde_db_root(eve: Path) -> Path:
@@ -476,8 +484,12 @@ def remote_is_newer(remote: dict, local: dict | None) -> bool:
 
 
 def load_app_release_meta() -> dict | None:
-    """Release JSON shipped with the app (assets/latest.txt, or legacy db/latest.txt)."""
-    return load_latest(APP_LATEST) or load_latest(LEGACY_APP_LATEST)
+    """Release JSON shipped with the app (assets/latest.txt, latest.json, or legacy paths)."""
+    return (
+        load_latest(APP_LATEST)
+        or load_latest(APP_LATEST_JSON)
+        or load_latest(LEGACY_APP_LATEST)
+    )
 
 
 def replace_asset(src: Path, dest: Path) -> None:
@@ -530,6 +542,16 @@ def main() -> int:
         "--dry-run",
         action="store_true",
         help="Fetch release + compare metadata only (metadata.json / release body vs app); no wipe or large downloads",
+    )
+    p.add_argument(
+        "--publish-release",
+        action="store_true",
+        help="After updating bundled assets, create/update a Pyertie GitHub Release with DB/icons/latest.json",
+    )
+    p.add_argument(
+        "--commit-assets",
+        action="store_true",
+        help="Commit app/src/main/assets to git and push (CI; requires GITHUB_TOKEN)",
     )
     args = p.parse_args()
 
@@ -605,7 +627,6 @@ def main() -> int:
     if not args.force and not remote_is_newer(remote_cmp, app_meta):
         print("[=] App bundle is already up to date (vs GitHub metadata). No download, no asset changes.")
         print("    Remote:", version_key(remote_cmp), "App:", version_key(app_meta or {}))
-        print("[i] Cloud upload skipped (not configured).")
         return 0
 
     print("[+] Remote newer than bundled app (or --force); downloading SDE and icons ...")
@@ -630,7 +651,7 @@ def main() -> int:
         raise SystemExit(f"Empty or invalid: {remote_latest}")
 
     print("[+] Newer SDE detected; normalizing BOOLEAN -> INTEGER for Room ...")
-    APP_DEBUG_DB_DIR.mkdir(parents=True, exist_ok=True)
+    APP_DB_DIR.mkdir(parents=True, exist_ok=True)
     for remote_db, app_db in (
         (remote_zh_db, APP_DB_ZH),
         (remote_en_db, APP_DB_EN),
@@ -639,18 +660,205 @@ def main() -> int:
         if r != 0:
             return r
 
-    APP_DEBUG_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
+    APP_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
     if LEGACY_APP_LATEST.is_file():
         LEGACY_APP_LATEST.unlink()
     merged = merge_meta_for_bundle(remote_cmp, remote_meta)
-    APP_LATEST.write_text(json.dumps(merged, indent=2) + "\n", encoding="utf-8")
+    latest_text = json.dumps(merged, indent=2) + "\n"
+    APP_LATEST.write_text(latest_text, encoding="utf-8")
     print(f"[+] Wrote {APP_LATEST}")
 
     replace_asset(icons_zip, APP_ICONS_ZIP)
     print(f"[+] Replaced {APP_ICONS_ZIP}")
 
-    print("[i] Cloud upload skipped (not configured).")
+    publish_meta = build_pyertie_release_meta(merged)
+    APP_LATEST_JSON.write_text(json.dumps(publish_meta, indent=2) + "\n", encoding="utf-8")
+    print(f"[+] Wrote {APP_LATEST_JSON}")
+
+    if args.publish_release:
+        publish_pyertie_github_release(publish_meta)
+    if args.commit_assets:
+        commit_bundled_assets(str(merged.get("build_number", "?")))
+
     return 0
+
+
+def pyertie_repo_slug() -> str:
+    return os.environ.get("GITHUB_REPOSITORY", "Lalala-Marshall/Pyertie")
+
+
+def pyertie_release_tag(build_number: str) -> str:
+    return f"sde-build-{build_number}"
+
+
+def build_pyertie_release_meta(merged: dict) -> dict:
+    bn = str(merged.get("build_number") or "0")
+    tag = pyertie_release_tag(bn)
+    repo = pyertie_repo_slug()
+    base = f"https://github.com/{repo}/releases/download/{urllib.parse.quote(tag, safe='')}"
+    out = dict(merged)
+    out["tag_name"] = tag
+    out["assets_base_url"] = f"{base}/"
+    out["assets"] = {
+        PYERITE_RELEASE_ASSET_META: f"{base}/{PYERITE_RELEASE_ASSET_META}",
+        PYERITE_RELEASE_ASSET_DB_ZH: f"{base}/{PYERITE_RELEASE_ASSET_DB_ZH}",
+        PYERITE_RELEASE_ASSET_DB_EN: f"{base}/{PYERITE_RELEASE_ASSET_DB_EN}",
+        PYERITE_RELEASE_ASSET_ICONS: f"{base}/{PYERITE_RELEASE_ASSET_ICONS}",
+    }
+    return out
+
+
+def _github_repo_api_base() -> str:
+    return f"https://api.github.com/repos/{pyertie_repo_slug()}"
+
+
+def _require_github_token() -> str:
+    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    if not token:
+        raise SystemExit("GITHUB_TOKEN or GH_TOKEN is required for --publish-release / --commit-assets")
+    return token
+
+
+def _github_post_json(url: str, payload: dict, token: str) -> dict:
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={
+            **_github_auth_headers(),
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=120) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def _github_get_json(url: str, token: str) -> dict | list | None:
+    req = urllib.request.Request(
+        url,
+        headers={
+            **_github_auth_headers(),
+            "Authorization": f"Bearer {token}",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return None
+        raise
+
+
+def _github_upload_release_asset(upload_url_template: str, file_path: Path, token: str) -> None:
+    upload_url = upload_url_template.split("{", 1)[0]
+    name = urllib.parse.quote(file_path.name)
+    url = f"{upload_url}?name={name}"
+    body = file_path.read_bytes()
+    req = urllib.request.Request(
+        url,
+        data=body,
+        headers={
+            "User-Agent": USER_AGENT,
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/octet-stream",
+            "Content-Length": str(len(body)),
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=1800) as resp:
+        resp.read()
+
+
+def publish_pyertie_github_release(publish_meta: dict) -> None:
+    token = _require_github_token()
+    tag = str(publish_meta.get("tag_name") or pyertie_release_tag(str(publish_meta.get("build_number", "0"))))
+    bn = str(publish_meta.get("build_number", "?"))
+    api = _github_repo_api_base()
+
+    release = _github_get_json(f"{api}/releases/tags/{urllib.parse.quote(tag, safe='')}", token)
+    if release is None:
+        body = (
+            f"Processed EVE SDE build **{bn}** for Pyerite (Room-normalized SQLite + icons).\n\n"
+            f"```json\n{json.dumps(publish_meta, indent=2)}\n```"
+        )
+        release = _github_post_json(
+            f"{api}/releases",
+            {
+                "tag_name": tag,
+                "name": f"SDE build {bn}",
+                "body": body,
+                "draft": False,
+                "prerelease": False,
+            },
+            token,
+        )
+        print(f"[+] Created GitHub release {tag}")
+    else:
+        print(f"[=] GitHub release {tag} already exists; refreshing assets")
+
+    upload_url = str(release.get("upload_url") or "")
+    if not upload_url:
+        raise SystemExit("GitHub release response missing upload_url")
+
+    assets = {
+        a.get("name"): a.get("id")
+        for a in (release.get("assets") or [])
+        if isinstance(a, dict)
+    }
+    for name, path in (
+        (PYERITE_RELEASE_ASSET_META, APP_LATEST_JSON),
+        (PYERITE_RELEASE_ASSET_DB_ZH, APP_DB_ZH),
+        (PYERITE_RELEASE_ASSET_DB_EN, APP_DB_EN),
+        (PYERITE_RELEASE_ASSET_ICONS, APP_ICONS_ZIP),
+    ):
+        if not path.is_file():
+            raise SystemExit(f"Missing release asset file: {path}")
+        asset_id = assets.get(name)
+        if asset_id:
+            delete_req = urllib.request.Request(
+                f"{api}/releases/assets/{asset_id}",
+                headers={
+                    "User-Agent": USER_AGENT,
+                    "Authorization": f"Bearer {token}",
+                    "Accept": "application/vnd.github+json",
+                },
+                method="DELETE",
+            )
+            with urllib.request.urlopen(delete_req, timeout=120):
+                pass
+        print(f"[+] Uploading {name} ...")
+        _github_upload_release_asset(upload_url, path, token)
+    print(f"[+] Published assets to GitHub release {tag}")
+
+
+def commit_bundled_assets(build_number: str) -> None:
+    token = _require_github_token()
+    repo = pyertie_repo_slug()
+    branch = os.environ.get("GITHUB_REF_NAME", "main")
+
+    subprocess.run(["git", "config", "user.name", "github-actions[bot]"], cwd=REPO_ROOT, check=True)
+    subprocess.run(
+        ["git", "config", "user.email", "github-actions[bot]@users.noreply.github.com"],
+        cwd=REPO_ROOT,
+        check=True,
+    )
+    subprocess.run(["git", "add", str(APP_ASSETS_DIR)], cwd=REPO_ROOT, check=True)
+    diff = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=REPO_ROOT)
+    if diff.returncode == 0:
+        print("[=] No bundled asset changes to commit")
+        return
+
+    subprocess.run(
+        ["git", "commit", "-m", f"chore(sde): bundle SDE build {build_number}"],
+        cwd=REPO_ROOT,
+        check=True,
+    )
+    remote = f"https://x-access-token:{token}@github.com/{repo}.git"
+    subprocess.run(["git", "push", remote, f"HEAD:{branch}"], cwd=REPO_ROOT, check=True)
+    print(f"[+] Committed and pushed bundled assets to {branch}")
 
 
 if __name__ == "__main__":

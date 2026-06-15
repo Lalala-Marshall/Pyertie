@@ -17,26 +17,34 @@ class IconManager(private val context: Context) {
         initIcons()
     }
 
+    fun reload() {
+        initIcons()
+    }
+
     private fun initIcons() {
         val iconDir = File(context.filesDir, ICONS_DIR_NAME)
         if (!iconDir.exists() || iconDir.list()?.isEmpty() != false) {
             iconDir.mkdirs()
-            context.assets.open(ICONS_ZIP_PATH).use { input ->
-                ZipInputStream(input).use { zip ->
-                    var entry = zip.nextEntry
-                    while (entry != null) {
-                        val outFile = File(iconDir, entry.name)
-                        outFile.parentFile?.mkdirs()
-                        outFile.outputStream().use { output ->
-                            zip.copyTo(output)
-                        }
-                        zip.closeEntry()
-                        entry = zip.nextEntry
+            extractIconsFromAssets(iconDir)
+        }
+        buildIndex(iconDir)
+    }
+
+    private fun extractIconsFromAssets(iconDir: File) {
+        context.assets.open(ICONS_ZIP_PATH).use { input ->
+            ZipInputStream(input).use { zip ->
+                var entry = zip.nextEntry
+                while (entry != null) {
+                    val outFile = File(iconDir, entry.name)
+                    outFile.parentFile?.mkdirs()
+                    outFile.outputStream().use { output ->
+                        zip.copyTo(output)
                     }
+                    zip.closeEntry()
+                    entry = zip.nextEntry
                 }
             }
         }
-        buildIndex(iconDir)
     }
 
     private fun buildIndex(iconDir: File) {
