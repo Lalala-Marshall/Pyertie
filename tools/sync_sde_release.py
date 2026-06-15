@@ -3,19 +3,14 @@
 Download latest EstamelGG/EveSDE_2.0 release (sde.zip + icons.zip), refresh
 D:\\Coding\\sde.
 
-**Phase A (update check only):** Compare remote build metadata (``metadata.json``,
-release ``body`` JSON, or tag) to app ``assets/latest.txt``. No SQLite file diff;
-no comparing two DBs to decide whether to download.
+**Phase A (update check only):** Compare upstream ``EstamelGG/EveSDE_2.0`` release metadata to
+**this repo's latest GitHub Release** (``latest.json`` on Pyertie Releases). Bundled
+``app/src/main/assets/latest.txt`` is only a fallback when no Release exists yet.
+No SQLite file diff; no comparing two DBs to decide whether to download.
 
-**Phase B (after a real update):** Unzip upstream DB, then run
-``normalize_sqlite_boolean_to_integer`` on ``item_db_zh.sqlite`` and ``item_db_en.sqlite`` (declared
-**BOOLEAN** column types -> **INTEGER** for Room affinity). **``--source``** is
-always the file from ``sde.zip``; output is a copy with rewritten DDL only where
-needed. Then replace debug assets (same filenames; no ``.bak.*``).
-
-Cloud upload: ``--publish-release`` creates/updates a GitHub Release on this repo
-with ``latest.json``, both SQLite DBs, and ``icons.zip``. ``--commit-assets`` commits
-``app/src/main/assets`` (CI).
+**Phase B (after a real update):** Unzip upstream DB, normalize for Room, write
+``app/src/main/assets/``, publish/update Pyertie GitHub Release, and ``--commit-assets``
+pushes bundled files so the next app release ships the same SDE build.
 
 Requires: public GitHub for downloads. Use --yes to allow wiping eve_sde root.
 """
@@ -484,12 +479,130 @@ def remote_is_newer(remote: dict, local: dict | None) -> bool:
 
 
 def load_app_release_meta() -> dict | None:
-    """Release JSON shipped with the app (assets/latest.txt, latest.json, or legacy paths)."""
+    """Bundled fallback metadata shipped in the app (``app/src/main/assets``)."""
     return (
         load_latest(APP_LATEST)
         or load_latest(APP_LATEST_JSON)
         or load_latest(LEGACY_APP_LATEST)
     )
+
+
+def fetch_pyertie_github_release() -> dict | None:
+    url = f"{_github_repo_api_base()}/releases/latest"
+    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    try:
+        if token:
+            rel = _github_get_json(url, token)
+            return rel if isinstance(rel, dict) else None
+        return http_json(url)
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return None
+        raise
+
+
+def load_pyertie_release_latest_json() -> dict | None:
+    """Raw ``latest.json`` from this repo's newest GitHub Release asset."""
+    release = fetch_pyertie_github_release()
+    if not release:
+        return None
+    for asset in release.get("assets") or []:
+        if not isinstance(asset, dict):
+            continue
+        if asset.get("name") != PYERITE_RELEASE_ASSET_META:
+            continue
+        url = asset.get("browser_download_url")
+        if url:
+            return try_download_json(url)
+    return None
+
+
+def load_pyertie_github_release_meta() -> dict | None:
+    """Build metadata for the SDE build already published on Pyertie Releases."""
+    raw = load_pyertie_release_latest_json()
+    if raw is not None:
+        return flatten_release_meta(raw)
+    release = fetch_pyertie_github_release()
+    if not release:
+        return None
+    body_meta = metadata_from_release_body(release)
+    if body_meta is not None:
+        return body_meta
+    tag = str(release.get("tag_name") or "")
+    if tag.startswith("sde-build-"):
+        return flatten_release_meta(
+            {"build_number": _tag_build_number(tag)},
+            str(release.get("published_at") or ""),
+        )
+    return None
+
+
+def load_published_release_meta() -> dict | None:
+    """Primary installed version: Pyertie GitHub Release, else bundled assets (first run)."""
+    return load_pyertie_github_release_meta() or load_app_release_meta()
+
+
+def bundled_behind_published(published: dict | None, bundled: dict | None) -> bool:
+    if published is None:
+        return False
+    if bundled is None:
+        return True
+    if version_key(published) > version_key(bundled):
+        return True
+    if version_key(published) < version_key(bundled):
+        return False
+    for key in ("sde_sha256", "icon_sha256"):
+        pv = published.get(key)
+        bv = bundled.get(key)
+        if pv and pv != bv:
+            return True
+    return False
+
+
+def _asset_download_url(latest: dict, filename: str) -> str | None:
+    assets = latest.get("assets")
+    if isinstance(assets, dict):
+        url = assets.get(filename)
+        if url:
+            return str(url)
+    base = str(latest.get("assets_base_url") or "").strip().rstrip("/")
+    if base:
+        return f"{base}/{filename}"
+    return None
+
+
+def refresh_bundled_from_published_release() -> bool:
+    """Copy DB/icons from this repo's GitHub Release into ``app/src/main/assets``."""
+    latest = load_pyertie_release_latest_json()
+    if not latest:
+        print("[!] Could not load latest.json from Pyertie GitHub Release.", file=sys.stderr)
+        return False
+
+    download_dir = Path(tempfile.mkdtemp(prefix="pyertie-release-"))
+    try:
+        pairs = (
+            (PYERITE_RELEASE_ASSET_DB_ZH, APP_DB_ZH),
+            (PYERITE_RELEASE_ASSET_DB_EN, APP_DB_EN),
+            (PYERITE_RELEASE_ASSET_ICONS, APP_ICONS_ZIP),
+        )
+        for asset_name, dest in pairs:
+            url = _asset_download_url(latest, asset_name)
+            if not url:
+                print(f"[!] Missing download URL for {asset_name} in published latest.json", file=sys.stderr)
+                return False
+            tmp = download_dir / asset_name
+            print(f"[+] Downloading published {asset_name} ...")
+            download_file(url, tmp)
+            replace_asset(tmp, dest)
+
+        core = flatten_release_meta(latest)
+        APP_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
+        APP_LATEST.write_text(json.dumps(core, indent=2) + "\n", encoding="utf-8")
+        APP_LATEST_JSON.write_text(json.dumps(latest, indent=2) + "\n", encoding="utf-8")
+        print(f"[+] Refreshed bundled assets from Pyertie Release (build {core.get('build_number')})")
+        return True
+    finally:
+        shutil.rmtree(download_dir, ignore_errors=True)
 
 
 def replace_asset(src: Path, dest: Path) -> None:
@@ -541,7 +654,7 @@ def main() -> int:
     p.add_argument(
         "--dry-run",
         action="store_true",
-        help="Fetch release + compare metadata only (metadata.json / release body vs app); no wipe or large downloads",
+        help="Fetch release + compare metadata (upstream vs Pyertie Release vs bundled assets); no large downloads",
     )
     p.add_argument(
         "--publish-release",
@@ -607,31 +720,60 @@ def main() -> int:
     print(f"[+] Latest release: {tag} ({release_title})")
 
     remote_cmp = remote_meta_for_compare(metadata_url, release, tag)
-    app_meta = load_app_release_meta()
+    published_meta = load_pyertie_github_release_meta()
+    bundled_meta = load_app_release_meta()
     print(
-        "[+] Upstream (compare): "
+        "[+] Upstream (EveSDE): "
         f"build_number={remote_cmp.get('build_number')!r} "
         f"icon_version={remote_cmp.get('icon_version', 'n/a')!r} "
         f"release_date={remote_cmp.get('release_date', '')!r}"
     )
+    if published_meta:
+        print(
+            "[+] Pyertie Release: "
+            f"build_number={published_meta.get('build_number')!r} "
+            f"release_date={published_meta.get('release_date', '')!r}"
+        )
+    else:
+        print("[+] Pyertie Release: (none yet)")
+    if bundled_meta:
+        print(
+            "[+] Bundled assets:  "
+            f"build_number={bundled_meta.get('build_number')!r} "
+            f"release_date={bundled_meta.get('release_date', '')!r}"
+        )
+    else:
+        print("[+] Bundled assets:  (missing)")
 
     if args.dry_run:
         print("[dry-run] Would wipe (if update):", eve)
         print("[dry-run] Would download:", ASSET_SDE, "and icons zip (only if update)")
         print("[dry-run] Would normalize + copy:", APP_DB_ZH.name, "and", APP_DB_EN.name)
-        print("[dry-run] remote (compare):", remote_cmp)
-        print("[dry-run] app (bundled):  ", app_meta)
-        print("[dry-run] would_update:   ", args.force or remote_is_newer(remote_cmp, app_meta))
+        print("[dry-run] upstream (EveSDE):", remote_cmp)
+        print("[dry-run] published (Pyertie Release):", published_meta)
+        print("[dry-run] bundled (assets):", bundled_meta)
+        print(
+            "[dry-run] would_sync_upstream:",
+            args.force or remote_is_newer(remote_cmp, published_meta),
+        )
+        print("[dry-run] would_refresh_bundled:", bundled_behind_published(published_meta, bundled_meta))
         return 0
 
-    if not args.force and not remote_is_newer(remote_cmp, app_meta):
-        print("[=] App bundle is already up to date (vs GitHub metadata). No download, no asset changes.")
-        print("    Remote:", version_key(remote_cmp), "App:", version_key(app_meta or {}))
+    needs_upstream_sync = args.force or remote_is_newer(remote_cmp, published_meta)
+    if not needs_upstream_sync:
+        print("[=] Upstream is not newer than Pyertie GitHub Release. Skipping EveSDE download.")
+        print("    Upstream:", version_key(remote_cmp), "Published:", version_key(published_meta or {}))
+        if bundled_behind_published(published_meta, bundled_meta):
+            print("[+] Bundled assets are behind published Release; refreshing from Pyertie Release ...")
+            if not refresh_bundled_from_published_release():
+                return 1
+            if args.commit_assets and published_meta:
+                commit_bundled_assets(str(published_meta.get("build_number", "?")))
         if args.publish_release or args.commit_assets:
-            return finalize_from_existing_bundled(app_meta, remote_cmp, args)
+            return finalize_from_existing_bundled(published_meta, bundled_meta, remote_cmp, args)
         return 0
 
-    print("[+] Remote newer than bundled app (or --force); downloading SDE and icons ...")
+    print("[+] Upstream newer than Pyertie Release (or --force); downloading SDE and icons ...")
     print(f"[+] Wiping {eve} ...")
     wipe_eve_sde_root(eve)
 
@@ -721,20 +863,24 @@ def finalize_publish_and_commit(publish_meta: dict, args: argparse.Namespace) ->
 
 
 def finalize_from_existing_bundled(
-    app_meta: dict | None,
+    published_meta: dict | None,
+    bundled_meta: dict | None,
     remote_cmp: dict,
     args: argparse.Namespace,
 ) -> int:
     if not bundled_assets_ready():
-        print(
-            "[!] Bundled assets are incomplete under app/src/main/assets; "
-            "cannot publish GitHub Release.",
-            file=sys.stderr,
-        )
-        return 1
-    source_meta = app_meta or remote_cmp
+        if published_meta and refresh_bundled_from_published_release():
+            bundled_meta = load_app_release_meta()
+        if not bundled_assets_ready():
+            print(
+                "[!] Bundled assets are incomplete under app/src/main/assets; "
+                "cannot publish GitHub Release.",
+                file=sys.stderr,
+            )
+            return 1
+    source_meta = published_meta or bundled_meta or remote_cmp
     publish_meta = load_or_build_publish_meta(source_meta)
-    print("[+] Bundled assets are current; publishing GitHub Release from existing files ...")
+    print("[+] Publishing GitHub Release from current bundled assets ...")
     return finalize_publish_and_commit(publish_meta, args)
 
 

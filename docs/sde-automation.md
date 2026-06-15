@@ -8,6 +8,21 @@
 | APK 内置 | `app/src/main/assets/` | 安装/升级后的兜底版本 |
 | GitHub Release | `Lalala-Marshall/Pyertie` Releases | 远端增量更新源 |
 
+## CI 如何判断「有新 build」
+
+比较的是 **两份 GitHub Release 的元数据**，不是 assets：
+
+| 一端 | 来源 |
+|------|------|
+| **上游** | `EstamelGG/EveSDE_2.0` 最新 Release（`metadata.json` / release body / tag） |
+| **已发布** | `Lalala-Marshall/Pyertie` 最新 Release 的 `latest.json` |
+
+上游 `build_number` 更大 → 下载、normalize、发 Pyertie Release、**commit & push `main/assets`**。
+
+若上游未更新，但 **assets 落后于 Pyertie Release** → 从 Release 下载文件刷新 assets 并 commit（保证下次发版 APK 兜底是最新的）。
+
+`app/src/main/assets/` 仅在 **尚无 Pyertie Release** 时作为首次比较的兜底。
+
 ## 一次性设置
 
 1. **推送本仓库到 GitHub**（若尚未推送 workflow 与脚本变更）。
