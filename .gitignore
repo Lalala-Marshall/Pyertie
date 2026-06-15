@@ -1,6 +1,7 @@
 *.iml
 .gradle
 /local.properties
+/.idea
 /.idea/*
 /.idea/caches
 /.idea/libraries
@@ -14,3 +15,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# AI
+/.cursor/*
+/.eve_sde_cache/

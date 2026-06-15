@@ -1,4 +1,121 @@
 <resources>
     <string name="app_name">Pyerite</string>
     <string name="main_page">首页</string>
+
+    <string name="data">数据</string>
+    <string name="database">数据库</string>
+    <string name="group">集合</string>
+    <string name="type">类型</string>
+    <string name="published">已发布</string>
+    <string name="unpublished">未发布</string>
+    <string name="type_info">物品信息</string>
+    <string name="base_info">基础信息</string>
+    <string name="structure">结构</string>
+    <string name="industrial_info">工业属性</string>
+    <string name="volume">体积</string>
+    <string name="repackaged_volume">体积(打包后)</string>
+    <string name="capacity">容量</string>
+    <string name="mass">质量</string>
+    <string name="region_market">星域市场</string>
+    <string name="structure_value">结构值</string>
+    <string name="skill_level">等级 %1$d</string>
+
+    <!-- Dogma Categories -->
+    <string name="category_fitting">装配</string>
+    <string name="category_shield">护盾</string>
+    <string name="category_armor">装甲</string>
+    <string name="category_structure">结构</string>
+    <string name="category_capacitor">电容器</string>
+    <string name="category_targeting">锁定</string>
+    <string name="category_misc">杂项</string>
+    <string name="category_skills">技能需求</string>
+    <string name="category_skill_level_detail">技能等级细节</string>
+    <string name="category_skill_level_applies">技能等级适用于</string>
+    <string name="skill_sp_amount">%1$s SP</string>
+    <string name="skill_sp_level_range">0级 -> %1$d级</string>
+    <string name="category_uncategorized">未分类</string>
+    <string name="category_drones">无人机</string>
+    <string name="category_ai">AI属性</string>
+    <string name="category_navigation">导航</string>
+    <string name="category_loot">战利品</string>
+    <string name="category_remote_support">远程支援</string>
+    <string name="category_fighter_abilities">铁骑舰载机能力</string>
+    <string name="category_ewar">电子战防御</string>
+    <string name="category_bonuses">加成</string>
+    <string name="category_fighter_attributes">铁骑舰载机属性</string>
+    <string name="category_doomsday">末日武器</string>
+    <string name="category_hangars_bays">挂载 &amp; 舱室</string>
+    <string name="category_ship_death">死亡/残骸</string>
+    <string name="category_npc_behavior">NPC行为</string>
+    <string name="category_mining">采矿</string>
+    <string name="category_other">其他</string>
+    <string name="unknown_attribute">未知属性</string>
+
+    <string name="type_detail_role_bonus_header">- 特有加成</string>
+    <string name="type_detail_skill_bonus_header_suffix"> 每级技能加成</string>
+    <string name="type_detail_skill_bonus_unknown_name">技能 #%1$d</string>
+
+    <string name="type_detail_section_market">市场</string>
+    <string name="type_detail_market_buy_column_title">买单</string>
+    <string name="type_detail_market_sell_column_title">卖单</string>
+    <string name="type_detail_market_buy_caption">最低卖价</string>
+    <string name="type_detail_market_sell_caption">最高买价</string>
+    <string name="type_detail_market_placeholder_value">—</string>
+    <string name="type_detail_market_api_hint">市场与订单数据将在接入服务器后显示。</string>
+
+    <string name="ewar_cargo_scan_immune">免疫</string>
+    <string name="ewar_cargo_scan_not_immune">不免疫</string>
+    <string name="type_detail_blueprint">蓝图</string>
+    <string name="type_detail_refining_output">精炼产出</string>
+    <string name="type_detail_refining_output_per_unit">每 %1$d 单位</string>
+    <string name="type_detail_refining_output_count">%1$d 种</string>
+    <string name="type_detail_applicable_to">适用于</string>
+    <string name="type_detail_applicable_to_subtitle">需要此物品的蓝图</string>
+    <string name="type_detail_refining_source">精炼来源</string>
+    <string name="type_detail_refining_quantity">× %1$s</string>
+    <string name="type_detail_refining_per_unit">%1$s/单位</string>
+    <string name="type_detail_industry_type_count">%1$s 种</string>
+    <string name="type_detail_compatible_with">配套使用</string>
+    <string name="unknown_group">未知分组</string>
+    <string name="type_detail_variants_section">变体</string>
+    <string name="type_detail_browse_variants">浏览 %1$d 个变体</string>
+
+    <string name="type_detail_section_manufacturing">制造</string>
+    <string name="type_detail_manufacturing_product">产品</string>
+    <string name="type_detail_manufacturing_product_quantity_name">%1$d × %2$s</string>
+    <string name="type_detail_manufacturing_materials">所需材料</string>
+    <string name="type_detail_manufacturing_skills">所需技能</string>
+    <string name="type_detail_manufacturing_time">制造时间</string>
+
+    <string name="type_detail_section_material_research">材料研究</string>
+    <string name="type_detail_material_research_time">研究时间</string>
+    <string name="type_detail_section_time_research">时间研究</string>
+    <string name="type_detail_time_research_time">研究时间</string>
+    <string name="type_detail_blueprint_research_level_count">%1$d 级</string>
+
+    <string name="type_detail_section_copy">复制</string>
+    <string name="type_detail_copy_time">复制时间</string>
+    <string name="type_detail_copy_max_runs">每次复制的最大流程数</string>
+
+    <string name="type_detail_section_invention">发明</string>
+    <string name="type_detail_invention_success_rate">成功率: %1$s</string>
+    <string name="type_detail_invention_materials">所需材料</string>
+    <string name="type_detail_invention_skills">所需技能</string>
+    <string name="type_detail_invention_time">发明时间</string>
+
+    <string name="duration_part_years">%1$d年</string>
+    <string name="duration_part_months">%1$d月</string>
+    <string name="duration_part_days">%1$d日</string>
+    <string name="duration_part_hours">%1$d时</string>
+    <string name="duration_part_minutes">%1$d分</string>
+    <string name="duration_part_seconds">%1$d秒</string>
+
+    <string name="sde_update_download">下载数据库更新</string>
+    <string name="sde_update_downloading_title">正在下载数据库</string>
+    <string name="sde_update_downloading">下载进度 %1$d%%</string>
+    <string name="sde_update_complete">更新完成</string>
+    <string name="sde_update_complete_message">数据库已更新，无需重启应用。</string>
+    <string name="sde_update_failed_title">更新失败</string>
+    <string name="sde_update_error">更新失败：%1$s</string>
+    <string name="sde_update_ok">确定</string>
 </resources>

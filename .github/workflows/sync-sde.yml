@@ -1,0 +1,31 @@
+name: Sync SDE
+
+on:
+  schedule:
+    # 22:00 UTC+8 (CST) = 14:00 UTC; GitHub Actions cron is UTC-only
+    - cron: "0 14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Sync upstream SDE, bundle assets, publish release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: python tools/sync_sde_release.py --yes --publish-release --commit-assets

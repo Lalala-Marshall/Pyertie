@@ -1,4 +1,120 @@
 <resources>
     <string name="app_name">Pyerite</string>
     <string name="main_page">Main Page</string>
+    <string name="data">Data</string>
+    <string name="database">Database</string>
+    <string name="group">Group</string>
+    <string name="type">Type</string>
+    <string name="published">Published</string>
+    <string name="unpublished">Unpublished</string>
+    <string name="type_info">Item Info</string>
+    <string name="base_info">Base Info</string>
+    <string name="structure">Structure</string>
+    <string name="industrial_info">Industrial Info</string>
+    <string name="volume">Volume</string>
+    <string name="repackaged_volume">Volume (Repackaged)</string>
+    <string name="capacity">Capacity</string>
+    <string name="mass">Mass</string>
+    <string name="region_market">Region market</string>
+    <string name="structure_value">Structure value</string>
+    <string name="skill_level">Level %1$d</string>
+
+    <!-- Dogma Categories -->
+    <string name="category_fitting">Fitting</string>
+    <string name="category_shield">Shield</string>
+    <string name="category_armor">Armor</string>
+    <string name="category_structure">Structure</string>
+    <string name="category_capacitor">Capacitor</string>
+    <string name="category_targeting">Targeting</string>
+    <string name="category_misc">Misc</string>
+    <string name="category_skills">Skill Requirements</string>
+    <string name="category_skill_level_detail">Skill Level Details</string>
+    <string name="category_skill_level_applies">Skill Level Applies To</string>
+    <string name="skill_sp_amount">%1$s SP</string>
+    <string name="skill_sp_level_range">Level 0 -> %1$d</string>
+    <string name="category_uncategorized">Uncategorized</string>
+    <string name="category_drones">Drones</string>
+    <string name="category_ai">AI Attributes</string>
+    <string name="category_navigation">Navigation</string>
+    <string name="category_loot">Loot</string>
+    <string name="category_remote_support">Remote Support</string>
+    <string name="category_fighter_abilities">Fighter Abilities</string>
+    <string name="category_ewar">EWar Resistances</string>
+    <string name="category_bonuses">Bonuses</string>
+    <string name="category_fighter_attributes">Fighter Attributes</string>
+    <string name="category_doomsday">Doomsday</string>
+    <string name="category_hangars_bays">Hangars &amp; Bays</string>
+    <string name="category_ship_death">Ship Death / Wreck</string>
+    <string name="category_npc_behavior">NPC Behavior</string>
+    <string name="category_mining">Mining</string>
+    <string name="category_other">Other</string>
+    <string name="unknown_attribute">Unknown Attribute</string>
+
+    <string name="type_detail_role_bonus_header">- Role bonus</string>
+    <string name="type_detail_skill_bonus_header_suffix"> — bonus per skill level</string>
+    <string name="type_detail_skill_bonus_unknown_name">Skill #%1$d</string>
+
+    <string name="type_detail_section_market">Market</string>
+    <string name="type_detail_market_buy_column_title">Buy orders</string>
+    <string name="type_detail_market_sell_column_title">Sell orders</string>
+    <string name="type_detail_market_buy_caption">Lowest sell</string>
+    <string name="type_detail_market_sell_caption">Highest buy</string>
+    <string name="type_detail_market_placeholder_value">—</string>
+    <string name="type_detail_market_api_hint">Market and order data will appear after the server API is connected.</string>
+
+    <string name="ewar_cargo_scan_immune">Immune</string>
+    <string name="ewar_cargo_scan_not_immune">Not immune</string>
+    <string name="type_detail_blueprint">Blueprint</string>
+    <string name="type_detail_refining_output">Refining Output</string>
+    <string name="type_detail_refining_output_per_unit">Per %1$d unit(s)</string>
+    <string name="type_detail_refining_output_count">%1$d types</string>
+    <string name="type_detail_applicable_to">Applicable to</string>
+    <string name="type_detail_applicable_to_subtitle">Blueprints requiring this item</string>
+    <string name="type_detail_refining_source">Refining source</string>
+    <string name="type_detail_refining_quantity">× %1$s</string>
+    <string name="type_detail_refining_per_unit">%1$s/unit</string>
+    <string name="type_detail_industry_type_count">%1$s types</string>
+    <string name="type_detail_compatible_with">Compatible with</string>
+    <string name="unknown_group">Unknown group</string>
+    <string name="type_detail_variants_section">Variants</string>
+    <string name="type_detail_browse_variants">Browse %1$d variants</string>
+
+    <string name="type_detail_section_manufacturing">Manufacturing</string>
+    <string name="type_detail_manufacturing_product">Product</string>
+    <string name="type_detail_manufacturing_product_quantity_name">%1$d × %2$s</string>
+    <string name="type_detail_manufacturing_materials">Materials required</string>
+    <string name="type_detail_manufacturing_skills">Skills required</string>
+    <string name="type_detail_manufacturing_time">Manufacturing time</string>
+
+    <string name="type_detail_section_material_research">Material research</string>
+    <string name="type_detail_material_research_time">Research time</string>
+    <string name="type_detail_section_time_research">Time research</string>
+    <string name="type_detail_time_research_time">Research time</string>
+    <string name="type_detail_blueprint_research_level_count">%1$d levels</string>
+
+    <string name="type_detail_section_copy">Copy</string>
+    <string name="type_detail_copy_time">Copy time</string>
+    <string name="type_detail_copy_max_runs">Max runs per copy</string>
+
+    <string name="type_detail_section_invention">Invention</string>
+    <string name="type_detail_invention_success_rate">Success rate: %1$s</string>
+    <string name="type_detail_invention_materials">Materials required</string>
+    <string name="type_detail_invention_skills">Skills required</string>
+    <string name="type_detail_invention_time">Invention time</string>
+
+    <string name="duration_part_years">%1$dy</string>
+    <string name="duration_part_months">%1$dmo</string>
+    <string name="duration_part_days">%1$dd</string>
+    <string name="duration_part_hours">%1$dh</string>
+    <string name="duration_part_minutes">%1$dm</string>
+    <string name="duration_part_seconds">%1$ds</string>
+
+    <string name="sde_update_download">Download database update</string>
+    <string name="sde_update_downloading_title">Downloading database</string>
+    <string name="sde_update_downloading">Download progress %1$d%%</string>
+    <string name="sde_update_complete">Update complete</string>
+    <string name="sde_update_complete_message">Database updated. No app restart required.</string>
+    <string name="sde_update_failed_title">Update failed</string>
+    <string name="sde_update_error">Update failed: %1$s</string>
+    <string name="sde_update_ok">OK</string>
 </resources>
