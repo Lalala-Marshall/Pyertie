@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -41,30 +39,19 @@ fun MainPage(
         sdeUpdateViewModel.checkForUpdates()
     }
 
-    val showUpdateBadge = uiState is SdeUpdateUiState.UpdateAvailable
+    val showUpdateIcon = uiState is SdeUpdateUiState.UpdateAvailable ||
+        uiState is SdeUpdateUiState.Downloading
     val showDownloadDialog = uiState is SdeUpdateUiState.Downloading ||
         uiState is SdeUpdateUiState.Completed ||
         uiState is SdeUpdateUiState.Failed
 
     BaseContainer(
         title = stringResource(R.string.data),
-        titleTrailingContent = {
-            BadgedBox(
-                badge = {
-                    if (showUpdateBadge) {
-                        Badge()
-                    }
-                },
-            ) {
+        titleTrailingContent = if (showUpdateIcon) {
+            {
                 IconButton(
-                    onClick = {
-                        when (uiState) {
-                            is SdeUpdateUiState.UpdateAvailable -> sdeUpdateViewModel.downloadUpdate()
-                            is SdeUpdateUiState.Failed -> sdeUpdateViewModel.downloadUpdate()
-                            else -> sdeUpdateViewModel.checkForUpdates()
-                        }
-                    },
-                    enabled = uiState !is SdeUpdateUiState.Downloading && uiState !is SdeUpdateUiState.Checking,
+                    onClick = { sdeUpdateViewModel.downloadUpdate() },
+                    enabled = uiState is SdeUpdateUiState.UpdateAvailable,
                 ) {
                     Icon(
                         imageVector = Icons.Default.CloudDownload,
@@ -73,6 +60,8 @@ fun MainPage(
                     )
                 }
             }
+        } else {
+            null
         },
         content = {
             BaseLazyColumn(
