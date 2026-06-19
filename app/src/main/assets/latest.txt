@@ -1,35 +1,35 @@
 {
-  "build_number": "3396210",
-  "release_date": "2026-06-16T12:43:42Z",
-  "completion_time": "2026-06-16T13:23:31.833700",
-  "icon_version": 24,
-  "icon_sha256": "1050ee53259c9737562aec0f0a548c1db412346ef68eb3adc71c98003357e0b6",
-  "sde_sha256": "bc07d4d3226fa820668079ad1e90b092cbbd351e6879385ca9bc6a46af7a9e4f",
+  "build_number": "3400955",
+  "release_date": "2026-06-19T12:28:59Z",
+  "completion_time": "2026-06-19T13:01:33.758607",
+  "icon_version": 25,
+  "icon_sha256": "afaec46bcb0d07517171850ef27dd5c939411e36a7b925b53bde225375780283",
+  "sde_sha256": "7ca83df6eae7a2d9f6e54ec4f8455fa051891dd80cbeac1284deaf18fa25129c",
   "patch_number": 0,
   "extra_db": {
     "de": {
       "file": "sde_db_de.zip",
-      "sha256": "5180fa7a8977c8f108282423ef0c605d9988bbec372cd7da557bb5bc353e76b0"
+      "sha256": "5f31121cc7460fb506364225f9447ffec48a54506856ea1f87d6f1d979405916"
     },
     "es": {
       "file": "sde_db_es.zip",
-      "sha256": "502cf77e62f3bf28300c7482fee5b58ee700e53686a8cfa435ff639ce078f7fd"
+      "sha256": "fb6ce5d8b292c31cebea23ca11442a073ebaf5a40326198ee5cdf83e9c4c54b3"
     },
     "fr": {
       "file": "sde_db_fr.zip",
-      "sha256": "476c97225811db3548dd50359ac547b8a3469dcaedceea8c625f6c3c05f71672"
+      "sha256": "19e0f1f4fad7c0903a8cfac3eaff077c8472563ca166eea4f859f3e6dd347ba7"
     },
     "ja": {
       "file": "sde_db_ja.zip",
-      "sha256": "cb96596b1e39ae14b078b427112c851c1b90246e38d61594c9c5bd7c34541693"
+      "sha256": "b2305c2c78e3aae6999defe712a7ab7244fb3f2ec365f4531dec6afe86764aee"
     },
     "ko": {
       "file": "sde_db_ko.zip",
-      "sha256": "665cebdf92ed4f1140a8ded8b19d4c4135a1aa8cbb31cb7665fc2c89df1a0f9d"
+      "sha256": "f99cd2baa228ad9ec641feeffd85a448cabae9d93f30e351193ccc7637aa8f9e"
     },
     "ru": {
       "file": "sde_db_ru.zip",
-      "sha256": "48e286f66c728eae1b6a66b7ed2bf8acd5b3cf915cf4976a3de0d13af6bdd3e6"
+      "sha256": "5c4ed15e23d0cf5e41ba0f395fcdb45c061b423f997e87a99741dbe70d66269d"
     }
   }
 }
