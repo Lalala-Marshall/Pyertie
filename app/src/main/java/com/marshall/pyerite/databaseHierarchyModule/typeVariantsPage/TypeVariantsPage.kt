@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,23 +27,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.data.icons.IconManager
+import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
 import com.marshall.pyerite.localization.LocaleController
 import com.marshall.pyerite.localization.displayName
-import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
+import com.marshall.pyerite.databaseHierarchyModule.navHost.rememberDatabaseRootBackStackEntry
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.MetaGroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
+import com.marshall.pyerite.databaseHierarchyModule.search.DatabaseListSearchHost
+import com.marshall.pyerite.databaseHierarchyModule.search.SearchNoResultsItem
+import com.marshall.pyerite.databaseHierarchyModule.search.matchingSearch
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
-private sealed class VariantListEntry(val key: String) {
-    data object Title : VariantListEntry("page:title")
+private fun variantPageKey(typeId: Int): String = "typeVariants:$typeId"
 
+private sealed class VariantListEntry(val key: String) {
     data class SectionHeader(
         val metaGroupId: Int?,
         val title: String,
@@ -66,13 +71,19 @@ private sealed class VariantListEntry(val key: String) {
 fun TypeVariantsPage(
     typeId: Int,
     navController: NavController,
-    viewModel: DatabaseViewModel = koinViewModel(),
+    backStackEntry: NavBackStackEntry,
     iconManager: IconManager = koinInject(),
     localeController: LocaleController = koinInject(),
 ) {
+    val databaseBackStackEntry = rememberDatabaseRootBackStackEntry(navController, backStackEntry)
+    val viewModel: DatabaseViewModel = koinViewModel(viewModelStoreOwner = databaseBackStackEntry)
+    val pageKey = variantPageKey(typeId)
+    val listState = rememberLazyListState()
+
     val variants by remember(typeId) { viewModel.variants(typeId) }
         .collectAsState(initial = emptyList())
     val metaGroups by viewModel.metaGroups.collectAsState(initial = emptyList())
+    val searchState by viewModel.searchState(pageKey).collectAsState()
 
     val unknownGroupLabel = stringResource(R.string.unknown_group)
     val contentLanguage = localeController.contentLanguage
@@ -81,6 +92,7 @@ fun TypeVariantsPage(
         metaGroups,
         unknownGroupLabel,
         contentLanguage,
+        searchState.query,
         iconManager,
         navController,
         localeController,
@@ -89,17 +101,31 @@ fun TypeVariantsPage(
             variants = variants,
             metaGroups = metaGroups,
             unknownGroupLabel = unknownGroupLabel,
+            searchQuery = searchState.query,
             iconManager = iconManager,
             navController = navController,
             localeController = localeController,
         )
     }
 
-    LazyColumn(
+    val hasListItems = entries.any { it is VariantListEntry.Item }
+
+    DatabaseListSearchHost(
+        pageKey = pageKey,
+        viewModel = viewModel,
+        listState = listState,
         modifier = Modifier
             .fillMaxSize()
             .systemBarsPadding(),
-    ) {
+        title = {
+            VariantPageTitle()
+        },
+    ) { query ->
+        if (query.isNotBlank() && !hasListItems) {
+            item(key = "search_no_results") {
+                SearchNoResultsItem()
+            }
+        }
         items(
             items = entries,
             key = { entry -> entry.key },
@@ -110,30 +136,32 @@ fun TypeVariantsPage(
 }
 
 @Composable
-private fun VariantListEntryContent(entry: VariantListEntry) {
+private fun VariantPageTitle() {
     val pageTitleTextSize = dimensionResource(R.dimen.list_page_title_text_size).value.sp
-    val sectionHeaderTextSize = dimensionResource(R.dimen.list_section_header_text_size).value.sp
     val titleStartPadding = dimensionResource(R.dimen.type_detail_page_title_start_padding)
     val titleVerticalPadding = dimensionResource(R.dimen.type_detail_page_title_vertical_padding)
+    Text(
+        text = stringResource(R.string.type_detail_variants_section),
+        fontSize = pageTitleTextSize,
+        fontWeight = FontWeight.Black,
+        color = colorResource(R.color.text_primary),
+        modifier = Modifier.padding(
+            start = titleStartPadding,
+            top = titleVerticalPadding,
+            bottom = titleVerticalPadding,
+        ),
+    )
+}
+
+@Composable
+private fun VariantListEntryContent(entry: VariantListEntry) {
+    val sectionHeaderTextSize = dimensionResource(R.dimen.list_section_header_text_size).value.sp
+    val titleStartPadding = dimensionResource(R.dimen.type_detail_page_title_start_padding)
     val sectionHeaderBottomPadding = dimensionResource(R.dimen.list_section_header_bottom_padding)
     val sectionGap = dimensionResource(R.dimen.type_detail_section_gap)
     val bottomPadding = dimensionResource(R.dimen.type_detail_bottom_padding)
 
     when (entry) {
-        VariantListEntry.Title -> {
-            Text(
-                text = stringResource(R.string.type_detail_variants_section),
-                fontSize = pageTitleTextSize,
-                fontWeight = FontWeight.Black,
-                color = colorResource(R.color.text_primary),
-                modifier = Modifier.padding(
-                    start = titleStartPadding,
-                    top = titleVerticalPadding,
-                    bottom = titleVerticalPadding,
-                ),
-            )
-        }
-
         is VariantListEntry.SectionHeader -> {
             Text(
                 text = entry.title,
@@ -196,19 +224,19 @@ private fun buildVariantEntries(
     variants: List<TypeEntity>,
     metaGroups: List<MetaGroupEntity>,
     unknownGroupLabel: String,
+    searchQuery: String,
     iconManager: IconManager,
     navController: NavController,
     localeController: LocaleController,
 ): List<VariantListEntry> = buildList {
-    add(VariantListEntry.Title)
-
-    if (variants.isEmpty()) {
+    val filteredVariants = variants.matchingSearch(searchQuery, localeController)
+    if (filteredVariants.isEmpty()) {
         add(VariantListEntry.BottomPadding)
         return@buildList
     }
 
     val metaGroupMap = metaGroups.associateBy { it.id }
-    val grouped = variants.groupBy { it.metaGroupID }
+    val grouped = filteredVariants.groupBy { it.metaGroupID }
     var addTopGap = false
 
     grouped.keys.sortedBy { it ?: Int.MAX_VALUE }.forEach { metaId ->

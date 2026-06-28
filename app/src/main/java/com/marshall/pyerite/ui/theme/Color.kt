@@ -3,8 +3,8 @@ package com.marshall.pyerite.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // ----------------- 日间颜色 -----------------
-val MainBackgroundDay = Color(0xFFFFFFFF)
-val SecondBackgroundDay = Color(0xFFF2F4F8)
+val MainBackgroundDay = Color(0xFFADADAD)
+val SecondBackgroundDay = Color(0xFFFFFFFF)
 val BorderDay = Color(0xFFE6E8EC)
 val TextPrimaryDay = Color(0xFF141A42)
 val HintTextDay = Color(0xFF434868)

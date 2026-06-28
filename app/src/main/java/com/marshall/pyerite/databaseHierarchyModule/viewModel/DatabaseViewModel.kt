@@ -27,20 +27,38 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillLevelSpRow
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillUnlockTypeRow
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeSkillMiscRow
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeTraitDetail
+import com.marshall.pyerite.databaseHierarchyModule.search.HierarchySearchState
+import com.marshall.pyerite.databaseHierarchyModule.search.TypeSearchUiState
 import com.marshall.pyerite.data.sde.SdeUpdateRepository
 import com.marshall.pyerite.localization.ContentLanguage
 import com.marshall.pyerite.localization.LocaleController
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
+@OptIn(
+    kotlinx.coroutines.ExperimentalCoroutinesApi::class,
+    kotlinx.coroutines.FlowPreview::class,
+)
 class DatabaseViewModel(
     private val repository: DatabaseRepository,
     private val localeController: LocaleController,
     private val sdeUpdateRepository: SdeUpdateRepository,
 ) : ViewModel() {
+
+    companion object {
+        private val TYPE_SEARCH_DEBOUNCE = 300.milliseconds
+        private const val TYPE_SEARCH_LIMIT = 500
+    }
 
     private var contentLanguage: ContentLanguage = localeController.contentLanguage
 
@@ -114,6 +132,36 @@ class DatabaseViewModel(
         compatibleGroupsFlows.clear()
         variantCountFlows.clear()
         variantsFlows.clear()
+        typeSearchStateFlows.clear()
+    }
+
+    private val typeSearchStateFlows = mutableMapOf<String, StateFlow<TypeSearchUiState>>()
+
+    fun typeSearchState(pageKey: String): StateFlow<TypeSearchUiState> {
+        syncContentLanguage()
+        return typeSearchStateFlows.getOrPut(pageKey) {
+            val queryFlow = searchState(pageKey)
+                .map { it.query.trim() }
+                .distinctUntilChanged()
+            val settledFlow = queryFlow
+                .debounce(TYPE_SEARCH_DEBOUNCE)
+                .flatMapLatest { query ->
+                    if (query.isEmpty()) {
+                        flowOf(TypeSearchUiState(settledQuery = ""))
+                    } else {
+                        repository.searchTypes(query, TYPE_SEARCH_LIMIT).map { results ->
+                            TypeSearchUiState(
+                                results = results,
+                                settledQuery = query,
+                                isTruncated = results.size >= TYPE_SEARCH_LIMIT,
+                            )
+                        }
+                    }
+                }
+            combine(queryFlow, settledFlow) { liveQuery, settled ->
+                settled.copy(isLoading = liveQuery.isNotEmpty() && liveQuery != settled.settledQuery)
+            }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TypeSearchUiState())
+        }
     }
 
     private val groupsFlows = mutableMapOf<Int, StateFlow<List<GroupEntity>>>()
@@ -490,6 +538,28 @@ class DatabaseViewModel(
 
     fun saveHierarchyScrollPosition(scrollKey: String, index: Int, offset: Int) {
         hierarchyScrollPositions[scrollKey] = HierarchyScrollPosition(index, offset)
+    }
+
+    private val hierarchySearchStateFlows = mutableMapOf<String, MutableStateFlow<HierarchySearchState>>()
+
+    private fun hierarchySearchStateFlow(pageKey: String): MutableStateFlow<HierarchySearchState> =
+        hierarchySearchStateFlows.getOrPut(pageKey) { MutableStateFlow(HierarchySearchState()) }
+
+    fun searchState(pageKey: String): StateFlow<HierarchySearchState> =
+        hierarchySearchStateFlow(pageKey)
+
+    fun setSearchActive(pageKey: String, active: Boolean) {
+        hierarchySearchStateFlow(pageKey).value =
+            hierarchySearchStateFlow(pageKey).value.copy(isActive = active)
+    }
+
+    fun setSearchQuery(pageKey: String, query: String) {
+        hierarchySearchStateFlow(pageKey).value =
+            hierarchySearchStateFlow(pageKey).value.copy(query = query)
+    }
+
+    fun cancelSearch(pageKey: String) {
+        hierarchySearchStateFlow(pageKey).value = HierarchySearchState()
     }
 }
 

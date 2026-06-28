@@ -20,4 +20,10 @@
     <color name="resistance_explosive_active">#E1A640</color>
     <color name="resistance_explosive_inactive">#6D5527</color>
 
+    <color name="search_field_idle_background">#484848</color>
+    <color name="search_field_background">#3A3A3A</color>
+    <color name="search_scrim">#E6000000</color>
+    <color name="search_clear_button_background">#F3F3F3</color>
+    <color name="search_clear_icon">#141A42</color>
+
 </resources>

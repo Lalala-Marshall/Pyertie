@@ -85,6 +85,7 @@ fun NavGraphBuilder.databaseNavGraph(
             TypeVariantsPage(
                 typeId = backStack.arguments!!.getInt("typeId"),
                 navController = navController,
+                backStackEntry = backStack,
             )
         }
 
@@ -97,6 +98,7 @@ fun NavGraphBuilder.databaseNavGraph(
             TypeApplicableBlueprintsPage(
                 typeId = backStack.arguments!!.getInt("typeId"),
                 navController = navController,
+                backStackEntry = backStack,
             )
         }
 
@@ -111,6 +113,7 @@ fun NavGraphBuilder.databaseNavGraph(
                 skillTypeId = backStack.arguments!!.getInt("skillTypeId"),
                 level = backStack.arguments!!.getInt("level"),
                 navController = navController,
+                backStackEntry = backStack,
             )
         }
     }
