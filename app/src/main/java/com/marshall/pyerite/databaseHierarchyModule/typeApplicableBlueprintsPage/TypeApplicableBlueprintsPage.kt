@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,20 +26,25 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.data.icons.IconManager
 import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
+import com.marshall.pyerite.databaseHierarchyModule.navHost.rememberDatabaseRootBackStackEntry
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeBlueprintDetail
+import com.marshall.pyerite.databaseHierarchyModule.search.DatabaseListSearchHost
+import com.marshall.pyerite.databaseHierarchyModule.search.SearchNoResultsItem
+import com.marshall.pyerite.databaseHierarchyModule.search.matchesSearchQuery
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
-private sealed class ApplicableBlueprintListEntry(val key: String) {
-    data object Title : ApplicableBlueprintListEntry("page:title")
+private fun applicableBlueprintsPageKey(typeId: Int): String = "applicableBlueprints:$typeId"
 
+private sealed class ApplicableBlueprintListEntry(val key: String) {
     data class Item(
         val blueprintTypeId: Int,
         val model: BaseLazyColumnItemModel,
@@ -55,25 +60,45 @@ private sealed class ApplicableBlueprintListEntry(val key: String) {
 fun TypeApplicableBlueprintsPage(
     typeId: Int,
     navController: NavController,
-    viewModel: DatabaseViewModel = koinViewModel(),
+    backStackEntry: NavBackStackEntry,
     iconManager: IconManager = koinInject(),
 ) {
+    val databaseBackStackEntry = rememberDatabaseRootBackStackEntry(navController, backStackEntry)
+    val viewModel: DatabaseViewModel = koinViewModel(viewModelStoreOwner = databaseBackStackEntry)
+    val pageKey = applicableBlueprintsPageKey(typeId)
+    val listState = rememberLazyListState()
+
     val blueprints by remember(typeId) { viewModel.applicableBlueprints(typeId) }
         .collectAsState(initial = emptyList())
+    val searchState by viewModel.searchState(pageKey).collectAsState()
 
-    val entries = remember(blueprints, iconManager, navController) {
+    val entries = remember(blueprints, searchState.query, iconManager, navController) {
         buildApplicableBlueprintEntries(
             blueprints = blueprints,
+            searchQuery = searchState.query,
             iconManager = iconManager,
             navController = navController,
         )
     }
 
-    LazyColumn(
+    val hasListItems = entries.any { it is ApplicableBlueprintListEntry.Item }
+
+    DatabaseListSearchHost(
+        pageKey = pageKey,
+        viewModel = viewModel,
+        listState = listState,
         modifier = Modifier
             .fillMaxSize()
             .systemBarsPadding(),
-    ) {
+        title = {
+            ApplicableBlueprintsPageTitle()
+        },
+    ) { query ->
+        if (query.isNotBlank() && !hasListItems) {
+            item(key = "search_no_results") {
+                SearchNoResultsItem()
+            }
+        }
         items(
             items = entries,
             key = { entry -> entry.key },
@@ -84,27 +109,28 @@ fun TypeApplicableBlueprintsPage(
 }
 
 @Composable
-private fun ApplicableBlueprintListEntryContent(entry: ApplicableBlueprintListEntry) {
+private fun ApplicableBlueprintsPageTitle() {
     val pageTitleTextSize = dimensionResource(R.dimen.list_page_title_text_size).value.sp
     val titleStartPadding = dimensionResource(R.dimen.type_detail_page_title_start_padding)
     val titleVerticalPadding = dimensionResource(R.dimen.type_detail_page_title_vertical_padding)
+    Text(
+        text = stringResource(R.string.type_detail_applicable_to),
+        fontSize = pageTitleTextSize,
+        fontWeight = FontWeight.Black,
+        color = colorResource(R.color.text_primary),
+        modifier = Modifier.padding(
+            start = titleStartPadding,
+            top = titleVerticalPadding,
+            bottom = titleVerticalPadding,
+        ),
+    )
+}
+
+@Composable
+private fun ApplicableBlueprintListEntryContent(entry: ApplicableBlueprintListEntry) {
     val bottomPadding = dimensionResource(R.dimen.type_detail_bottom_padding)
 
     when (entry) {
-        ApplicableBlueprintListEntry.Title -> {
-            Text(
-                text = stringResource(R.string.type_detail_applicable_to),
-                fontSize = pageTitleTextSize,
-                fontWeight = FontWeight.Black,
-                color = colorResource(R.color.text_primary),
-                modifier = Modifier.padding(
-                    start = titleStartPadding,
-                    top = titleVerticalPadding,
-                    bottom = titleVerticalPadding,
-                ),
-            )
-        }
-
         is ApplicableBlueprintListEntry.Item -> {
             ApplicableBlueprintItemRow(
                 model = entry.model,
@@ -151,30 +177,30 @@ private fun sectionItemShape(indexInSection: Int, sectionItemCount: Int, corner:
 
 private fun buildApplicableBlueprintEntries(
     blueprints: List<TypeBlueprintDetail>,
+    searchQuery: String,
     iconManager: IconManager,
     navController: NavController,
 ): List<ApplicableBlueprintListEntry> = buildList {
-    add(ApplicableBlueprintListEntry.Title)
-
-    if (blueprints.isEmpty()) {
+    val filtered = blueprints.filter { it.name.matchesSearchQuery(searchQuery) }
+    if (filtered.isEmpty()) {
         add(ApplicableBlueprintListEntry.BottomPadding)
         return@buildList
     }
 
-    blueprints.forEachIndexed { index, blueprint ->
+    filtered.forEachIndexed { index, blueprint ->
         add(
             ApplicableBlueprintListEntry.Item(
                 blueprintTypeId = blueprint.typeId,
                 model = BaseLazyColumnItemModel(
                     iconFile = blueprint.iconFilename?.let { iconManager.getIconFile(it) },
-                    itemName = blueprint.name ?: "",
+                    itemName = blueprint.name.orEmpty(),
                     onClick = {
                         navController.navigate(DatabaseRoute.TypeDetail.create(blueprint.typeId))
                     },
                 ),
-                showDivider = index < blueprints.lastIndex,
+                showDivider = index < filtered.lastIndex,
                 indexInSection = index,
-                sectionItemCount = blueprints.size,
+                sectionItemCount = filtered.size,
             ),
         )
     }

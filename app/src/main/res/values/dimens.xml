@@ -40,6 +40,10 @@
     <dimen name="detail_card_corner_radius">16dp</dimen>
     <dimen name="detail_card_horizontal_padding">16dp</dimen>
 
+    <dimen name="search_bar_height">44dp</dimen>
+    <dimen name="search_bar_vertical_padding">8dp</dimen>
+    <dimen name="search_bar_cancel_gap">8dp</dimen>
+
     <!-- Type summary (basic section) -->
     <dimen name="type_detail_summary_icon_size">64dp</dimen>
     <dimen name="type_detail_summary_title_text_size">20sp</dimen>

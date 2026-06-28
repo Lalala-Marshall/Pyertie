@@ -117,4 +117,12 @@
     <string name="sde_update_failed_title">Update failed</string>
     <string name="sde_update_error">Update failed: %1$s</string>
     <string name="sde_update_ok">OK</string>
+
+    <string name="search">Search</string>
+    <string name="cancel_search">Cancel search</string>
+    <string name="search_clear">Clear search</string>
+    <string name="search_no_results">No matching results</string>
+    <string name="search_preview_hint">Search</string>
+    <string name="search_preview_page_title">Frigate Blueprints</string>
+    <string name="search_preview_tap_to_toggle_active">Tap here to simulate active search</string>
 </resources>

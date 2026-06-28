@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
-import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
+import com.marshall.pyerite.databaseHierarchyModule.navHost.rememberDatabaseRootBackStackEntry
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -65,9 +65,7 @@ fun TypeDetailPage(
     navController: NavController,
     backStackEntry: NavBackStackEntry,
 ) {
-    val databaseBackStackEntry = remember(backStackEntry) {
-        navController.getBackStackEntry(DatabaseRoute.Root.route)
-    }
+    val databaseBackStackEntry = rememberDatabaseRootBackStackEntry(navController, backStackEntry)
     val viewModel: DatabaseViewModel = koinViewModel(viewModelStoreOwner = databaseBackStackEntry)
 
     val scrollState = rememberTypeDetailScrollState(typeId, viewModel)

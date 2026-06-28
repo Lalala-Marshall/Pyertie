@@ -27,9 +27,11 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillLevelSpRow
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillUnlockTypeRow
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeSkillMiscRow
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeTraitDetail
+import com.marshall.pyerite.databaseHierarchyModule.search.HierarchySearchState
 import com.marshall.pyerite.data.sde.SdeUpdateRepository
 import com.marshall.pyerite.localization.ContentLanguage
 import com.marshall.pyerite.localization.LocaleController
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -490,6 +492,28 @@ class DatabaseViewModel(
 
     fun saveHierarchyScrollPosition(scrollKey: String, index: Int, offset: Int) {
         hierarchyScrollPositions[scrollKey] = HierarchyScrollPosition(index, offset)
+    }
+
+    private val hierarchySearchStateFlows = mutableMapOf<String, MutableStateFlow<HierarchySearchState>>()
+
+    private fun hierarchySearchStateFlow(pageKey: String): MutableStateFlow<HierarchySearchState> =
+        hierarchySearchStateFlows.getOrPut(pageKey) { MutableStateFlow(HierarchySearchState()) }
+
+    fun searchState(pageKey: String): StateFlow<HierarchySearchState> =
+        hierarchySearchStateFlow(pageKey)
+
+    fun setSearchActive(pageKey: String, active: Boolean) {
+        hierarchySearchStateFlow(pageKey).value =
+            hierarchySearchStateFlow(pageKey).value.copy(isActive = active)
+    }
+
+    fun setSearchQuery(pageKey: String, query: String) {
+        hierarchySearchStateFlow(pageKey).value =
+            hierarchySearchStateFlow(pageKey).value.copy(query = query)
+    }
+
+    fun cancelSearch(pageKey: String) {
+        hierarchySearchStateFlow(pageKey).value = HierarchySearchState()
     }
 }
 

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,11 +39,15 @@ import com.marshall.pyerite.localization.LocaleController
 import com.marshall.pyerite.localization.displayName
 import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseLevel
 import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
+import com.marshall.pyerite.databaseHierarchyModule.navHost.rememberDatabaseRootBackStackEntry
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.CategoryEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.GroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.MetaGroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
+import com.marshall.pyerite.databaseHierarchyModule.search.DatabaseListSearchHost
+import com.marshall.pyerite.databaseHierarchyModule.search.SearchNoResultsItem
+import com.marshall.pyerite.databaseHierarchyModule.search.matchingSearch
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.HierarchyScrollPosition
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
@@ -119,9 +122,7 @@ fun DatabaseHierarchyPage(
     iconManager: IconManager = koinInject(),
     localeController: LocaleController = koinInject(),
 ) {
-    val databaseBackStackEntry = remember(backStackEntry) {
-        navController.getBackStackEntry(DatabaseRoute.Root.route)
-    }
+    val databaseBackStackEntry = rememberDatabaseRootBackStackEntry(navController, backStackEntry)
     val viewModel: DatabaseViewModel = koinViewModel(viewModelStoreOwner = databaseBackStackEntry)
     val scrollKey = hierarchyScrollKey(level, parentId)
     val listState = rememberHierarchyLazyListState(scrollKey, viewModel)
@@ -152,6 +153,8 @@ fun DatabaseHierarchyPage(
     val publishedTitle = stringResource(R.string.published)
     val unpublishedTitle = stringResource(R.string.unpublished)
 
+    val searchState by remember(scrollKey) { viewModel.searchState(scrollKey) }.collectAsState()
+
     val contentLanguage = localeController.contentLanguage
     val entries = remember(
         level,
@@ -162,6 +165,7 @@ fun DatabaseHierarchyPage(
         publishedTitle,
         unpublishedTitle,
         contentLanguage,
+        searchState.query,
         iconManager,
         navController,
         localeController,
@@ -174,26 +178,36 @@ fun DatabaseHierarchyPage(
             metaGroups = metaGroups,
             publishedTitle = publishedTitle,
             unpublishedTitle = unpublishedTitle,
+            searchQuery = searchState.query,
             iconManager = iconManager,
             navController = navController,
             localeController = localeController,
         )
     }
 
-    LazyColumn(
-        state = listState,
+    val hasListItems = entries.any { it is HierarchyListEntry.Item }
+
+    DatabaseListSearchHost(
+        pageKey = scrollKey,
+        viewModel = viewModel,
+        listState = listState,
         modifier = Modifier
             .fillMaxSize()
             .systemBarsPadding(),
-    ) {
+        title = {
+            HierarchyPageTitle(title = title)
+        },
+    ) { query ->
+        if (query.isNotBlank() && !hasListItems) {
+            item(key = "search_no_results") {
+                SearchNoResultsItem()
+            }
+        }
         items(
             items = entries,
             key = { entry -> entry.key },
         ) { entry ->
-            HierarchyListEntryContent(
-                pageTitle = title,
-                entry = entry,
-            )
+            HierarchyListEntryContent(entry = entry)
         }
     }
 }
@@ -240,32 +254,35 @@ private fun rememberHierarchyLazyListState(
 }
 
 @Composable
-private fun HierarchyListEntryContent(
-    pageTitle: String,
-    entry: HierarchyListEntry,
-) {
+private fun HierarchyPageTitle(title: String) {
     val pageTitleTextSize = dimensionResource(R.dimen.list_page_title_text_size).value.sp
-    val sectionHeaderTextSize = dimensionResource(R.dimen.list_section_header_text_size).value.sp
     val titleStartPadding = dimensionResource(R.dimen.type_detail_page_title_start_padding)
     val titleVerticalPadding = dimensionResource(R.dimen.type_detail_page_title_vertical_padding)
+    Text(
+        text = title,
+        fontSize = pageTitleTextSize,
+        fontWeight = FontWeight.Black,
+        color = colorResource(R.color.text_primary),
+        modifier = Modifier.padding(
+            start = titleStartPadding,
+            top = titleVerticalPadding,
+            bottom = titleVerticalPadding,
+        ),
+    )
+}
+
+@Composable
+private fun HierarchyListEntryContent(
+    entry: HierarchyListEntry,
+) {
+    val sectionHeaderTextSize = dimensionResource(R.dimen.list_section_header_text_size).value.sp
+    val titleStartPadding = dimensionResource(R.dimen.type_detail_page_title_start_padding)
     val sectionHeaderBottomPadding = dimensionResource(R.dimen.list_section_header_bottom_padding)
     val sectionGap = dimensionResource(R.dimen.type_detail_section_gap)
     val bottomPadding = dimensionResource(R.dimen.type_detail_bottom_padding)
 
     when (entry) {
-        HierarchyListEntry.Title -> {
-            Text(
-                text = pageTitle,
-                fontSize = pageTitleTextSize,
-                fontWeight = FontWeight.Black,
-                color = colorResource(R.color.text_primary),
-                modifier = Modifier.padding(
-                    start = titleStartPadding,
-                    top = titleVerticalPadding,
-                    bottom = titleVerticalPadding,
-                ),
-            )
-        }
+        HierarchyListEntry.Title -> Unit
 
         is HierarchyListEntry.SectionHeader -> {
             Text(
@@ -333,24 +350,29 @@ private fun buildHierarchyEntries(
     metaGroups: List<MetaGroupEntity>,
     publishedTitle: String,
     unpublishedTitle: String,
+    searchQuery: String,
     iconManager: IconManager,
     navController: NavController,
     localeController: LocaleController,
 ): List<HierarchyListEntry> = buildList {
-    add(HierarchyListEntry.Title)
-
     when (level) {
         DatabaseLevel.CATEGORY -> {
             appendPublishedUnpublishedSections(
                 builder = this,
                 publishedTitle = publishedTitle,
                 unpublishedTitle = unpublishedTitle,
-                published = categories.filter { it.published == true }.map {
-                    HierarchyRowKey.Category(it.id) to createCategoryModel(it, iconManager, navController, localeController)
-                },
-                unpublished = categories.filter { it.published != true }.map {
-                    HierarchyRowKey.Category(it.id) to createCategoryModel(it, iconManager, navController, localeController)
-                },
+                published = categories
+                    .filter { it.published == true }
+                    .matchingSearch(searchQuery, localeController)
+                    .map {
+                        HierarchyRowKey.Category(it.id) to createCategoryModel(it, iconManager, navController, localeController)
+                    },
+                unpublished = categories
+                    .filter { it.published != true }
+                    .matchingSearch(searchQuery, localeController)
+                    .map {
+                        HierarchyRowKey.Category(it.id) to createCategoryModel(it, iconManager, navController, localeController)
+                    },
             )
         }
 
@@ -359,18 +381,26 @@ private fun buildHierarchyEntries(
                 builder = this,
                 publishedTitle = publishedTitle,
                 unpublishedTitle = unpublishedTitle,
-                published = groups.filter { it.published == true }.map {
-                    HierarchyRowKey.Group(it.id) to createGroupModel(it, iconManager, navController, localeController)
-                },
-                unpublished = groups.filter { it.published != true }.map {
-                    HierarchyRowKey.Group(it.id) to createGroupModel(it, iconManager, navController, localeController)
-                },
+                published = groups
+                    .filter { it.published == true }
+                    .matchingSearch(searchQuery, localeController)
+                    .map {
+                        HierarchyRowKey.Group(it.id) to createGroupModel(it, iconManager, navController, localeController)
+                    },
+                unpublished = groups
+                    .filter { it.published != true }
+                    .matchingSearch(searchQuery, localeController)
+                    .map {
+                        HierarchyRowKey.Group(it.id) to createGroupModel(it, iconManager, navController, localeController)
+                    },
             )
         }
 
         DatabaseLevel.TYPE -> {
             var addTopGap = false
-            val publishedTypes = types.filter { it.published == true }
+            val publishedTypes = types
+                .filter { it.published == true }
+                .matchingSearch(searchQuery, localeController)
             if (publishedTypes.isNotEmpty()) {
                 val metaGroupMap = metaGroups.associateBy { it.id }
                 val grouped = publishedTypes.groupBy { it.metaGroupID }
@@ -394,7 +424,10 @@ private fun buildHierarchyEntries(
                 }
             }
 
-            val unpublished = types.filter { it.published != true }.map {
+            val unpublished = types
+                .filter { it.published != true }
+                .matchingSearch(searchQuery, localeController)
+                .map {
                 HierarchyRowKey.Type(it.id) to createTypeModel(it, iconManager, navController, localeController)
             }
             appendSection(

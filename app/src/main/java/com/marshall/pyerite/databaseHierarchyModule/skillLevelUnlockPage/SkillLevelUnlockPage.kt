@@ -11,10 +11,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Icon
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -34,23 +34,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.data.icons.IconManager
+import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
 import com.marshall.pyerite.localization.LocaleController
 import com.marshall.pyerite.localization.displayName
-import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
-import com.marshall.pyerite.databaseHierarchyModule.util.certificateLevelDrawable
+import com.marshall.pyerite.databaseHierarchyModule.navHost.rememberDatabaseRootBackStackEntry
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillUnlockTypeRow
+import com.marshall.pyerite.databaseHierarchyModule.search.DatabaseListSearchHost
+import com.marshall.pyerite.databaseHierarchyModule.search.SearchNoResultsItem
+import com.marshall.pyerite.databaseHierarchyModule.search.matchingSearch
+import com.marshall.pyerite.databaseHierarchyModule.util.certificateLevelDrawable
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
-private sealed class UnlockListEntry(val key: String) {
-    data object Title : UnlockListEntry("page:title")
+private fun skillUnlockPageKey(skillTypeId: Int, level: Int): String =
+    "skillUnlock:$skillTypeId:$level"
 
+private sealed class UnlockListEntry(val key: String) {
     data class SectionHeader(
         val categoryKey: String,
         val title: String,
@@ -74,13 +80,19 @@ fun SkillLevelUnlockPage(
     skillTypeId: Int,
     level: Int,
     navController: NavController,
-    viewModel: DatabaseViewModel = koinViewModel(),
+    backStackEntry: NavBackStackEntry,
     iconManager: IconManager = koinInject(),
     localeController: LocaleController = koinInject(),
 ) {
+    val databaseBackStackEntry = rememberDatabaseRootBackStackEntry(navController, backStackEntry)
+    val viewModel: DatabaseViewModel = koinViewModel(viewModelStoreOwner = databaseBackStackEntry)
+    val pageKey = skillUnlockPageKey(skillTypeId, level)
+    val listState = rememberLazyListState()
+
     val unlockTypes by remember(skillTypeId, level) {
         viewModel.typesUnlockedBySkillAtLevel(skillTypeId, level)
     }.collectAsState(initial = emptyList())
+    val searchState by viewModel.searchState(pageKey).collectAsState()
 
     val uncategorizedLabel = stringResource(R.string.category_uncategorized)
     val contentLanguage = localeController.contentLanguage
@@ -88,6 +100,7 @@ fun SkillLevelUnlockPage(
         unlockTypes,
         uncategorizedLabel,
         contentLanguage,
+        searchState.query,
         iconManager,
         navController,
         localeController,
@@ -95,67 +108,81 @@ fun SkillLevelUnlockPage(
         buildUnlockEntries(
             unlockTypes = unlockTypes,
             uncategorizedLabel = uncategorizedLabel,
+            searchQuery = searchState.query,
             iconManager = iconManager,
             navController = navController,
             localeController = localeController,
         )
     }
 
-    LazyColumn(
+    val hasListItems = entries.any { it is UnlockListEntry.Item }
+
+    DatabaseListSearchHost(
+        pageKey = pageKey,
+        viewModel = viewModel,
+        listState = listState,
         modifier = Modifier
             .fillMaxSize()
             .systemBarsPadding(),
-    ) {
+        title = {
+            SkillUnlockPageTitle(level = level)
+        },
+    ) { query ->
+        if (query.isNotBlank() && !hasListItems) {
+            item(key = "search_no_results") {
+                SearchNoResultsItem()
+            }
+        }
         items(
             items = entries,
             key = { entry -> entry.key },
         ) { entry ->
-            UnlockListEntryContent(entry = entry, level = level)
+            UnlockListEntryContent(entry = entry)
         }
     }
 }
 
 @Composable
-private fun UnlockListEntryContent(
-    entry: UnlockListEntry,
-    level: Int,
-) {
+private fun SkillUnlockPageTitle(level: Int) {
     val pageTitleTextSize = dimensionResource(R.dimen.list_page_title_text_size).value.sp
-    val sectionSubheaderTextSize = dimensionResource(R.dimen.list_section_subheader_text_size).value.sp
     val titleStartPadding = dimensionResource(R.dimen.type_detail_page_title_start_padding)
     val titleVerticalPadding = dimensionResource(R.dimen.type_detail_page_title_vertical_padding)
     val titleIconSize = dimensionResource(R.dimen.skill_unlock_title_icon_size)
     val titleIconGap = dimensionResource(R.dimen.skill_unlock_title_icon_gap)
+
+    Row(
+        modifier = Modifier.padding(
+            start = titleStartPadding,
+            top = titleVerticalPadding,
+            bottom = titleVerticalPadding,
+        ),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            modifier = Modifier.size(titleIconSize),
+            painter = painterResource(certificateLevelDrawable(level)),
+            contentDescription = null,
+            tint = Color.Unspecified,
+        )
+        Spacer(modifier = Modifier.width(titleIconGap))
+        Text(
+            text = stringResource(R.string.skill_level, level),
+            fontSize = pageTitleTextSize,
+            fontWeight = FontWeight.Black,
+            color = colorResource(R.color.text_primary),
+        )
+    }
+}
+
+@Composable
+private fun UnlockListEntryContent(entry: UnlockListEntry) {
+    val sectionSubheaderTextSize = dimensionResource(R.dimen.list_section_subheader_text_size).value.sp
+    val titleStartPadding = dimensionResource(R.dimen.type_detail_page_title_start_padding)
     val sectionHeaderBottomPadding = dimensionResource(R.dimen.list_section_header_bottom_padding)
     val sectionGap = dimensionResource(R.dimen.type_detail_section_gap)
     val bottomPadding = dimensionResource(R.dimen.type_detail_bottom_padding)
 
     when (entry) {
-        UnlockListEntry.Title -> {
-            Row(
-                modifier = Modifier.padding(
-                    start = titleStartPadding,
-                    top = titleVerticalPadding,
-                    bottom = titleVerticalPadding,
-                ),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    modifier = Modifier.size(titleIconSize),
-                    painter = painterResource(certificateLevelDrawable(level)),
-                    contentDescription = null,
-                    tint = Color.Unspecified,
-                )
-                Spacer(modifier = Modifier.width(titleIconGap))
-                Text(
-                    text = stringResource(R.string.skill_level, level),
-                    fontSize = pageTitleTextSize,
-                    fontWeight = FontWeight.Black,
-                    color = colorResource(R.color.text_primary),
-                )
-            }
-        }
-
         is UnlockListEntry.SectionHeader -> {
             Text(
                 text = entry.title,
@@ -217,18 +244,18 @@ private fun sectionItemShape(indexInSection: Int, sectionItemCount: Int, corner:
 private fun buildUnlockEntries(
     unlockTypes: List<SkillUnlockTypeRow>,
     uncategorizedLabel: String,
+    searchQuery: String,
     iconManager: IconManager,
     navController: NavController,
     localeController: LocaleController,
 ): List<UnlockListEntry> = buildList {
-    add(UnlockListEntry.Title)
-
-    if (unlockTypes.isEmpty()) {
+    val filteredTypes = unlockTypes.matchingSearch(searchQuery, localeController)
+    if (filteredTypes.isEmpty()) {
         add(UnlockListEntry.BottomPadding)
         return@buildList
     }
 
-    val grouped = unlockTypes.groupBy { row ->
+    val grouped = filteredTypes.groupBy { row ->
         row.categoryId?.toString() ?: "none"
     }
     var addTopGap = false

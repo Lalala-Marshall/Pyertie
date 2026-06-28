@@ -26,4 +26,11 @@
     <color name="resistance_kinetic_inactive">#585858</color>
     <color name="resistance_explosive_active">#E1A640</color>
     <color name="resistance_explosive_inactive">#6D5527</color>
+
+    <!-- Search preview only -->
+    <color name="search_field_idle_background">#E3E3E8</color>
+    <color name="search_field_background">#949494</color>
+    <color name="search_scrim">#CC000000</color>
+    <color name="search_clear_button_background">#141A42</color>
+    <color name="search_clear_icon">#FFFFFF</color>
 </resources>
