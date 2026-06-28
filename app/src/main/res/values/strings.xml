@@ -124,6 +124,7 @@
     <string name="cancel_search">取消搜索</string>
     <string name="search_clear">清除搜索</string>
     <string name="search_no_results">无匹配结果</string>
+    <string name="search_results_truncated">结果过多，仅显示前 500 条</string>
     <string name="search_preview_page_title">护卫舰蓝图</string>
     <string name="search_preview_hint">搜索</string>
     <string name="search_preview_tap_to_toggle_active">点击此区域模拟搜索激活态</string>

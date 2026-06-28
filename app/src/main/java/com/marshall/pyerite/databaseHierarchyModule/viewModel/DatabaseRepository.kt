@@ -64,6 +64,11 @@ class DatabaseRepository(
         emit(typeDao.getTypesByGroup(groupId))
     }.flowOn(Dispatchers.IO)
 
+    fun searchTypes(query: String, limit: Int): Flow<List<TypeEntity>> = flow {
+        val pattern = "%${query.trim()}%"
+        emit(typeDao.searchTypes(pattern, limit))
+    }.flowOn(Dispatchers.IO)
+
     fun getType(typeId: Int): Flow<TypeEntity?> = flow {
         emit(typeDao.getTypeById(typeId))
     }.flowOn(Dispatchers.IO)

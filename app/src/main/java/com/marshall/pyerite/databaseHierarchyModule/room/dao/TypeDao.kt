@@ -26,6 +26,18 @@ interface TypeDao {
     @Query("SELECT * FROM types WHERE groupID = :groupId ORDER BY type_id")
     suspend fun getTypesByGroup(groupId: Int): List<TypeEntity>
 
+    @Query(
+        """
+        SELECT * FROM types
+        WHERE zh_name LIKE :pattern COLLATE NOCASE
+           OR en_name LIKE :pattern COLLATE NOCASE
+           OR name LIKE :pattern COLLATE NOCASE
+        ORDER BY groupID, type_id
+        LIMIT :limit
+        """,
+    )
+    suspend fun searchTypes(pattern: String, limit: Int): List<TypeEntity>
+
     @Query("SELECT * FROM types WHERE type_id = :typeId")
     suspend fun getTypeById(typeId: Int): TypeEntity?
 

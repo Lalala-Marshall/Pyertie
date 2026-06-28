@@ -182,3 +182,21 @@ fun SearchNoResultsItem(modifier: Modifier = Modifier) {
         color = colorResource(R.color.hint_text),
     )
 }
+
+@Composable
+fun SearchResultsTruncatedItem(
+    message: String,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = message,
+        modifier = modifier.padding(
+            start = dimensionResource(R.dimen.type_detail_page_title_start_padding),
+            top = dimensionResource(R.dimen.type_detail_section_gap),
+            end = dimensionResource(R.dimen.detail_card_horizontal_padding),
+        ),
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Normal,
+        color = colorResource(R.color.hint_text),
+    )
+}

@@ -47,6 +47,8 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
 import com.marshall.pyerite.databaseHierarchyModule.search.DatabaseListSearchHost
 import com.marshall.pyerite.databaseHierarchyModule.search.SearchNoResultsItem
+import com.marshall.pyerite.databaseHierarchyModule.search.SearchResultsTruncatedItem
+import com.marshall.pyerite.databaseHierarchyModule.search.TypeSearchUiState
 import com.marshall.pyerite.databaseHierarchyModule.search.matchingSearch
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.HierarchyScrollPosition
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
@@ -66,6 +68,8 @@ private sealed interface HierarchySectionKey {
     data object Unpublished : HierarchySectionKey
 
     data class MetaGroup(val metaGroupId: Int?) : HierarchySectionKey
+
+    data class SearchGroup(val groupId: Int) : HierarchySectionKey
 }
 
 private sealed interface HierarchyRowKey {
@@ -104,6 +108,7 @@ private fun HierarchySectionKey.toLazyListKey(): String = when (this) {
     HierarchySectionKey.Published -> "published"
     HierarchySectionKey.Unpublished -> "unpublished"
     is HierarchySectionKey.MetaGroup -> "meta:${metaGroupId ?: "none"}"
+    is HierarchySectionKey.SearchGroup -> "search_group:$groupId"
 }
 
 private fun HierarchyRowKey.toLazyListKey(): String = when (this) {
@@ -155,6 +160,15 @@ fun DatabaseHierarchyPage(
 
     val searchState by remember(scrollKey) { viewModel.searchState(scrollKey) }.collectAsState()
 
+    val isTypeSearchMode = (level == DatabaseLevel.CATEGORY || level == DatabaseLevel.GROUP) &&
+        searchState.query.isNotBlank()
+
+    val typeSearchUi by if (level == DatabaseLevel.CATEGORY || level == DatabaseLevel.GROUP) {
+        remember(scrollKey) { viewModel.typeSearchState(scrollKey) }.collectAsState()
+    } else {
+        remember { mutableStateOf(TypeSearchUiState()) }
+    }
+
     val contentLanguage = localeController.contentLanguage
     val entries = remember(
         level,
@@ -162,6 +176,8 @@ fun DatabaseHierarchyPage(
         groups,
         types,
         metaGroups,
+        typeSearchUi,
+        isTypeSearchMode,
         publishedTitle,
         unpublishedTitle,
         contentLanguage,
@@ -176,6 +192,8 @@ fun DatabaseHierarchyPage(
             groups = groups,
             types = types,
             metaGroups = metaGroups,
+            typeSearchResults = typeSearchUi.results,
+            isTypeSearchMode = isTypeSearchMode,
             publishedTitle = publishedTitle,
             unpublishedTitle = unpublishedTitle,
             searchQuery = searchState.query,
@@ -186,6 +204,7 @@ fun DatabaseHierarchyPage(
     }
 
     val hasListItems = entries.any { it is HierarchyListEntry.Item }
+    val searchResultsTruncatedHint = stringResource(R.string.search_results_truncated)
 
     DatabaseListSearchHost(
         pageKey = scrollKey,
@@ -198,7 +217,12 @@ fun DatabaseHierarchyPage(
             HierarchyPageTitle(title = title)
         },
     ) { query ->
-        if (query.isNotBlank() && !hasListItems) {
+        if (isTypeSearchMode && typeSearchUi.isTruncated) {
+            item(key = "search_results_truncated") {
+                SearchResultsTruncatedItem(message = searchResultsTruncatedHint)
+            }
+        }
+        if (query.isNotBlank() && !hasListItems && !typeSearchUi.isLoading) {
             item(key = "search_no_results") {
                 SearchNoResultsItem()
             }
@@ -348,6 +372,8 @@ private fun buildHierarchyEntries(
     groups: List<GroupEntity>,
     types: List<TypeEntity>,
     metaGroups: List<MetaGroupEntity>,
+    typeSearchResults: List<TypeEntity>,
+    isTypeSearchMode: Boolean,
     publishedTitle: String,
     unpublishedTitle: String,
     searchQuery: String,
@@ -355,6 +381,18 @@ private fun buildHierarchyEntries(
     navController: NavController,
     localeController: LocaleController,
 ): List<HierarchyListEntry> = buildList {
+    if (isTypeSearchMode) {
+        appendTypeSearchByGroupSections(
+            builder = this,
+            matchedTypes = typeSearchResults,
+            iconManager = iconManager,
+            navController = navController,
+            localeController = localeController,
+        )
+        add(HierarchyListEntry.BottomPadding)
+        return@buildList
+    }
+
     when (level) {
         DatabaseLevel.CATEGORY -> {
             appendPublishedUnpublishedSections(
@@ -441,6 +479,51 @@ private fun buildHierarchyEntries(
     }
 
     add(HierarchyListEntry.BottomPadding)
+}
+
+private fun appendTypeSearchByGroupSections(
+    builder: MutableList<HierarchyListEntry>,
+    matchedTypes: List<TypeEntity>,
+    iconManager: IconManager,
+    navController: NavController,
+    localeController: LocaleController,
+) {
+    if (matchedTypes.isEmpty()) return
+
+    var addTopGap = false
+    matchedTypes
+        .groupBy { it.groupId }
+        .entries
+        .sortedWith(
+            compareBy<Map.Entry<Int?, List<TypeEntity>>> { (groupId, _) ->
+                groupId ?: Int.MAX_VALUE
+            }.thenBy { (_, typesInGroup) ->
+                typesInGroup.firstOrNull()?.groupName.orEmpty()
+            },
+        )
+        .forEach { (groupId, typesInGroup) ->
+            val sectionKey = HierarchySectionKey.SearchGroup(groupId ?: -1)
+            val title = typesInGroup.firstOrNull()?.groupName?.takeIf { it.isNotBlank() }
+                ?: groupId?.toString()
+                ?: ""
+            val rows = typesInGroup
+                .sortedBy { it.id }
+                .map {
+                    HierarchyRowKey.Type(it.id) to createTypeModel(
+                        it,
+                        iconManager,
+                        navController,
+                        localeController,
+                    )
+                }
+            addTopGap = appendSection(
+                builder = builder,
+                sectionKey = sectionKey,
+                title = title,
+                addTopGap = addTopGap,
+                rows = rows,
+            )
+        }
 }
 
 private fun appendPublishedUnpublishedSections(
