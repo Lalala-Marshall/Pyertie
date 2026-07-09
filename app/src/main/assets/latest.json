@@ -1,43 +1,43 @@
 {
-  "build_number": "3426485",
-  "release_date": "2026-07-08T11:05:41Z",
-  "completion_time": "2026-07-08T13:02:25.208943",
+  "build_number": "3428504",
+  "release_date": "2026-07-09T11:05:50Z",
+  "completion_time": "2026-07-09T14:09:19.062298",
   "icon_version": 27,
   "icon_sha256": "ad133f80769257ed8da2724ca85f470a29cfe0135a41a1a420aa73e9171379d4",
-  "sde_sha256": "2f7b5e78ba8250faa47c8357833f0fcf59717be2fa4681000e899b3963c89778",
+  "sde_sha256": "d7880557b7e8ed23b19ab63d5e360951668ea6aca265246c621adbd3bd2da09b",
   "patch_number": 0,
   "extra_db": {
     "de": {
       "file": "sde_db_de.zip",
-      "sha256": "fafbff67e8c980dad51531e6dd2cef4589c4d0296668b66ebf0e41dc8ecac492"
+      "sha256": "0c0f4df8de60512772c418ce5741f41322da781a0f6296a39da7183ad4fe6b65"
     },
     "es": {
       "file": "sde_db_es.zip",
-      "sha256": "817341ead0e5eea7fbac3ece4e111691213fa9f585873412a0890be372cbfbde"
+      "sha256": "d114c3dcf2ca027c6ed9342ccd895f2ca72f37c4616a982d1c43e4efed2aa7db"
     },
     "fr": {
       "file": "sde_db_fr.zip",
-      "sha256": "6bdc375535ca7c39ba12ed009a4ab739089f770f39f37df4826a013140c8c1c0"
+      "sha256": "547e895a14b5aab183acae4cdfcffaa57c3bdc05eb44edc084a7951af5668d2f"
     },
     "ja": {
       "file": "sde_db_ja.zip",
-      "sha256": "47637381750cbb1ac0e1d286acf4470fa9fdc4dc1d206a9c8db790b46601d107"
+      "sha256": "505fceddb49283afa91f05bdfc43fb878513f460197de9f89813be48121619c5"
     },
     "ko": {
       "file": "sde_db_ko.zip",
-      "sha256": "4283e74320320bd888757cf11669fcf2acd6b6d071bbbbb65515f047735bdf09"
+      "sha256": "e99f85b8609e8526f550c5853a93f8899d619251bcca095ea6d067b050188efc"
     },
     "ru": {
       "file": "sde_db_ru.zip",
-      "sha256": "b9784e88e243f7f762835400a8b536a69c87aee9a57926cd589f46656976fa57"
+      "sha256": "2121ed7e78f49e1f3c20933e222d0ff3de79d7a7721f7db808f01ace630fe5b7"
     }
   },
-  "tag_name": "sde-build-3426485",
-  "assets_base_url": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3426485/",
+  "tag_name": "sde-build-3428504",
+  "assets_base_url": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3428504/",
   "assets": {
-    "latest.json": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3426485/latest.json",
-    "item_db_zh.sqlite": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3426485/item_db_zh.sqlite",
-    "item_db_en.sqlite": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3426485/item_db_en.sqlite",
-    "icons.zip": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3426485/icons.zip"
+    "latest.json": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3428504/latest.json",
+    "item_db_zh.sqlite": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3428504/item_db_zh.sqlite",
+    "item_db_en.sqlite": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3428504/item_db_en.sqlite",
+    "icons.zip": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3428504/icons.zip"
   }
 }
