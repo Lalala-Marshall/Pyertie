@@ -5,10 +5,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -17,17 +15,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.databaseHierarchyModule.navHost.rememberDatabaseRootBackStackEntry
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
+import com.marshall.pyerite.ui.golbalComponents.PageTitle
+import com.marshall.pyerite.ui.golbalComponents.PyeritePageScaffold
+import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
+import com.marshall.pyerite.ui.golbalComponents.rememberScrollTitleCollapsed
 import org.koin.androidx.compose.koinViewModel
 
 internal enum class TypeDetailSlot {
@@ -74,25 +73,34 @@ fun TypeDetailPage(
         .collectAsState(initial = null)
 
     val visibleSlots = rememberVisibleTypeDetailSlots(typeId, viewModel)
+    val pageTitle = stringResource(R.string.type_info)
+    val onBack = navController.rememberNavigateUpAction()
+    val showCollapsedTitle = rememberScrollTitleCollapsed(scrollState)
 
     type?.let { entity ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .systemBarsPadding()
-                .verticalScroll(scrollState),
-        ) {
-            visibleSlots.forEach { slot ->
-                TypeDetailSlotContent(
-                    slot = slot,
-                    typeId = typeId,
-                    entity = entity,
-                    navController = navController,
-                )
-                TypeDetailSlotTrailingSpacer(
-                    slot = slot,
-                    isLastSlot = slot == visibleSlots.last(),
-                )
+        PyeritePageScaffold(
+            title = pageTitle,
+            showCollapsedTitle = showCollapsedTitle,
+            onBack = onBack,
+        ) { topBarPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(topBarPadding)
+                    .verticalScroll(scrollState),
+            ) {
+                visibleSlots.forEach { slot ->
+                    TypeDetailSlotContent(
+                        slot = slot,
+                        typeId = typeId,
+                        entity = entity,
+                        navController = navController,
+                    )
+                    TypeDetailSlotTrailingSpacer(
+                        slot = slot,
+                        isLastSlot = slot == visibleSlots.last(),
+                    )
+                }
             }
         }
     }
@@ -322,17 +330,7 @@ private fun TypeDetailSlotContent(
 ) {
     when (slot) {
         TypeDetailSlot.Title -> {
-            Text(
-                text = stringResource(R.string.type_info),
-                fontSize = dimensionResource(R.dimen.list_page_title_text_size).value.sp,
-                fontWeight = FontWeight.Black,
-                color = colorResource(R.color.text_primary),
-                modifier = Modifier.padding(
-                    start = dimensionResource(R.dimen.type_detail_page_title_start_padding),
-                    top = dimensionResource(R.dimen.type_detail_page_title_vertical_padding),
-                    bottom = dimensionResource(R.dimen.type_detail_page_title_vertical_padding),
-                ),
-            )
+            PageTitle(text = stringResource(R.string.type_info))
         }
 
         TypeDetailSlot.Summary -> TypeSummarySectionItem(typeId = typeId, entity = entity)

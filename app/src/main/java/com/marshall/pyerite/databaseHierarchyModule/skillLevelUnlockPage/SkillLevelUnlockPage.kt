@@ -2,14 +2,12 @@ package com.marshall.pyerite.databaseHierarchyModule.skillLevelUnlockPage
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -20,7 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -50,6 +47,8 @@ import com.marshall.pyerite.databaseHierarchyModule.util.certificateLevelDrawabl
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
+import com.marshall.pyerite.ui.golbalComponents.PageTitle
+import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
@@ -116,14 +115,16 @@ fun SkillLevelUnlockPage(
     }
 
     val hasListItems = entries.any { it is UnlockListEntry.Item }
+    val pageTitle = stringResource(R.string.skill_level, level)
+    val onBack = navController.rememberNavigateUpAction()
 
     DatabaseListSearchHost(
         pageKey = pageKey,
         viewModel = viewModel,
         listState = listState,
-        modifier = Modifier
-            .fillMaxSize()
-            .systemBarsPadding(),
+        navTitle = pageTitle,
+        modifier = Modifier.fillMaxSize(),
+        onBack = onBack,
         title = {
             SkillUnlockPageTitle(level = level)
         },
@@ -144,34 +145,21 @@ fun SkillLevelUnlockPage(
 
 @Composable
 private fun SkillUnlockPageTitle(level: Int) {
-    val pageTitleTextSize = dimensionResource(R.dimen.list_page_title_text_size).value.sp
-    val titleStartPadding = dimensionResource(R.dimen.type_detail_page_title_start_padding)
-    val titleVerticalPadding = dimensionResource(R.dimen.type_detail_page_title_vertical_padding)
     val titleIconSize = dimensionResource(R.dimen.skill_unlock_title_icon_size)
     val titleIconGap = dimensionResource(R.dimen.skill_unlock_title_icon_gap)
 
-    Row(
-        modifier = Modifier.padding(
-            start = titleStartPadding,
-            top = titleVerticalPadding,
-            bottom = titleVerticalPadding,
-        ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            modifier = Modifier.size(titleIconSize),
-            painter = painterResource(certificateLevelDrawable(level)),
-            contentDescription = null,
-            tint = Color.Unspecified,
-        )
-        Spacer(modifier = Modifier.width(titleIconGap))
-        Text(
-            text = stringResource(R.string.skill_level, level),
-            fontSize = pageTitleTextSize,
-            fontWeight = FontWeight.Black,
-            color = colorResource(R.color.text_primary),
-        )
-    }
+    PageTitle(
+        text = stringResource(R.string.skill_level, level),
+        leadingContent = {
+            Icon(
+                modifier = Modifier.size(titleIconSize),
+                painter = painterResource(certificateLevelDrawable(level)),
+                contentDescription = null,
+                tint = Color.Unspecified,
+            )
+            Spacer(modifier = Modifier.width(titleIconGap))
+        },
+    )
 }
 
 @Composable

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -53,13 +52,15 @@ import com.marshall.pyerite.databaseHierarchyModule.search.matchingSearch
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.HierarchyScrollPosition
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
+import com.marshall.pyerite.ui.golbalComponents.PageTitle
+import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
 private fun hierarchyScrollKey(level: DatabaseLevel, parentId: Int?): String = when (level) {
-    DatabaseLevel.CATEGORY -> "hierarchy:category"
-    DatabaseLevel.GROUP -> "hierarchy:group:$parentId"
-    DatabaseLevel.TYPE -> "hierarchy:type:$parentId"
+    DatabaseLevel.CATEGORY -> "hierarchy:category:v2"
+    DatabaseLevel.GROUP -> "hierarchy:group:$parentId:v2"
+    DatabaseLevel.TYPE -> "hierarchy:type:$parentId:v2"
 }
 
 private sealed interface HierarchySectionKey {
@@ -205,16 +206,17 @@ fun DatabaseHierarchyPage(
 
     val hasListItems = entries.any { it is HierarchyListEntry.Item }
     val searchResultsTruncatedHint = stringResource(R.string.search_results_truncated)
+    val onBack = navController.rememberNavigateUpAction()
 
     DatabaseListSearchHost(
         pageKey = scrollKey,
         viewModel = viewModel,
         listState = listState,
-        modifier = Modifier
-            .fillMaxSize()
-            .systemBarsPadding(),
+        navTitle = title,
+        modifier = Modifier.fillMaxSize(),
+        onBack = onBack,
         title = {
-            HierarchyPageTitle(title = title)
+            PageTitle(text = title)
         },
     ) { query ->
         if (isTypeSearchMode && typeSearchUi.isTruncated) {
@@ -275,24 +277,6 @@ private fun rememberHierarchyLazyListState(
     }
 
     return listState
-}
-
-@Composable
-private fun HierarchyPageTitle(title: String) {
-    val pageTitleTextSize = dimensionResource(R.dimen.list_page_title_text_size).value.sp
-    val titleStartPadding = dimensionResource(R.dimen.type_detail_page_title_start_padding)
-    val titleVerticalPadding = dimensionResource(R.dimen.type_detail_page_title_vertical_padding)
-    Text(
-        text = title,
-        fontSize = pageTitleTextSize,
-        fontWeight = FontWeight.Black,
-        color = colorResource(R.color.text_primary),
-        modifier = Modifier.padding(
-            start = titleStartPadding,
-            top = titleVerticalPadding,
-            bottom = titleVerticalPadding,
-        ),
-    )
 }
 
 @Composable

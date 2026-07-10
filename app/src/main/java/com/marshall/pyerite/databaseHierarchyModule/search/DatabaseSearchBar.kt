@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -55,14 +56,44 @@ fun rememberSearchRowHeight(): Dp {
 fun DatabaseSearchIdleBar(
     onActivate: () -> Unit,
     modifier: Modifier = Modifier,
+    transparentContainer: Boolean = false,
 ) {
-    SearchRowContainer(modifier = modifier) {
+    SearchRowContainer(
+        modifier = modifier,
+        transparentBackground = transparentContainer,
+    ) {
         DatabaseSearchIdleField(
             onActivate = onActivate,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(dimensionResource(R.dimen.search_bar_height)),
         )
+    }
+}
+
+/** Active search row for the pinned top header; tap scrim elsewhere to dismiss when query is blank. */
+@Composable
+fun DatabaseSearchActiveBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onClearQuery: () -> Unit,
+    focusRequester: FocusRequester,
+    modifier: Modifier = Modifier,
+    transparentContainer: Boolean = true,
+) {
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        SearchRowContainer(transparentBackground = transparentContainer) {
+            DatabaseSearchActiveField(
+                query = query,
+                onQueryChange = onQueryChange,
+                onClearQuery = onClearQuery,
+                focusRequester = focusRequester,
+                rowMaxWidth = maxWidth,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(dimensionResource(R.dimen.search_bar_height)),
+            )
+        }
     }
 }
 
@@ -95,6 +126,7 @@ fun DatabaseSearchActiveField(
 @Composable
 private fun SearchRowContainer(
     modifier: Modifier = Modifier,
+    transparentBackground: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val horizontalPadding = dimensionResource(R.dimen.detail_card_horizontal_padding)
@@ -103,7 +135,13 @@ private fun SearchRowContainer(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.background)
+            .then(
+                if (transparentBackground) {
+                    Modifier
+                } else {
+                    Modifier.background(MaterialTheme.colorScheme.background)
+                },
+            )
             .padding(horizontal = horizontalPadding, vertical = verticalPadding),
     ) {
         content()
@@ -115,13 +153,13 @@ private fun DatabaseSearchIdleField(
     onActivate: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val corner = dimensionResource(R.dimen.detail_card_corner_radius)
-    val fieldBackground = colorResource(R.color.search_field_idle_background)
+    val barHeight = dimensionResource(R.dimen.search_bar_height)
+    val fieldBackground = colorResource(R.color.second_background)
     val hintColor = colorResource(R.color.hint_text)
 
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(corner))
+            .clip(RoundedCornerShape(barHeight / 2))
             .background(fieldBackground)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },

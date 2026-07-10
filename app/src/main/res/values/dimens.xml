@@ -40,6 +40,17 @@
     <dimen name="detail_card_corner_radius">16dp</dimen>
     <dimen name="detail_card_horizontal_padding">16dp</dimen>
 
+    <!-- Top navigation bar -->
+    <dimen name="top_bar_height">56dp</dimen>
+    <dimen name="top_bar_nav_row_height">44dp</dimen>
+    <dimen name="top_bar_back_button_size">36dp</dimen>
+    <dimen name="top_bar_action_width">48dp</dimen>
+    <dimen name="top_bar_icon_size">24dp</dimen>
+    <dimen name="top_bar_scrim_fade_extra">20dp</dimen>
+    <dimen name="page_title_collapse_threshold">48dp</dimen>
+    <dimen name="list_page_title_block_height">48dp</dimen>
+    <dimen name="list_page_title_bottom_padding">4dp</dimen>
+
     <dimen name="search_bar_height">44dp</dimen>
     <dimen name="search_bar_vertical_padding">8dp</dimen>
     <dimen name="search_bar_cancel_gap">8dp</dimen>
