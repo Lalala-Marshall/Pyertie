@@ -7,11 +7,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -23,9 +21,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
@@ -39,6 +35,8 @@ import com.marshall.pyerite.databaseHierarchyModule.search.matchesSearchQuery
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
+import com.marshall.pyerite.ui.golbalComponents.PageTitle
+import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
@@ -82,16 +80,18 @@ fun TypeApplicableBlueprintsPage(
     }
 
     val hasListItems = entries.any { it is ApplicableBlueprintListEntry.Item }
+    val pageTitle = stringResource(R.string.type_detail_applicable_to)
+    val onBack = navController.rememberNavigateUpAction()
 
     DatabaseListSearchHost(
         pageKey = pageKey,
         viewModel = viewModel,
         listState = listState,
-        modifier = Modifier
-            .fillMaxSize()
-            .systemBarsPadding(),
+        navTitle = pageTitle,
+        modifier = Modifier.fillMaxSize(),
+        onBack = onBack,
         title = {
-            ApplicableBlueprintsPageTitle()
+            PageTitle(text = pageTitle)
         },
     ) { query ->
         if (query.isNotBlank() && !hasListItems) {
@@ -106,24 +106,6 @@ fun TypeApplicableBlueprintsPage(
             ApplicableBlueprintListEntryContent(entry = entry)
         }
     }
-}
-
-@Composable
-private fun ApplicableBlueprintsPageTitle() {
-    val pageTitleTextSize = dimensionResource(R.dimen.list_page_title_text_size).value.sp
-    val titleStartPadding = dimensionResource(R.dimen.type_detail_page_title_start_padding)
-    val titleVerticalPadding = dimensionResource(R.dimen.type_detail_page_title_vertical_padding)
-    Text(
-        text = stringResource(R.string.type_detail_applicable_to),
-        fontSize = pageTitleTextSize,
-        fontWeight = FontWeight.Black,
-        color = colorResource(R.color.text_primary),
-        modifier = Modifier.padding(
-            start = titleStartPadding,
-            top = titleVerticalPadding,
-            bottom = titleVerticalPadding,
-        ),
-    )
 }
 
 @Composable

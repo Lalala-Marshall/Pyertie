@@ -10,14 +10,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -39,13 +38,20 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.marshall.pyerite.R
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
+import com.marshall.pyerite.ui.golbalComponents.PyeriteTopBar
+import com.marshall.pyerite.ui.golbalComponents.rememberLazyListSearchPinned
+import com.marshall.pyerite.ui.golbalComponents.rememberLazyListTitleCollapsed
+import com.marshall.pyerite.ui.golbalComponents.rememberTopBarTotalHeight
 
 @Composable
 fun DatabaseListSearchHost(
     pageKey: String,
     viewModel: DatabaseViewModel,
     listState: LazyListState,
+    navTitle: String,
     modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null,
+    trailingContent: @Composable (() -> Unit)? = null,
     title: @Composable () -> Unit,
     listContent: LazyListScope.(query: String) -> Unit,
 ) {
@@ -53,8 +59,17 @@ fun DatabaseListSearchHost(
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     val searchRowHeight = rememberSearchRowHeight()
+    val topBarTotalHeight = rememberTopBarTotalHeight()
+    val showCollapsedTitle = rememberLazyListTitleCollapsed(
+        listState = listState,
+        enabled = !searchState.isActive,
+    )
+    val isSearchPinned = rememberLazyListSearchPinned(
+        listState = listState,
+        enabled = !searchState.isActive,
+    )
 
-    val showScrim = searchState.isActive && searchState.query.isBlank()
+    val showDismissScrim = searchState.isActive && searchState.query.isBlank()
 
     val cancelSearch: () -> Unit = {
         viewModel.cancelSearch(pageKey)
@@ -76,13 +91,16 @@ fun DatabaseListSearchHost(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Box(modifier = modifier.fillMaxSize().imePadding()) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .imePadding(),
+        ) {
             LazyColumn(
                 state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .zIndex(0f),
-                userScrollEnabled = !showScrim,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(top = topBarTotalHeight),
+                userScrollEnabled = !showDismissScrim,
             ) {
                 item(key = "page_title") {
                     AnimatedVisibility(
@@ -94,17 +112,15 @@ fun DatabaseListSearchHost(
                     }
                 }
 
-                stickyHeader(key = "search_bar") {
-                    if (searchState.isActive) {
+                item(key = "search_bar") {
+                    if (searchState.isActive || isSearchPinned) {
                         Spacer(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(searchRowHeight),
                         )
                     } else {
-                    DatabaseSearchIdleBar(
-                        onActivate = activateSearch,
-                    )
+                        DatabaseSearchIdleBar(onActivate = activateSearch)
                     }
                 }
 
@@ -112,58 +128,76 @@ fun DatabaseListSearchHost(
             }
         }
 
-        if (searchState.isActive) {
-            DatabaseSearchActiveOverlay(
-                query = searchState.query,
-                showScrim = showScrim,
-                onQueryChange = { viewModel.setSearchQuery(pageKey, it) },
-                onClearQuery = { viewModel.setSearchQuery(pageKey, "") },
-                onDismissScrim = cancelSearch,
-                focusRequester = focusRequester,
+        val showDismissScrim = searchState.isActive && searchState.query.isBlank()
+        val showTopBarScrim = showCollapsedTitle || searchState.isActive
+        val showTopBarTitle = showCollapsedTitle || searchState.isActive
+        val topBarOnBack = if (searchState.isActive) cancelSearch else onBack
+
+        PyeriteTopBar(
+            title = navTitle,
+            showTitle = showTopBarTitle,
+            showScrim = showTopBarScrim,
+            onBack = topBarOnBack,
+            trailingContent = if (searchState.isActive) null else trailingContent,
+            pinnedSearch = when {
+                searchState.isActive -> {
+                    {
+                        DatabaseSearchActiveBar(
+                            query = searchState.query,
+                            onQueryChange = { viewModel.setSearchQuery(pageKey, it) },
+                            onClearQuery = { viewModel.setSearchQuery(pageKey, "") },
+                            focusRequester = focusRequester,
+                        )
+                    }
+                }
+                isSearchPinned -> {
+                    {
+                        DatabaseSearchIdleBar(
+                            onActivate = activateSearch,
+                            transparentContainer = true,
+                        )
+                    }
+                }
+                else -> null
+            },
+            pinnedSearchHeight = searchRowHeight,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .zIndex(20f),
+        )
+
+        if (showDismissScrim) {
+            DatabaseSearchDismissScrim(
+                topOffset = topBarTotalHeight + searchRowHeight,
+                onDismiss = cancelSearch,
             )
         }
     }
 }
 
 @Composable
-private fun DatabaseSearchActiveOverlay(
-    query: String,
-    showScrim: Boolean,
-    onQueryChange: (String) -> Unit,
-    onClearQuery: () -> Unit,
-    onDismissScrim: () -> Unit,
-    focusRequester: FocusRequester,
+private fun DatabaseSearchDismissScrim(
+    topOffset: androidx.compose.ui.unit.Dp,
+    onDismiss: () -> Unit,
 ) {
     val scrimColor = colorResource(R.color.search_scrim)
 
-    BoxWithConstraints(
+    Box(
         modifier = Modifier
-            .then(if (showScrim) Modifier.fillMaxSize() else Modifier.fillMaxWidth())
-            .zIndex(10f),
+            .fillMaxSize()
+            .zIndex(15f),
     ) {
-        if (showScrim) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(scrimColor)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        enabled = true,
-                        onClick = onDismissScrim,
-                    ),
-            )
-        }
-
-        DatabaseSearchActiveField(
-            query = query,
-            onQueryChange = onQueryChange,
-            onClearQuery = onClearQuery,
-            focusRequester = focusRequester,
-            rowMaxWidth = maxWidth,
+        Box(
             modifier = Modifier
-                .align(Alignment.TopCenter)
-                .statusBarsPadding(),
+                .fillMaxSize()
+                .padding(top = topOffset)
+                .background(scrimColor)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    enabled = true,
+                    onClick = onDismiss,
+                ),
         )
     }
 }

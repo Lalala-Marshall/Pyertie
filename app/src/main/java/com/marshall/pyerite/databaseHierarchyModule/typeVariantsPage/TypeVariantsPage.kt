@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,6 +42,8 @@ import com.marshall.pyerite.databaseHierarchyModule.search.matchingSearch
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
+import com.marshall.pyerite.ui.golbalComponents.PageTitle
+import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
@@ -109,16 +110,18 @@ fun TypeVariantsPage(
     }
 
     val hasListItems = entries.any { it is VariantListEntry.Item }
+    val pageTitle = stringResource(R.string.type_detail_variants_section)
+    val onBack = navController.rememberNavigateUpAction()
 
     DatabaseListSearchHost(
         pageKey = pageKey,
         viewModel = viewModel,
         listState = listState,
-        modifier = Modifier
-            .fillMaxSize()
-            .systemBarsPadding(),
+        navTitle = pageTitle,
+        modifier = Modifier.fillMaxSize(),
+        onBack = onBack,
         title = {
-            VariantPageTitle()
+            PageTitle(text = pageTitle)
         },
     ) { query ->
         if (query.isNotBlank() && !hasListItems) {
@@ -133,24 +136,6 @@ fun TypeVariantsPage(
             VariantListEntryContent(entry = entry)
         }
     }
-}
-
-@Composable
-private fun VariantPageTitle() {
-    val pageTitleTextSize = dimensionResource(R.dimen.list_page_title_text_size).value.sp
-    val titleStartPadding = dimensionResource(R.dimen.type_detail_page_title_start_padding)
-    val titleVerticalPadding = dimensionResource(R.dimen.type_detail_page_title_vertical_padding)
-    Text(
-        text = stringResource(R.string.type_detail_variants_section),
-        fontSize = pageTitleTextSize,
-        fontWeight = FontWeight.Black,
-        color = colorResource(R.color.text_primary),
-        modifier = Modifier.padding(
-            start = titleStartPadding,
-            top = titleVerticalPadding,
-            bottom = titleVerticalPadding,
-        ),
-    )
 }
 
 @Composable

@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Pyerite</string>
     <string name="main_page">首页</string>
+    <string name="nav_back">返回</string>
 
     <string name="data">数据</string>
     <string name="database">数据库</string>
