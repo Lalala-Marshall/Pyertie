@@ -129,6 +129,11 @@ private fun SdeUpdateSheetBody(
                     fontSize = 14.sp,
                     color = captionColor,
                 )
+                Text(
+                    text = stringResource(R.string.sde_update_check_failed_hint),
+                    fontSize = 14.sp,
+                    color = captionColor,
+                )
                 SdeUpdateSheetActions(
                     primaryLabel = stringResource(R.string.sde_update_retry),
                     onPrimaryClick = onRetryCheck,
