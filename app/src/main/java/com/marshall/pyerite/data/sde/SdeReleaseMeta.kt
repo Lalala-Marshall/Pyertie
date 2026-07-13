@@ -21,6 +21,7 @@ data class SdeReleaseMeta(
     val buildNumber: String,
     val releaseDate: String,
     val completionTime: String,
+    val iconVersion: Int?,
     val iconSha256: String?,
     val sdeSha256: String?,
 ) {
@@ -38,6 +39,7 @@ data class SdeReleaseMeta(
             buildNumber = json.optString("build_number", "0"),
             releaseDate = json.optString("release_date", ""),
             completionTime = json.optString("completion_time", ""),
+            iconVersion = json.optInt("icon_version", -1).takeIf { it >= 0 },
             iconSha256 = json.optString("icon_sha256").ifBlank { null },
             sdeSha256 = json.optString("sde_sha256").ifBlank { null },
         )

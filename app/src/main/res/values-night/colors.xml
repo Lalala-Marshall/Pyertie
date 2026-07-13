@@ -26,4 +26,6 @@
     <color name="search_clear_button_background">#F3F3F3</color>
     <color name="search_clear_icon">#141A42</color>
 
+    <color name="sde_update_accent">#34A853</color>
+
 </resources>

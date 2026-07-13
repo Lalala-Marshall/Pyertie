@@ -13,6 +13,7 @@ class SdeVersionStore(context: Context) {
             buildNumber = prefs.getString(KEY_BUILD_NUMBER, "0").orEmpty(),
             releaseDate = prefs.getString(KEY_RELEASE_DATE, "").orEmpty(),
             completionTime = prefs.getString(KEY_COMPLETION_TIME, "").orEmpty(),
+            iconVersion = prefs.getInt(KEY_ICON_VERSION, -1).takeIf { it >= 0 },
             iconSha256 = prefs.getString(KEY_ICON_SHA256, null)?.ifBlank { null },
             sdeSha256 = prefs.getString(KEY_SDE_SHA256, null)?.ifBlank { null },
         )
@@ -23,6 +24,11 @@ class SdeVersionStore(context: Context) {
             putString(KEY_BUILD_NUMBER, meta.buildNumber)
             putString(KEY_RELEASE_DATE, meta.releaseDate)
             putString(KEY_COMPLETION_TIME, meta.completionTime)
+            if (meta.iconVersion != null) {
+                putInt(KEY_ICON_VERSION, meta.iconVersion)
+            } else {
+                remove(KEY_ICON_VERSION)
+            }
             if (meta.iconSha256 != null) {
                 putString(KEY_ICON_SHA256, meta.iconSha256)
             } else {
@@ -41,6 +47,7 @@ class SdeVersionStore(context: Context) {
         private const val KEY_BUILD_NUMBER = "build_number"
         private const val KEY_RELEASE_DATE = "release_date"
         private const val KEY_COMPLETION_TIME = "completion_time"
+        private const val KEY_ICON_VERSION = "icon_version"
         private const val KEY_ICON_SHA256 = "icon_sha256"
         private const val KEY_SDE_SHA256 = "sde_sha256"
     }
