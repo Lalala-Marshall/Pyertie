@@ -33,4 +33,6 @@
     <color name="search_scrim">#CC000000</color>
     <color name="search_clear_button_background">#141A42</color>
     <color name="search_clear_icon">#FFFFFF</color>
+
+    <color name="sde_update_accent">#34A853</color>
 </resources>

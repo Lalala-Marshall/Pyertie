@@ -5,32 +5,26 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CloudDownload
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
+import com.marshall.pyerite.data.sde.SdeUpdateBottomSheet
 import com.marshall.pyerite.data.sde.SdeUpdateUiState
 import com.marshall.pyerite.data.sde.SdeUpdateViewModel
 import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
@@ -38,6 +32,7 @@ import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
 import com.marshall.pyerite.ui.golbalComponents.PageTitle
 import com.marshall.pyerite.ui.golbalComponents.PyeritePageScaffold
+import com.marshall.pyerite.ui.golbalComponents.PyeriteTopBarActionItem
 import com.marshall.pyerite.ui.golbalComponents.rememberLazyListTitleCollapsed
 import org.koin.androidx.compose.koinViewModel
 
@@ -50,37 +45,35 @@ fun MainPage(
     val listState = rememberLazyListState()
     val showCollapsedTitle = rememberLazyListTitleCollapsed(listState)
 
-    LaunchedEffect(Unit) {
-        sdeUpdateViewModel.checkForUpdates()
+    val updateActionLabel = when (uiState) {
+        is SdeUpdateUiState.CheckFailed -> stringResource(R.string.sde_update_check_manually)
+        else -> stringResource(R.string.sde_update_available)
     }
-
-    val showUpdateIcon = uiState is SdeUpdateUiState.UpdateAvailable ||
-        uiState is SdeUpdateUiState.Downloading
-    val showDownloadDialog = uiState is SdeUpdateUiState.Downloading ||
-        uiState is SdeUpdateUiState.Completed ||
-        uiState is SdeUpdateUiState.Failed
+    val showUpdateIcon = uiState is SdeUpdateUiState.UpdateReady ||
+        uiState is SdeUpdateUiState.CheckFailed
+    val updateActionEnabled = showUpdateIcon
     val pageTitle = stringResource(R.string.main_page)
     val dataSectionTitle = stringResource(R.string.data)
+    val updateEndActions = if (showUpdateIcon) {
+        listOf(
+            PyeriteTopBarActionItem(
+                onClick = { sdeUpdateViewModel.openUpdateSheet() },
+                icon = Icons.Default.ArrowDownward,
+                contentDescription = stringResource(R.string.sde_update_download),
+                label = updateActionLabel,
+                accentColor = colorResource(R.color.sde_update_accent),
+                iconBadge = true,
+                enabled = updateActionEnabled
+            ),
+        )
+    } else {
+        emptyList()
+    }
 
     PyeritePageScaffold(
         title = pageTitle,
         showCollapsedTitle = showCollapsedTitle,
-        trailingContent = if (showUpdateIcon) {
-            {
-                IconButton(
-                    onClick = { sdeUpdateViewModel.downloadUpdate() },
-                    enabled = uiState is SdeUpdateUiState.UpdateAvailable,
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CloudDownload,
-                        contentDescription = stringResource(R.string.sde_update_download),
-                        modifier = Modifier.size(24.dp),
-                    )
-                }
-            }
-        } else {
-            null
-        },
+        endActions = updateEndActions,
     ) { topBarPadding ->
         LazyColumn(
             state = listState,
@@ -102,12 +95,21 @@ fun MainPage(
         }
     }
 
-    if (showDownloadDialog) {
-        SdeUpdateDialog(
-            uiState = uiState,
-            onDismissCompleted = sdeUpdateViewModel::dismissCompleted,
-            onDismissError = sdeUpdateViewModel::dismissError,
-        )
+    val sheetState = uiState as? SdeUpdateUiState.Sheet
+    if (sheetState != null) {
+        key(sheetState.instanceId) {
+            SdeUpdateBottomSheet(
+                content = sheetState.content,
+                onDismiss = sdeUpdateViewModel::dismissSheet,
+                onConfirmDownload = sdeUpdateViewModel::startDownload,
+                onRetryDownload = sdeUpdateViewModel::retryDownload,
+                onRetryCheck = sdeUpdateViewModel::retryCheck,
+            )
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        sdeUpdateViewModel.repairStaleCheckingState()
     }
 }
 
@@ -117,7 +119,7 @@ private fun MainPageSectionHeader(title: String) {
     val titleStartPadding = dimensionResource(R.dimen.type_detail_page_title_start_padding)
     val sectionHeaderBottomPadding = dimensionResource(R.dimen.list_section_header_bottom_padding)
 
-    Text(
+    androidx.compose.material3.Text(
         text = title,
         fontSize = sectionHeaderTextSize,
         fontWeight = FontWeight.Black,
@@ -150,67 +152,4 @@ private fun MainPageDatabaseItem(onClick: () -> Unit) {
             showDivider = false,
         )
     }
-}
-
-@Composable
-private fun SdeUpdateDialog(
-    uiState: SdeUpdateUiState,
-    onDismissCompleted: () -> Unit,
-    onDismissError: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = {
-            when (uiState) {
-                is SdeUpdateUiState.Completed -> onDismissCompleted()
-                is SdeUpdateUiState.Failed -> onDismissError()
-                else -> Unit
-            }
-        },
-        title = {
-            Text(
-                text = when (uiState) {
-                    is SdeUpdateUiState.Downloading -> stringResource(R.string.sde_update_downloading_title)
-                    is SdeUpdateUiState.Completed -> stringResource(R.string.sde_update_complete)
-                    is SdeUpdateUiState.Failed -> stringResource(R.string.sde_update_failed_title)
-                    else -> stringResource(R.string.sde_update_download)
-                },
-            )
-        },
-        text = {
-            when (uiState) {
-                is SdeUpdateUiState.Downloading -> {
-                    LinearProgressIndicator(
-                        progress = { uiState.progressPercent / 100f },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Text(
-                        text = stringResource(R.string.sde_update_downloading, uiState.progressPercent),
-                        modifier = Modifier.padding(top = 12.dp),
-                    )
-                }
-                is SdeUpdateUiState.Completed -> {
-                    Text(text = stringResource(R.string.sde_update_complete_message))
-                }
-                is SdeUpdateUiState.Failed -> {
-                    Text(text = stringResource(R.string.sde_update_error, uiState.message))
-                }
-                else -> Unit
-            }
-        },
-        confirmButton = {
-            when (uiState) {
-                is SdeUpdateUiState.Completed -> {
-                    TextButton(onClick = onDismissCompleted) {
-                        Text(text = stringResource(R.string.sde_update_ok))
-                    }
-                }
-                is SdeUpdateUiState.Failed -> {
-                    TextButton(onClick = onDismissError) {
-                        Text(text = stringResource(R.string.sde_update_ok))
-                    }
-                }
-                else -> Unit
-            }
-        },
-    )
 }

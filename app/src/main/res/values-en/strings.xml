@@ -111,6 +111,26 @@
     <string name="duration_part_seconds">%1$ds</string>
 
     <string name="sde_update_download">Download database update</string>
+    <string name="sde_update_available">Update</string>
+    <string name="sde_update_check_manually">Check for updates</string>
+    <string name="sde_update_checking">Checking</string>
+    <string name="sde_update_checking_title">Checking for updates</string>
+    <string name="sde_update_checking_message">Connecting to the update server…</string>
+    <string name="sde_update_sheet_title">Database update</string>
+    <string name="sde_update_installed_build_label">Current database</string>
+    <string name="sde_update_remote_build_label">New database</string>
+    <string name="sde_update_installed_icon_version_label">Current icons</string>
+    <string name="sde_update_remote_icon_version_label">New icons</string>
+    <string name="sde_update_build_unknown">Unknown</string>
+    <string name="sde_update_prompt_message">The update applies without restarting the app.</string>
+    <string name="sde_update_confirm">Download update</string>
+    <string name="sde_update_cancel">Cancel</string>
+    <string name="sde_update_cancel_download">Cancel download</string>
+    <string name="sde_update_retry">Retry</string>
+    <string name="sde_update_check_failed_title">Update check failed</string>
+    <string name="sde_update_cancelled_title">Download cancelled</string>
+    <string name="sde_update_cancelled_message">Download was cancelled. You can try again later.</string>
+    <string name="sde_update_network_error">Could not reach the update server. Check your network and try again.</string>
     <string name="sde_update_downloading_title">Downloading database</string>
     <string name="sde_update_downloading">Download progress %1$d%%</string>
     <string name="sde_update_complete">Update complete</string>

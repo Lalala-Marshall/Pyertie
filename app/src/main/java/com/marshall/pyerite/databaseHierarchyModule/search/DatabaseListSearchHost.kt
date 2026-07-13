@@ -39,6 +39,7 @@ import androidx.compose.ui.zIndex
 import com.marshall.pyerite.R
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
 import com.marshall.pyerite.ui.golbalComponents.PyeriteTopBar
+import com.marshall.pyerite.ui.golbalComponents.PyeriteTopBarActionItem
 import com.marshall.pyerite.ui.golbalComponents.rememberLazyListSearchPinned
 import com.marshall.pyerite.ui.golbalComponents.rememberLazyListTitleCollapsed
 import com.marshall.pyerite.ui.golbalComponents.rememberTopBarTotalHeight
@@ -51,7 +52,7 @@ fun DatabaseListSearchHost(
     navTitle: String,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
-    trailingContent: @Composable (() -> Unit)? = null,
+    endActions: List<PyeriteTopBarActionItem> = emptyList(),
     title: @Composable () -> Unit,
     listContent: LazyListScope.(query: String) -> Unit,
 ) {
@@ -138,7 +139,7 @@ fun DatabaseListSearchHost(
             showTitle = showTopBarTitle,
             showScrim = showTopBarScrim,
             onBack = topBarOnBack,
-            trailingContent = if (searchState.isActive) null else trailingContent,
+            endActions = if (searchState.isActive) emptyList() else endActions,
             pinnedSearch = when {
                 searchState.isActive -> {
                     {

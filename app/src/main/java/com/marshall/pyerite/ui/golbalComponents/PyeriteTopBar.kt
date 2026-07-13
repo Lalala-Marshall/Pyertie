@@ -19,8 +19,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -31,6 +33,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -113,7 +116,8 @@ fun PyeritePageScaffold(
     showCollapsedTitle: Boolean,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
-    trailingContent: @Composable (() -> Unit)? = null,
+    startActions: List<PyeriteTopBarActionItem> = emptyList(),
+    endActions: List<PyeriteTopBarActionItem> = emptyList(),
     content: @Composable (topBarPadding: PaddingValues) -> Unit,
 ) {
     val topBarTotalHeight = rememberTopBarTotalHeight()
@@ -128,7 +132,8 @@ fun PyeritePageScaffold(
             showTitle = showCollapsedTitle,
             showScrim = showCollapsedTitle,
             onBack = onBack,
-            trailingContent = trailingContent,
+            startActions = startActions,
+            endActions = endActions,
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .zIndex(20f),
@@ -143,18 +148,30 @@ fun PyeriteTopBar(
     modifier: Modifier = Modifier,
     showScrim: Boolean = showTitle,
     onBack: (() -> Unit)? = null,
-    trailingContent: @Composable (() -> Unit)? = null,
+    startActions: List<PyeriteTopBarActionItem> = emptyList(),
+    endActions: List<PyeriteTopBarActionItem> = emptyList(),
     pinnedSearch: (@Composable () -> Unit)? = null,
     pinnedSearchHeight: Dp = 0.dp,
 ) {
     val navRowHeight = dimensionResource(R.dimen.top_bar_nav_row_height)
-    val actionWidth = dimensionResource(R.dimen.top_bar_action_width)
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val barTotalHeight = statusBarTop + navRowHeight
     val hasPinnedSearch = pinnedSearch != null
     val headerHeight = barTotalHeight + if (hasPinnedSearch) pinnedSearchHeight else 0.dp
     val scrimBase = colorResource(R.color.main_background)
     val headerClickBlocker = remember { MutableInteractionSource() }
+    val leadingActions = buildList {
+        if (onBack != null) {
+            add(
+                PyeriteTopBarActionItem(
+                    onClick = onBack,
+                    icon = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.nav_back),
+                ),
+            )
+        }
+        addAll(startActions)
+    }
 
     Box(
         modifier = modifier
@@ -202,11 +219,11 @@ fun PyeriteTopBar(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
-                    modifier = Modifier.width(actionWidth),
+                    modifier = Modifier.wrapContentWidth(),
                     contentAlignment = Alignment.CenterStart,
                 ) {
-                    if (onBack != null) {
-                        PyeriteBackButton(onClick = onBack)
+                    if (leadingActions.isNotEmpty()) {
+                        PyeriteTopBarActions(actions = leadingActions)
                     }
                 }
 
@@ -218,10 +235,12 @@ fun PyeriteTopBar(
                 }
 
                 Box(
-                    modifier = Modifier.width(actionWidth),
+                    modifier = Modifier.wrapContentWidth(),
                     contentAlignment = Alignment.CenterEnd,
                 ) {
-                    trailingContent?.invoke()
+                    if (endActions.isNotEmpty()) {
+                        PyeriteTopBarActions(actions = endActions)
+                    }
                 }
             }
 

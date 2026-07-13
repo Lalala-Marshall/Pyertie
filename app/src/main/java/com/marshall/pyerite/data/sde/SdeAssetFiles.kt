@@ -48,6 +48,11 @@ object SdeAssetFiles {
         copyDatabaseFromAssets(context, SdeDatabase.EN_FILE_NAME)
     }
 
+    fun areDatabasesPresent(context: Context): Boolean {
+        return context.getDatabasePath(SdeDatabase.ZH_FILE_NAME).exists() &&
+            context.getDatabasePath(SdeDatabase.EN_FILE_NAME).exists()
+    }
+
     fun installDatabaseFromFile(context: Context, dbName: String, source: File) {
         deleteDatabase(context, dbName)
         val dbFile = context.getDatabasePath(dbName)
