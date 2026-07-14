@@ -6,6 +6,7 @@ import com.marshall.pyerite.data.sde.BundledSdeUpdater
 import com.marshall.pyerite.data.sde.SdeUpdateController
 import com.marshall.pyerite.data.sde.SdeUpdateLog
 import com.marshall.pyerite.data.sde.sdeModule
+import com.marshall.pyerite.characterModule.viewModel.characterModule
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.databaseHierarchyModule
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,6 +30,7 @@ class PyeriteApp : Application() {
                 appModule,
                 sdeModule,
                 databaseHierarchyModule,
+                characterModule,
             )
         }
 

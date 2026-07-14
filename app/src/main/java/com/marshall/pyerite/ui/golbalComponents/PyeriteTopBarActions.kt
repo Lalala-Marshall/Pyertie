@@ -45,6 +45,7 @@ data class PyeriteTopBarActionItem(
     val iconTint: Color = Color.Unspecified,
     val enabled: Boolean = true,
     val iconBadge: Boolean = false,
+    val showIcon: Boolean = true,
 )
 
 /**
@@ -145,18 +146,13 @@ private fun TopBarActionSegment(
                     modifier = Modifier.size(badgeIconSize),
                 )
             }
-        } else {
-            Box(
-                modifier = Modifier.size(if (inPill) buttonSize else iconSize),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = action.icon,
-                    contentDescription = action.contentDescription,
-                    tint = iconTint,
-                    modifier = Modifier.size(iconSize),
-                )
-            }
+        } else if (action.showIcon) {
+            Icon(
+                imageVector = action.icon,
+                contentDescription = action.contentDescription,
+                tint = iconTint,
+                modifier = Modifier.size(iconSize),
+            )
         }
     }
 
@@ -198,7 +194,7 @@ private fun TopBarActionSegment(
 }
 
 @Composable
-internal fun Modifier.topBarActionSurface(shape: Shape): Modifier {
+fun Modifier.topBarActionSurface(shape: Shape): Modifier {
     return this
         .shadow(elevation = 2.dp, shape = shape, clip = false)
         .clip(shape)

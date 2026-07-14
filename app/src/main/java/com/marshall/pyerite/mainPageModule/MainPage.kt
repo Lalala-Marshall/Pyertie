@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,6 +29,9 @@ import com.marshall.pyerite.data.sde.SdeUpdateBottomSheet
 import com.marshall.pyerite.data.sde.SdeUpdateUiState
 import com.marshall.pyerite.data.sde.SdeUpdateViewModel
 import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
+import com.marshall.pyerite.characterModule.navHost.CharacterRoute
+import com.marshall.pyerite.characterModule.ui.MainPageCharacterCard
+import com.marshall.pyerite.characterModule.viewModel.CharacterViewModel
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
 import com.marshall.pyerite.ui.golbalComponents.PageTitle
@@ -40,8 +44,10 @@ import org.koin.androidx.compose.koinViewModel
 fun MainPage(
     navController: NavController,
     sdeUpdateViewModel: SdeUpdateViewModel = koinViewModel(),
+    characterViewModel: CharacterViewModel = koinViewModel(),
 ) {
     val uiState by sdeUpdateViewModel.uiState.collectAsState()
+    val currentCharacter by characterViewModel.currentCharacter.collectAsState()
     val listState = rememberLazyListState()
     val showCollapsedTitle = rememberLazyListTitleCollapsed(listState)
 
@@ -51,29 +57,37 @@ fun MainPage(
     }
     val showUpdateIcon = uiState is SdeUpdateUiState.UpdateReady ||
         uiState is SdeUpdateUiState.CheckFailed
-    val updateActionEnabled = showUpdateIcon
     val pageTitle = stringResource(R.string.main_page)
     val dataSectionTitle = stringResource(R.string.data)
-    val updateEndActions = if (showUpdateIcon) {
-        listOf(
-            PyeriteTopBarActionItem(
-                onClick = { sdeUpdateViewModel.openUpdateSheet() },
-                icon = Icons.Default.ArrowDownward,
-                contentDescription = stringResource(R.string.sde_update_download),
-                label = updateActionLabel,
-                accentColor = colorResource(R.color.sde_update_accent),
-                iconBadge = true,
-                enabled = updateActionEnabled
-            ),
-        )
-    } else {
-        emptyList()
+    val endActions = buildList {
+        if (showUpdateIcon) {
+            add(
+                PyeriteTopBarActionItem(
+                    onClick = { sdeUpdateViewModel.openUpdateSheet() },
+                    icon = Icons.Default.ArrowDownward,
+                    contentDescription = stringResource(R.string.sde_update_download),
+                    label = updateActionLabel,
+                    accentColor = colorResource(R.color.sde_update_accent),
+                    iconBadge = true,
+                ),
+            )
+        }
+        if (currentCharacter != null) {
+            add(
+                PyeriteTopBarActionItem(
+                    onClick = characterViewModel::clearCurrentCharacter,
+                    icon = Icons.AutoMirrored.Filled.Logout,
+                    contentDescription = stringResource(R.string.character_exit_current),
+                    iconTint = colorResource(R.color.character_delete),
+                ),
+            )
+        }
     }
 
     PyeritePageScaffold(
         title = pageTitle,
         showCollapsedTitle = showCollapsedTitle,
-        endActions = updateEndActions,
+        endActions = endActions,
     ) { topBarPadding ->
         LazyColumn(
             state = listState,
@@ -87,7 +101,7 @@ fun MainPage(
             item(key = "current_character") {
                 MainPageCharacterCard(
                     currentCharacter = currentCharacter,
-                    onClick = {  },
+                    onClick = { navController.navigate(CharacterRoute.Root.route) },
                 )
             }
             item(key = "data_section_header") {
