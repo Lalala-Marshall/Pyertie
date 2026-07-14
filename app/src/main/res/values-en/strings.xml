@@ -148,4 +148,23 @@
     <string name="search_preview_hint">Search</string>
     <string name="search_preview_page_title">Frigate Blueprints</string>
     <string name="search_preview_tap_to_toggle_active">Tap here to simulate active search</string>
+
+    <!-- Character / OAuth -->
+    <string name="character_add">Add Character</string>
+    <string name="character_management">Character Management</string>
+    <string name="character_edit">Edit</string>
+    <string name="character_done">Done</string>
+    <string name="character_logged_in_section">Logged-in Characters (%1$d)</string>
+    <string name="character_wallet">Wallet: %1$s</string>
+    <string name="character_total_skill_points">Total SP: %1$s SP (Unallocated: %2$s)</string>
+    <string name="character_training_skill">%1$s %2$d</string>
+    <string name="character_portrait">Character portrait</string>
+    <string name="character_corp_icon">Corporation icon</string>
+    <string name="character_alliance_icon">Alliance icon</string>
+    <string name="character_open_management">Open character management</string>
+    <string name="character_delete">Delete character</string>
+    <string name="character_delete_confirm_title">Remove Character</string>
+    <string name="character_delete_confirm">Remove</string>
+    <string name="character_delete_cancel">Cancel</string>
+    <string name="character_exit_current">Exit current character</string>
 </resources>

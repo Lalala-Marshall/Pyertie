@@ -84,6 +84,12 @@ fun MainPage(
             item(key = "page_title") {
                 PageTitle(text = pageTitle)
             }
+            item(key = "current_character") {
+                MainPageCharacterCard(
+                    currentCharacter = currentCharacter,
+                    onClick = {  },
+                )
+            }
             item(key = "data_section_header") {
                 MainPageSectionHeader(title = dataSectionTitle)
             }

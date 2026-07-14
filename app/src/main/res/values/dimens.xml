@@ -48,6 +48,7 @@
     <dimen name="top_bar_icon_size">24dp</dimen>
     <dimen name="top_bar_action_pill_horizontal_padding">4dp</dimen>
     <dimen name="top_bar_action_pill_item_gap">2dp</dimen>
+    <dimen name="top_bar_end_action_gap">8dp</dimen>
     <dimen name="top_bar_update_badge_size">28dp</dimen>
     <dimen name="top_bar_update_badge_icon_size">16dp</dimen>
     <dimen name="top_bar_update_text_start_padding">12dp</dimen>
@@ -93,4 +94,31 @@
     <dimen name="defense_bar_height">14dp</dimen>
     <dimen name="defense_bar_corner_radius">3dp</dimen>
     <dimen name="defense_row_extra_horizontal_padding">4dp</dimen>
+
+    <!-- Character module -->
+    <dimen name="character_main_avatar_size">64dp</dimen>
+    <dimen name="character_main_avatar_gap">12dp</dimen>
+    <dimen name="character_list_avatar_size">56dp</dimen>
+    <dimen name="character_badge_size">20dp</dimen>
+    <dimen name="character_badge_offset">2dp</dimen>
+    <dimen name="character_avatar_border_width">1dp</dimen>
+    <dimen name="character_org_icon_size">16dp</dimen>
+    <dimen name="character_org_icon_gap">6dp</dimen>
+    <dimen name="character_org_line_spacing">2dp</dimen>
+    <dimen name="character_org_text_size">13sp</dimen>
+    <dimen name="character_main_name_text_size">16sp</dimen>
+    <dimen name="character_list_name_text_size">16sp</dimen>
+    <dimen name="character_list_meta_text_size">13sp</dimen>
+    <dimen name="character_list_meta_spacing">0dp</dimen>
+    <dimen name="character_card_inner_padding">12dp</dimen>
+    <dimen name="character_main_card_bottom_spacing">12dp</dimen>
+    <dimen name="character_section_spacing">12dp</dimen>
+    <dimen name="character_add_icon_size">24dp</dimen>
+    <dimen name="character_delete_icon_size">22dp</dimen>
+    <dimen name="character_delete_icon_gap">8dp</dimen>
+    <dimen name="character_skill_queue_top_spacing">6dp</dimen>
+    <dimen name="character_skill_queue_label_spacing">4dp</dimen>
+    <dimen name="character_skill_queue_icon_gap">4dp</dimen>
+    <dimen name="character_skill_progress_height">6dp</dimen>
+    <dimen name="character_skill_progress_corner_radius">3dp</dimen>
 </resources>
