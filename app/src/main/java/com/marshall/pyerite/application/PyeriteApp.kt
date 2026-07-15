@@ -2,6 +2,7 @@ package com.marshall.pyerite.application
 
 import android.app.Application
 import com.marshall.pyerite.data.appModule
+import com.marshall.pyerite.data.network.networkModule
 import com.marshall.pyerite.data.sde.BundledSdeUpdater
 import com.marshall.pyerite.data.sde.SdeUpdateController
 import com.marshall.pyerite.data.sde.SdeUpdateLog
@@ -28,6 +29,7 @@ class PyeriteApp : Application() {
             androidContext(this@PyeriteApp)
             modules(
                 appModule,
+                networkModule,
                 sdeModule,
                 databaseHierarchyModule,
                 characterModule,
