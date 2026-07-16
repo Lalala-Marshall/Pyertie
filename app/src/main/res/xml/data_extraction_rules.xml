@@ -2,10 +2,12 @@
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="sharedpref" path="pyerite_sde_version.xml" />
+        <exclude domain="sharedpref" path="pyerite_eve_sso_tokens.xml" />
         <exclude domain="database" path="." />
     </cloud-backup>
     <device-transfer>
         <exclude domain="sharedpref" path="pyerite_sde_version.xml" />
+        <exclude domain="sharedpref" path="pyerite_eve_sso_tokens.xml" />
         <exclude domain="database" path="." />
     </device-transfer>
 </data-extraction-rules>

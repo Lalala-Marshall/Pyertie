@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
     <exclude domain="sharedpref" path="pyerite_sde_version.xml" />
+    <exclude domain="sharedpref" path="pyerite_eve_sso_tokens.xml" />
     <exclude domain="database" path="." />
 </full-backup-content>

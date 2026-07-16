@@ -167,4 +167,8 @@
     <string name="character_delete_confirm">Remove</string>
     <string name="character_delete_cancel">Cancel</string>
     <string name="character_exit_current">Exit current character</string>
+    <string name="character_sso_signing_in">Signing in with EVE SSO…</string>
+    <string name="character_sso_success">Added character %1$s</string>
+    <string name="character_sso_failed">Sign-in failed: %1$s</string>
+    <string name="character_sso_ok">OK</string>
 </resources>

@@ -1,9 +1,13 @@
 package com.marshall.pyerite.data.network
 
+import com.marshall.pyerite.data.sde.SdeRemoteConfig
+import kotlinx.serialization.json.Json
 import okhttp3.Interceptor
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Response
 import retrofit2.Retrofit
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import java.util.concurrent.TimeUnit
 
 object NetworkDefaults {
@@ -14,13 +18,21 @@ object NetworkDefaults {
     const val PLACEHOLDER_BASE_URL = "https://localhost/"
 }
 
+/** Shared JSON config for Retrofit responses and local persistence. */
+val PyeriteJson: Json = Json {
+    ignoreUnknownKeys = true
+    isLenient = true
+    encodeDefaults = true
+    coerceInputValues = true
+}
+
 /** Shared headers for all Retrofit traffic. Derived clients inherit this via [OkHttpClient.newBuilder]. */
 class PyeriteHeadersInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
         val builder = request.newBuilder()
             .header("User-Agent", NetworkDefaults.USER_AGENT)
-        if (request.url.host == "api.github.com") {
+        if (request.url.host == SdeRemoteConfig.GITHUB_API_HOST) {
             builder.header("Accept", "application/vnd.github+json")
             builder.header("X-GitHub-Api-Version", "2022-11-28")
         }
@@ -47,7 +59,10 @@ fun OkHttpClient.createRetrofit(baseUrl: String): Retrofit =
     Retrofit.Builder()
         .baseUrl(baseUrl)
         .client(this)
+        .addConverterFactory(PyeriteJson.asConverterFactory(JSON_MEDIA_TYPE))
         .build()
 
 inline fun <reified T> OkHttpClient.createApi(baseUrl: String): T =
     createRetrofit(baseUrl).create(T::class.java)
+
+private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()

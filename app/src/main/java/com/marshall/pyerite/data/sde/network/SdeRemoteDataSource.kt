@@ -10,7 +10,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
-import org.json.JSONObject
 import retrofit2.HttpException
 import java.io.File
 import java.io.FileOutputStream
@@ -85,9 +84,7 @@ class SdeRemoteDataSource(
 
     private suspend fun fetchFromLatestDownload(): SdeRemotePackage? {
         return try {
-            metadataApi.fetchBody(SdeRemoteConfig.LATEST_JSON_URL).use { body ->
-                parseLatestPackage(body.string())
-            }
+            validatePackage(metadataApi.fetchLatestPackage(SdeRemoteConfig.LATEST_JSON_URL).toRemotePackage())
         } catch (_: Exception) {
             null
         }
@@ -95,27 +92,20 @@ class SdeRemoteDataSource(
 
     private suspend fun fetchFromGitHubApi(): SdeRemotePackage? {
         return try {
-            val releaseJson = metadataApi.fetchBody(SdeRemoteConfig.GITHUB_API_LATEST_RELEASE_URL).use { body ->
-                JSONObject(body.string())
-            }
-            val assets = releaseJson.optJSONArray("assets") ?: return null
-            for (index in 0 until assets.length()) {
-                val asset = assets.optJSONObject(index) ?: continue
-                if (asset.optString("name") != SdeRemoteConfig.LATEST_JSON_ASSET) continue
-                val downloadUrl = asset.optString("browser_download_url").trim()
-                if (downloadUrl.isEmpty()) continue
-                return metadataApi.fetchBody(downloadUrl).use { body ->
-                    parseLatestPackage(body.string())
-                }
-            }
-            null
+            val release = metadataApi.fetchGitHubRelease(SdeRemoteConfig.GITHUB_API_LATEST_RELEASE_URL)
+            val downloadUrl = release.assets
+                .firstOrNull { it.name == SdeRemoteConfig.LATEST_JSON_ASSET }
+                ?.browserDownloadUrl
+                ?.trim()
+                ?.takeIf { it.isNotEmpty() }
+                ?: return null
+            validatePackage(metadataApi.fetchLatestPackage(downloadUrl).toRemotePackage())
         } catch (_: Exception) {
             null
         }
     }
 
-    private fun parseLatestPackage(body: String): SdeRemotePackage {
-        val pkg = SdeRemotePackage.fromJsonObject(JSONObject(body))
+    private fun validatePackage(pkg: SdeRemotePackage): SdeRemotePackage {
         val buildNumber = pkg.meta.buildNumber.toIntOrNull()
         require(buildNumber != null && buildNumber > 0) {
             "Invalid remote SDE build_number"

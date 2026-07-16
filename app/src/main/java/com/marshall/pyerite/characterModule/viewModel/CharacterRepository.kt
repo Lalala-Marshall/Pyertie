@@ -43,6 +43,11 @@ class CharacterRepository {
         _currentCharacter.value = character.toSummary()
     }
 
+    fun upsertLoggedInCharacter(character: LoggedInCharacter) {
+        val without = _loggedInCharacters.value.filterNot { it.characterId == character.characterId }
+        _loggedInCharacters.value = without + character
+    }
+
     fun removeLoggedInCharacter(characterId: Long) {
         val remaining = _loggedInCharacters.value.filterNot { it.characterId == characterId }
         _loggedInCharacters.value = remaining

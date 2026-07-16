@@ -8,7 +8,10 @@ import retrofit2.http.Url
 interface SdeRemoteApi {
 
     @GET
-    suspend fun fetchBody(@Url url: String): ResponseBody
+    suspend fun fetchLatestPackage(@Url url: String): SdeLatestJsonDto
+
+    @GET
+    suspend fun fetchGitHubRelease(@Url url: String): GitHubReleaseDto
 
     @Streaming
     @GET

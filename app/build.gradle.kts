@@ -1,10 +1,22 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
 }
+
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) {
+        file.inputStream().use { load(it) }
+    }
+}
+
+fun localProp(name: String, default: String = ""): String =
+    (localProperties.getProperty(name) ?: default).replace("\"", "\\\"")
 
 android {
     namespace = "com.marshall.pyerite"
@@ -20,6 +32,13 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "EVE_SSO_CLIENT_ID", "\"${localProp("EVE_SSO_CLIENT_ID")}\"")
+        buildConfigField(
+            "String",
+            "EVE_SSO_REDIRECT_URI",
+            "\"${localProp("EVE_SSO_REDIRECT_URI", "eveauthpyerite://login.pyerite.callback/")}\"",
+        )
     }
 
     buildTypes {
@@ -37,6 +56,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -78,9 +98,14 @@ dependencies {
     implementation(libs.koin.android)
     implementation(libs.koin.compose)
 
-    // Retrofit2 + OkHttp
+    // Retrofit2 + OkHttp + kotlinx.serialization
     implementation(libs.retrofit2)
+    implementation(libs.retrofit2.kotlinx.serialization.converter)
     implementation(libs.okhttp)
+    implementation(libs.kotlinx.serialization.json)
+
+    // Custom Tabs for EVE SSO (tokens use Android Keystore + SharedPreferences)
+    implementation(libs.androidx.browser)
 }
 
 ksp {

@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
@@ -48,17 +49,23 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.browser.customtabs.CustomTabsIntent
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.characterModule.model.LoggedInCharacter
 import com.marshall.pyerite.characterModule.ui.CharacterLoggedInListItem
 import com.marshall.pyerite.characterModule.viewModel.CharacterViewModel
+import com.marshall.pyerite.characterModule.auth.EveSsoUiStatus
 import com.marshall.pyerite.ui.golbalComponents.PyeritePageScaffold
 import com.marshall.pyerite.ui.golbalComponents.PyeriteTopBarActionItem
 import com.marshall.pyerite.ui.golbalComponents.rememberLazyListTitleCollapsed
 import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
 import com.marshall.pyerite.ui.golbalComponents.topBarActionSurface
 import org.koin.androidx.compose.koinViewModel
+import androidx.core.net.toUri
 
 @Composable
 fun CharacterManagementPage(
@@ -67,10 +74,18 @@ fun CharacterManagementPage(
 ) {
     val loggedInCharacters by viewModel.loggedInCharacters.collectAsState()
     val isEditMode by viewModel.isEditMode.collectAsState()
+    val ssoStatus by viewModel.ssoStatus.collectAsState()
     val listState = rememberLazyListState()
     val showCollapsedTitle = rememberLazyListTitleCollapsed(listState)
     var pendingDeleteCharacter by remember { mutableStateOf<LoggedInCharacter?>(null) }
     val navigateUp = navController.rememberNavigateUpAction()
+    val context = LocalContext.current
+
+    LaunchedEffect(viewModel) {
+        viewModel.openAuthorizationUrl.collect { url ->
+            openEveAuthorizationUrl(context, url)
+        }
+    }
 
     val pageTitle = stringResource(R.string.character_management)
     val hasLoggedInCharacters = loggedInCharacters.isNotEmpty()
@@ -212,6 +227,94 @@ fun CharacterManagementPage(
             }
         }
     }
+
+    when (val status = ssoStatus) {
+        is EveSsoUiStatus.Idle,
+        is EveSsoUiStatus.AwaitingBrowser,
+        -> Unit
+
+        is EveSsoUiStatus.ExchangingToken -> {
+            Dialog(onDismissRequest = {}) {
+                Surface(
+                    shape = RoundedCornerShape(28.dp),
+                    color = colorResource(R.color.main_background),
+                ) {
+                    Text(
+                        text = stringResource(R.string.character_sso_signing_in),
+                        color = colorResource(R.color.text_primary),
+                        fontSize = 16.sp,
+                        modifier = Modifier.padding(24.dp),
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
+        }
+
+        is EveSsoUiStatus.Failed -> {
+            Dialog(onDismissRequest = viewModel::clearSsoStatus) {
+                Surface(
+                    shape = RoundedCornerShape(28.dp),
+                    color = colorResource(R.color.main_background),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.character_sso_failed, status.message),
+                            color = colorResource(R.color.text_primary),
+                            fontSize = 16.sp,
+                            textAlign = TextAlign.Center,
+                        )
+                        CharacterDialogActionButton(
+                            label = stringResource(R.string.character_sso_ok),
+                            labelColor = colorResource(R.color.hyperlink_text),
+                            onClick = viewModel::clearSsoStatus,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 20.dp),
+                        )
+                    }
+                }
+            }
+        }
+
+        is EveSsoUiStatus.Succeeded -> {
+            Dialog(onDismissRequest = viewModel::clearSsoStatus) {
+                Surface(
+                    shape = RoundedCornerShape(28.dp),
+                    color = colorResource(R.color.main_background),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            text = stringResource(
+                                R.string.character_sso_success,
+                                status.characterName,
+                            ),
+                            color = colorResource(R.color.text_primary),
+                            fontSize = 16.sp,
+                            textAlign = TextAlign.Center,
+                        )
+                        CharacterDialogActionButton(
+                            label = stringResource(R.string.character_sso_ok),
+                            labelColor = colorResource(R.color.hyperlink_text),
+                            onClick = viewModel::clearSsoStatus,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 20.dp),
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -339,5 +442,14 @@ private fun sectionItemShape(indexInSection: Int, sectionItemCount: Int, corner:
         indexInSection == 0 -> RoundedCornerShape(topStart = corner, topEnd = corner)
         indexInSection == sectionItemCount - 1 -> RoundedCornerShape(bottomStart = corner, bottomEnd = corner)
         else -> RectangleShape
+    }
+}
+
+private fun openEveAuthorizationUrl(context: Context, url: String) {
+    val uri = url.toUri()
+    runCatching {
+        CustomTabsIntent.Builder().build().launchUrl(context, uri)
+    }.onFailure {
+        context.startActivity(Intent(Intent.ACTION_VIEW, uri))
     }
 }
