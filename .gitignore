@@ -1,21 +1,13 @@
 *.iml
 .gradle
-/local.properties
-/.idea
-/.idea/*
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+local.properties
+.idea/
 .DS_Store
 /build
 /captures
 .externalNativeBuild
 .cxx
-local.properties
 
 # AI
-/.cursor/*
+/.cursor/
 /.eve_sde_cache/
