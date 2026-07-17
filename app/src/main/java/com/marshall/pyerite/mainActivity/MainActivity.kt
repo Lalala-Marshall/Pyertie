@@ -42,7 +42,12 @@ class MainActivity : ComponentActivity() {
 
     private fun isSsoCallback(uri: Uri): Boolean {
         val expected = EveSsoConfig.redirectUri.toUri()
-        return uri.scheme.equals(expected.scheme, ignoreCase = true) &&
-            uri.host.equals(expected.host, ignoreCase = true)
+        val schemeOk = uri.scheme.equals(expected.scheme, ignoreCase = true)
+        val hostOk = uri.host.equals(expected.host, ignoreCase = true)
+        val expectedPath = expected.path.orEmpty().trimEnd('/')
+        val actualPath = uri.path.orEmpty().trimEnd('/')
+        val pathOk = expectedPath.isEmpty() ||
+            expectedPath.equals(actualPath, ignoreCase = true)
+        return schemeOk && hostOk && pathOk
     }
 }

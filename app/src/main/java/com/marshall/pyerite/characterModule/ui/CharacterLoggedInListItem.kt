@@ -106,7 +106,7 @@ fun CharacterLoggedInListItem(
                 CharacterLocationLine(
                     securityStatus = character.securityStatus,
                     location = character.location,
-                    locationStatus = character.locationStatus,
+                    isOnline = character.isOnline,
                     textSize = metaSize,
                 )
                 character.walletBalance?.let { balance ->
@@ -158,10 +158,15 @@ fun CharacterLoggedInListItem(
 private fun CharacterLocationLine(
     securityStatus: Double?,
     location: String?,
-    locationStatus: String?,
+    isOnline: Boolean?,
     textSize: TextUnit,
 ) {
-    if (securityStatus == null && location.isNullOrBlank() && locationStatus.isNullOrBlank()) return
+    val onlineLabel = when (isOnline) {
+        true -> stringResource(R.string.character_status_online)
+        false -> stringResource(R.string.character_status_offline)
+        null -> null
+    }
+    if (securityStatus == null && location.isNullOrBlank() && onlineLabel == null) return
 
     val securityColor = when {
         securityStatus == null -> colorResource(R.color.text_primary)
@@ -183,7 +188,7 @@ private fun CharacterLocationLine(
                     append(loc)
                 }
             }
-            locationStatus?.let { status ->
+            onlineLabel?.let { status ->
                 append(" ")
                 withStyle(SpanStyle(color = colorResource(R.color.text_caption))) {
                     append(status)
@@ -242,12 +247,25 @@ private fun CharacterSkillQueueSection(
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            text = queue.timeRemaining,
+            text = formatRemainingDuration(queue.remainingSeconds),
             color = colorResource(R.color.text_caption),
             fontSize = textSize,
             lineHeight = textSize,
             style = compactTextStyle(textSize),
         )
+    }
+}
+
+@Composable
+private fun formatRemainingDuration(remainingSeconds: Long): String {
+    val total = remainingSeconds.coerceAtLeast(0L)
+    val hours = total / 3600
+    val minutes = (total % 3600) / 60
+    val seconds = total % 60
+    return when {
+        hours > 0 -> stringResource(R.string.character_duration_hms, hours, minutes, seconds)
+        minutes > 0 -> stringResource(R.string.character_duration_ms, minutes, seconds)
+        else -> stringResource(R.string.character_duration_s, seconds)
     }
 }
 

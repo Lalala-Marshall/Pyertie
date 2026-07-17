@@ -168,7 +168,20 @@
     <string name="character_delete_cancel">Cancel</string>
     <string name="character_exit_current">Exit current character</string>
     <string name="character_sso_signing_in">Signing in with EVE SSO…</string>
+    <string name="character_sso_awaiting_browser">Complete sign-In in the browser</string>
+    <string name="character_sso_cancel">Cancel sign-in</string>
     <string name="character_sso_success">Added character %1$s</string>
     <string name="character_sso_failed">Sign-in failed: %1$s</string>
     <string name="character_sso_ok">OK</string>
+    <string name="character_sso_error_missing_client_id">Missing EVE_SSO_CLIENT_ID in local.properties</string>
+    <string name="character_sso_error_invalid_callback">Invalid SSO callback</string>
+    <string name="character_sso_error_state_mismatch">SSO state mismatch or login expired</string>
+    <string name="character_sso_error_generic">SSO login failed</string>
+    <string name="character_sso_error_provider">%1$s</string>
+    <string name="character_sso_error_provider_denied">Authorization cancelled or denied</string>
+    <string name="character_status_online">Online</string>
+    <string name="character_status_offline">Offline</string>
+    <string name="character_duration_hms">%1$dh %2$dm %3$ds</string>
+    <string name="character_duration_ms">%1$dm %2$ds</string>
+    <string name="character_duration_s">%1$ds</string>
 </resources>

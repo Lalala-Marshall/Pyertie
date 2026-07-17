@@ -1,7 +1,8 @@
 package com.marshall.pyerite.characterModule.auth
 
 import android.net.Uri
-import com.marshall.pyerite.characterModule.model.LoggedInCharacter
+import androidx.annotation.StringRes
+import com.marshall.pyerite.R
 import com.marshall.pyerite.characterModule.viewModel.CharacterRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -19,21 +21,23 @@ sealed interface EveSsoUiStatus {
     data object Idle : EveSsoUiStatus
     data object AwaitingBrowser : EveSsoUiStatus
     data object ExchangingToken : EveSsoUiStatus
-    data class Failed(val message: String) : EveSsoUiStatus
+    data class Failed(
+        @param:StringRes val messageRes: Int,
+        val formatArgs: List<Any> = emptyList(),
+    ) : EveSsoUiStatus
     data class Succeeded(val characterName: String) : EveSsoUiStatus
 }
 
-class EveSsoAuthRepository(
+class EveSsoAuthRepository internal constructor(
     private val remote: EveSsoRemoteDataSource,
-    private val tokenStore: EveTokenStore,
-    private val esi: EsiPublicDataSource,
+    private val tokenManager: EveTokenManager,
+    private val profileLoader: CharacterProfileLoader,
     private val characterRepository: CharacterRepository,
     private val callbackBus: EveSsoCallbackBus,
+    private val pendingLoginStore: EvePendingLoginStore,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val mutex = Mutex()
-    private var pendingState: String? = null
-    private var pendingCodeVerifier: String? = null
 
     private val _status = MutableStateFlow<EveSsoUiStatus>(EveSsoUiStatus.Idle)
     val status: StateFlow<EveSsoUiStatus> = _status.asStateFlow()
@@ -41,6 +45,9 @@ class EveSsoAuthRepository(
     init {
         scope.launch {
             restoreSessions()
+            if (pendingLoginStore.hasPending()) {
+                _status.value = EveSsoUiStatus.AwaitingBrowser
+            }
             callbackBus.callbacks.collect { uri ->
                 handleCallback(uri)
             }
@@ -51,17 +58,21 @@ class EveSsoAuthRepository(
         _status.value = EveSsoUiStatus.Idle
     }
 
+    fun cancelLogin() {
+        pendingLoginStore.clear()
+        _status.value = EveSsoUiStatus.Idle
+    }
+
     /** Returns the authorization URL for the UI to open, or null if preparation failed. */
     suspend fun prepareLogin(): String? = mutex.withLock {
         if (EveSsoConfig.clientId.isBlank()) {
-            _status.value = EveSsoUiStatus.Failed("Missing EVE_SSO_CLIENT_ID in local.properties")
+            _status.value = EveSsoUiStatus.Failed(R.string.character_sso_error_missing_client_id)
             return@withLock null
         }
         val verifier = EveSsoPkce.generateVerifier()
         val challenge = EveSsoPkce.challengeS256(verifier)
         val state = EveSsoPkce.generateState()
-        pendingCodeVerifier = verifier
-        pendingState = state
+        pendingLoginStore.save(state = state, codeVerifier = verifier)
 
         val authorizationEndpoint = remote.resolveAuthorizationEndpoint()
         val url = buildAuthorizationUrl(
@@ -73,112 +84,96 @@ class EveSsoAuthRepository(
         url
     }
 
+    suspend fun refreshStoredSessionsOnForeground() {
+        withContext(Dispatchers.IO) {
+            applyRefreshResults(tokenManager.refreshAllIfNeeded())
+        }
+    }
+
     fun removeCharacterSession(characterId: Long) {
-        tokenStore.remove(characterId)
-        characterRepository.removeLoggedInCharacter(characterId)
+        scope.launch(Dispatchers.IO) {
+            val refreshToken = tokenManager.peekRefreshToken(characterId)
+            tokenManager.remove(characterId)
+            characterRepository.removeLoggedInCharacter(characterId)
+            if (!refreshToken.isNullOrBlank()) {
+                runCatching { remote.revokeRefreshToken(refreshToken) }
+            }
+        }
     }
 
     private suspend fun handleCallback(uri: Uri) {
         mutex.withLock {
-            val expectedState = pendingState
-            val verifier = pendingCodeVerifier
-            pendingState = null
-            pendingCodeVerifier = null
-
-            val error = uri.queryParamOrNull("error")
+            val error = uri.queryParamOrNull(EveSsoConfig.OAuth.QUERY_ERROR)
             if (error != null) {
-                _status.value = EveSsoUiStatus.Failed(
-                    uri.queryParamOrNull("error_description") ?: error,
-                )
+                pendingLoginStore.clear()
+                _status.value = EveSsoUiStatus.Failed(R.string.character_sso_error_provider_denied)
                 return
             }
 
-            val code = uri.queryParamOrNull("code")
-            val state = uri.queryParamOrNull("state")
-            if (code.isNullOrBlank() || state.isNullOrBlank() || verifier.isNullOrBlank()) {
-                _status.value = EveSsoUiStatus.Failed("Invalid SSO callback")
+            val code = uri.queryParamOrNull(EveSsoConfig.OAuth.QUERY_CODE)
+            val state = uri.queryParamOrNull(EveSsoConfig.OAuth.QUERY_STATE)
+            if (code.isNullOrBlank() || state.isNullOrBlank()) {
+                pendingLoginStore.clear()
+                _status.value = EveSsoUiStatus.Failed(R.string.character_sso_error_invalid_callback)
                 return
             }
-            if (expectedState == null || expectedState != state) {
-                _status.value = EveSsoUiStatus.Failed("SSO state mismatch")
+
+            val verifier = pendingLoginStore.consume(state)
+            if (verifier.isNullOrBlank()) {
+                _status.value = EveSsoUiStatus.Failed(R.string.character_sso_error_state_mismatch)
                 return
             }
 
             _status.value = EveSsoUiStatus.ExchangingToken
             try {
                 val tokenResponse = remote.exchangeAuthorizationCode(code, verifier)
-                val claims = EveJwtDecoder.decodeUnverified(tokenResponse.accessToken)
+                val claims = EveJwtDecoder.decodeAndVerify(tokenResponse.accessToken, remote.fetchJwks())
                 EveJwtDecoder.assertBasicClaims(claims, EveSsoConfig.clientId)
 
-                val tokenSet = EveTokenSet(
-                    characterId = claims.characterId,
-                    characterName = claims.characterName,
-                    accessToken = tokenResponse.accessToken,
-                    refreshToken = tokenResponse.refreshToken,
-                    tokenType = tokenResponse.tokenType,
-                    expiresAtEpochMs = System.currentTimeMillis() +
-                        tokenResponse.expiresInSeconds * 1_000L,
-                    scopes = tokenResponse.scopes.ifEmpty { claims.scopes },
+                val fromExpiresIn = System.currentTimeMillis() +
+                    tokenResponse.expiresInSeconds * EveSsoConfig.MILLIS_PER_SECOND
+                val session = tokenManager.save(
+                    EveTokenSet(
+                        characterId = claims.characterId,
+                        characterName = claims.characterName,
+                        accessToken = tokenResponse.accessToken,
+                        refreshToken = tokenResponse.refreshToken,
+                        tokenType = normalizeTokenType(tokenResponse.tokenType),
+                        expiresAtEpochMs = minOf(fromExpiresIn, claims.expiresAtEpochMs),
+                        scopes = tokenResponse.scopes.ifEmpty { claims.scopes },
+                    ),
                 )
-                tokenStore.save(tokenSet)
 
-                val loggedIn = buildLoggedInCharacter(tokenSet)
+                val loggedIn = profileLoader.load(session)
                 characterRepository.upsertLoggedInCharacter(loggedIn)
                 if (characterRepository.currentCharacter.value == null) {
                     characterRepository.selectCurrentCharacter(loggedIn)
                 }
                 _status.value = EveSsoUiStatus.Succeeded(loggedIn.name)
-            } catch (error: Exception) {
-                _status.value = EveSsoUiStatus.Failed(
-                    error.message?.takeIf { it.isNotBlank() } ?: "SSO login failed",
-                )
+            } catch (_: Exception) {
+                _status.value = EveSsoUiStatus.Failed(R.string.character_sso_error_generic)
             }
         }
     }
 
     private suspend fun restoreSessions() {
-        val sessions = tokenStore.all()
-        if (sessions.isEmpty()) return
-        sessions.forEach { tokenSet ->
-            runCatching {
-                val loggedIn = buildLoggedInCharacter(tokenSet)
-                characterRepository.upsertLoggedInCharacter(loggedIn)
+        withContext(Dispatchers.IO) {
+            applyRefreshResults(tokenManager.refreshAllIfNeeded())
+            tokenManager.storedSessions().forEach { session ->
+                runCatching {
+                    characterRepository.upsertLoggedInCharacter(profileLoader.load(session))
+                }
             }
+            characterRepository.restoreCurrentCharacterSelection()
         }
     }
 
-    private suspend fun buildLoggedInCharacter(tokenSet: EveTokenSet): LoggedInCharacter {
-        val public = runCatching { esi.fetchCharacter(tokenSet.characterId) }.getOrNull()
-        val corporation = public?.corporationId?.let { id ->
-            runCatching { esi.fetchCorporation(id) }.getOrNull()
+    private fun applyRefreshResults(results: List<EveTokenRefreshResult>) {
+        results.forEach { result ->
+            if (result is EveTokenRefreshResult.Failed && result.permanent) {
+                characterRepository.removeLoggedInCharacter(result.characterId)
+            }
         }
-        val alliance = public?.allianceId?.let { id ->
-            runCatching { esi.fetchAlliance(id) }.getOrNull()
-        }
-        val corpLabel = corporation?.let { org ->
-            val ticker = org.ticker?.let { "[$it] " }.orEmpty()
-            "$ticker${org.name}"
-        }
-        val allianceLabel = alliance?.let { org ->
-            val ticker = org.ticker?.let { "[$it] " }.orEmpty()
-            "$ticker${org.name}"
-        }
-        return LoggedInCharacter(
-            characterId = tokenSet.characterId,
-            name = public?.name ?: tokenSet.characterName,
-            portraitUrl = portraitUrl(tokenSet.characterId),
-            securityStatus = public?.securityStatus,
-            location = null,
-            locationStatus = null,
-            walletBalance = null,
-            totalSkillPoints = null,
-            unallocatedSkillPoints = null,
-            corporationName = corpLabel,
-            corporationIconUrl = public?.corporationId?.let { corporationLogoUrl(it) },
-            allianceName = allianceLabel,
-            allianceIconUrl = public?.allianceId?.let { allianceLogoUrl(it) },
-            skillQueue = null,
-        )
     }
 
     private fun buildAuthorizationUrl(
@@ -188,13 +183,14 @@ class EveSsoAuthRepository(
     ): String {
         val scope = EveSsoConfig.requestedScopes.joinToString(" ")
         val query = listOf(
-            "response_type" to "code",
-            "redirect_uri" to EveSsoConfig.redirectUri,
-            "client_id" to EveSsoConfig.clientId,
-            "scope" to scope,
-            "state" to state,
-            "code_challenge" to codeChallenge,
-            "code_challenge_method" to "S256",
+            EveSsoConfig.OAuth.PARAM_RESPONSE_TYPE to EveSsoConfig.OAuth.RESPONSE_TYPE_CODE,
+            EveSsoConfig.OAuth.PARAM_REDIRECT_URI to EveSsoConfig.redirectUri,
+            EveSsoConfig.OAuth.PARAM_CLIENT_ID to EveSsoConfig.clientId,
+            EveSsoConfig.OAuth.PARAM_SCOPE to scope,
+            EveSsoConfig.OAuth.PARAM_STATE to state,
+            EveSsoConfig.OAuth.PARAM_CODE_CHALLENGE to codeChallenge,
+            EveSsoConfig.OAuth.PARAM_CODE_CHALLENGE_METHOD to
+                EveSsoConfig.OAuth.CODE_CHALLENGE_METHOD_S256,
         ).joinToString("&") { (key, value) ->
             "${enc(key)}=${enc(value)}"
         }

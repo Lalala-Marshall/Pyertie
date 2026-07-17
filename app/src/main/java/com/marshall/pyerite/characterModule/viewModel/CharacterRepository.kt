@@ -1,22 +1,23 @@
 package com.marshall.pyerite.characterModule.viewModel
 
+import com.marshall.pyerite.characterModule.auth.CharacterSelectionStore
+import com.marshall.pyerite.characterModule.auth.EveTokenManager
 import com.marshall.pyerite.characterModule.model.CharacterSummary
 import com.marshall.pyerite.characterModule.model.LoggedInCharacter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 
-class CharacterRepository {
+class CharacterRepository internal constructor(
+    private val tokenManager: EveTokenManager,
+    private val selectionStore: CharacterSelectionStore,
+) {
 
     private val _currentCharacter = MutableStateFlow<CharacterSummary?>(null)
     val currentCharacter: StateFlow<CharacterSummary?> = _currentCharacter.asStateFlow()
 
     private val _loggedInCharacters = MutableStateFlow<List<LoggedInCharacter>>(emptyList())
     val loggedInCharacters: StateFlow<List<LoggedInCharacter>> = _loggedInCharacters.asStateFlow()
-
-    private val _isEditMode = MutableStateFlow(false)
-    val isEditMode: StateFlow<Boolean> = _isEditMode.asStateFlow()
 
     /**
      * Stack of previous current characters (oldest at first, newest previous at last).
@@ -25,14 +26,11 @@ class CharacterRepository {
      */
     private val currentCharacterHistory = ArrayDeque<CharacterSummary>()
 
-    fun toggleEditMode() {
-        _isEditMode.update { !it }
-    }
-
     fun setCurrentCharacter(character: CharacterSummary?) {
         pushCurrentToHistoryIfChanging(character?.characterId)
         pruneHistory(character?.characterId)
         _currentCharacter.value = character
+        selectionStore.setCurrentCharacterId(character?.characterId)
     }
 
     /** Switches current character only when the id differs. */
@@ -41,6 +39,7 @@ class CharacterRepository {
         pushCurrentToHistoryIfChanging(character.characterId)
         pruneHistory(character.characterId)
         _currentCharacter.value = character.toSummary()
+        selectionStore.setCurrentCharacterId(character.characterId)
     }
 
     fun upsertLoggedInCharacter(character: LoggedInCharacter) {
@@ -55,8 +54,18 @@ class CharacterRepository {
 
         if (_currentCharacter.value?.characterId != characterId) return
 
-        _currentCharacter.value = findUsableCurrentFromHistory(remaining)
+        val next = findUsableCurrentFromHistory(remaining)
             ?: remaining.firstOrNull()?.toSummary()
+        _currentCharacter.value = next
+        selectionStore.setCurrentCharacterId(next?.characterId)
+    }
+
+    /** After tokens restore the logged-in list, re-apply persisted current selection. */
+    fun restoreCurrentCharacterSelection() {
+        val savedId = selectionStore.getCurrentCharacterId() ?: return
+        val match = _loggedInCharacters.value.find { it.characterId == savedId } ?: return
+        if (!isSessionUsable(match)) return
+        _currentCharacter.value = match.toSummary()
     }
 
     private fun pushCurrentToHistoryIfChanging(nextCharacterId: Long?) {
@@ -93,10 +102,6 @@ class CharacterRepository {
         allianceIconUrl = allianceIconUrl,
     )
 
-    /**
-     * Whether this logged-in session can become currentCharacter.
-     * Token expiry / refresh failure will be wired here with OAuth.
-     */
-    @Suppress("UNUSED_PARAMETER")
-    private fun isSessionUsable(character: LoggedInCharacter): Boolean = true
+    private fun isSessionUsable(character: LoggedInCharacter): Boolean =
+        tokenManager.hasStoredSession(character.characterId)
 }

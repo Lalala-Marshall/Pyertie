@@ -52,7 +52,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.browser.customtabs.CustomTabsIntent
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.characterModule.model.LoggedInCharacter
@@ -229,9 +228,38 @@ fun CharacterManagementPage(
     }
 
     when (val status = ssoStatus) {
-        is EveSsoUiStatus.Idle,
-        is EveSsoUiStatus.AwaitingBrowser,
-        -> Unit
+        is EveSsoUiStatus.Idle -> Unit
+
+        is EveSsoUiStatus.AwaitingBrowser -> {
+            Dialog(onDismissRequest = viewModel::cancelSsoLogin) {
+                Surface(
+                    shape = RoundedCornerShape(28.dp),
+                    color = colorResource(R.color.main_background),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.character_sso_awaiting_browser),
+                            color = colorResource(R.color.text_primary),
+                            fontSize = 16.sp,
+                            textAlign = TextAlign.Center,
+                        )
+                        CharacterDialogActionButton(
+                            label = stringResource(R.string.character_sso_cancel),
+                            labelColor = colorResource(R.color.hyperlink_text),
+                            onClick = viewModel::cancelSsoLogin,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 20.dp),
+                        )
+                    }
+                }
+            }
+        }
 
         is EveSsoUiStatus.ExchangingToken -> {
             Dialog(onDismissRequest = {}) {
@@ -263,7 +291,17 @@ fun CharacterManagementPage(
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text(
-                            text = stringResource(R.string.character_sso_failed, status.message),
+                            text = stringResource(
+                                R.string.character_sso_failed,
+                                if (status.formatArgs.isEmpty()) {
+                                    stringResource(status.messageRes)
+                                } else {
+                                    stringResource(
+                                        status.messageRes,
+                                        *status.formatArgs.toTypedArray(),
+                                    )
+                                },
+                            ),
                             color = colorResource(R.color.text_primary),
                             fontSize = 16.sp,
                             textAlign = TextAlign.Center,

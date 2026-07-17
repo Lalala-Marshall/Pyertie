@@ -1,5 +1,6 @@
 package com.marshall.pyerite.characterModule.auth
 
+import androidx.lifecycle.ProcessLifecycleOwner
 import com.marshall.pyerite.data.network.NetworkDefaults
 import com.marshall.pyerite.data.network.createApi
 import okhttp3.OkHttpClient
@@ -16,15 +17,25 @@ val authModule = module {
     }
     single { EveSsoCallbackBus() }
     single { EveTokenStore(androidContext()) }
+    single { EvePendingLoginStore(androidContext()) }
+    single { CharacterSelectionStore(androidContext()) }
     singleOf(::EveSsoRemoteDataSource)
+    singleOf(::EveTokenManager)
     singleOf(::EsiPublicDataSource)
+    singleOf(::CharacterProfileLoader)
     single {
         EveSsoAuthRepository(
             remote = get(),
-            tokenStore = get(),
-            esi = get(),
+            tokenManager = get(),
+            profileLoader = get(),
             characterRepository = get(),
             callbackBus = get(),
+            pendingLoginStore = get(),
         )
+    }
+    single(createdAtStart = true) {
+        EveTokenLifecycleObserver(get()).also { observer ->
+            ProcessLifecycleOwner.get().lifecycle.addObserver(observer)
+        }
     }
 }

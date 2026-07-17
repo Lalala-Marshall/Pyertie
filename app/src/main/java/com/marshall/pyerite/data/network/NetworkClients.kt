@@ -32,9 +32,14 @@ class PyeriteHeadersInterceptor : Interceptor {
         val request = chain.request()
         val builder = request.newBuilder()
             .header("User-Agent", NetworkDefaults.USER_AGENT)
-        if (request.url.host == SdeRemoteConfig.GITHUB_API_HOST) {
-            builder.header("Accept", "application/vnd.github+json")
-            builder.header("X-GitHub-Api-Version", "2022-11-28")
+        when (request.url.host) {
+            SdeRemoteConfig.GITHUB_API_HOST -> {
+                builder.header("Accept", "application/vnd.github+json")
+                builder.header("X-GitHub-Api-Version", "2022-11-28")
+            }
+            EsiNetworkConfig.HOST -> {
+                builder.header("X-Compatibility-Date", EsiNetworkConfig.COMPATIBILITY_DATE)
+            }
         }
         return chain.proceed(builder.build())
     }

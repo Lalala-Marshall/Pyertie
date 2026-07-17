@@ -8,8 +8,11 @@ import com.marshall.pyerite.characterModule.model.CharacterSummary
 import com.marshall.pyerite.characterModule.model.LoggedInCharacter
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class CharacterViewModel(
@@ -19,13 +22,17 @@ class CharacterViewModel(
 
     val currentCharacter: StateFlow<CharacterSummary?> = repository.currentCharacter
     val loggedInCharacters: StateFlow<List<LoggedInCharacter>> = repository.loggedInCharacters
-    val isEditMode: StateFlow<Boolean> = repository.isEditMode
     val ssoStatus: StateFlow<EveSsoUiStatus> = authRepository.status
+
+    private val _isEditMode = MutableStateFlow(false)
+    val isEditMode: StateFlow<Boolean> = _isEditMode.asStateFlow()
 
     private val _openAuthorizationUrl = Channel<String>(Channel.BUFFERED)
     val openAuthorizationUrl: Flow<String> = _openAuthorizationUrl.receiveAsFlow()
 
-    fun toggleEditMode() = repository.toggleEditMode()
+    fun toggleEditMode() {
+        _isEditMode.update { !it }
+    }
 
     fun selectCurrentCharacter(character: LoggedInCharacter) =
         repository.selectCurrentCharacter(character)
@@ -46,4 +53,6 @@ class CharacterViewModel(
     }
 
     fun clearSsoStatus() = authRepository.clearStatus()
+
+    fun cancelSsoLogin() = authRepository.cancelLogin()
 }

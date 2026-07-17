@@ -6,9 +6,12 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Url
 
-interface EveSsoApi {
+internal interface EveSsoApi {
     @GET
     suspend fun fetchMetadata(@Url url: String): EveSsoMetadataDto
+
+    @GET
+    suspend fun fetchJWTs(@Url url: String): EveJWTsDto
 
     @FormUrlEncoded
     @POST
@@ -16,4 +19,11 @@ interface EveSsoApi {
         @Url url: String,
         @FieldMap fields: Map<String, String>,
     ): EveSsoTokenDto
+
+    @FormUrlEncoded
+    @POST
+    suspend fun revokeToken(
+        @Url url: String,
+        @FieldMap fields: Map<String, String>,
+    )
 }

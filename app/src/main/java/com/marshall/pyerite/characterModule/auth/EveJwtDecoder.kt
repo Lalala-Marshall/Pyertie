@@ -3,25 +3,46 @@ package com.marshall.pyerite.characterModule.auth
 import android.net.Uri
 import android.util.Base64
 import com.marshall.pyerite.data.network.PyeriteJson
-import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.Serializable
+import java.math.BigInteger
 import java.nio.charset.StandardCharsets
+import java.security.KeyFactory
+import java.security.Signature
+import java.security.interfaces.RSAPublicKey
+import java.security.spec.RSAPublicKeySpec
 
-object EveJwtDecoder {
+internal object EveJwtDecoder {
 
-    fun decodeUnverified(accessToken: String): EveJwtClaims {
+    fun decodeAndVerify(accessToken: String, jwks: EveJWTsDto): EveJwtClaims {
         val parts = accessToken.split('.')
-        require(parts.size >= 2) { "Invalid JWT" }
-        val payloadJson = String(
-            Base64.decode(parts[1], Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING),
-            StandardCharsets.UTF_8,
+        require(parts.size == 3) { "Invalid JWT" }
+        val header = PyeriteJson.decodeFromString<EveJwtHeaderDto>(
+            String(base64UrlDecode(parts[0]), StandardCharsets.UTF_8),
         )
-        val payload = PyeriteJson.decodeFromString<EveJwtPayloadDto>(payloadJson)
+        require(header.alg.equals(EveSsoConfig.JWT_ALGORITHM_RS256, ignoreCase = true)) {
+            "Unexpected JWT alg: ${header.alg}"
+        }
+        val key = jwks.keys.firstOrNull { it.kid == header.kid }
+            ?: error("No JWKS key for kid=${header.kid}")
+        val publicKey = rsaPublicKey(key)
+        val signingInput = "${parts[0]}.${parts[1]}".toByteArray(StandardCharsets.US_ASCII)
+        val signatureBytes = base64UrlDecode(parts[2])
+        val verified = Signature.getInstance("SHA256withRSA").run {
+            initVerify(publicKey)
+            update(signingInput)
+            verify(signatureBytes)
+        }
+        require(verified) { "JWT signature verification failed" }
+
+        val payload = PyeriteJson.decodeFromString<EveJwtPayloadDto>(
+            String(base64UrlDecode(parts[1]), StandardCharsets.UTF_8),
+        )
         val characterId = payload.sub.substringAfterLast(':').toLongOrNull()
             ?: error("JWT sub missing character id: ${payload.sub}")
         return EveJwtClaims(
             characterId = characterId,
-            characterName = payload.name.ifBlank { "Character $characterId" },
-            expiresAtEpochMs = payload.exp * 1_000L,
+            characterName = payload.name.takeIf { it.isNotBlank() }.orEmpty(),
+            expiresAtEpochMs = payload.exp * EveSsoConfig.MILLIS_PER_SECOND,
             scopes = payload.scp,
             audience = payload.aud,
             issuer = payload.iss,
@@ -46,7 +67,24 @@ object EveJwtDecoder {
             "Access token expired"
         }
     }
+
+    private fun rsaPublicKey(jwk: EveJwkDto): RSAPublicKey {
+        val modulus = BigInteger(1, base64UrlDecode(jwk.n))
+        val exponent = BigInteger(1, base64UrlDecode(jwk.e))
+        val spec = RSAPublicKeySpec(modulus, exponent)
+        return KeyFactory.getInstance("RSA").generatePublic(spec) as RSAPublicKey
+    }
+
+    private fun base64UrlDecode(value: String): ByteArray =
+        Base64.decode(value, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
 }
+
+@Serializable
+internal data class EveJwtHeaderDto(
+    val alg: String = "",
+    val kid: String = "",
+    val typ: String = "",
+)
 
 fun Uri.queryParamOrNull(name: String): String? =
     getQueryParameter(name)?.takeIf { it.isNotBlank() }

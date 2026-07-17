@@ -7,16 +7,14 @@ import android.security.keystore.KeyProperties
 import android.util.Base64
 import androidx.core.content.edit
 import com.marshall.pyerite.data.network.PyeriteJson
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
-/** EVE SSO tokens: SharedPreferences values encrypted with Android Keystore AES-GCM. */
-class EveTokenStore(
+/** Encrypted token persistence — only [EveTokenManager] may read/write. */
+internal class EveTokenStore(
     context: Context,
 ) {
     private val prefs: SharedPreferences =
@@ -45,7 +43,7 @@ class EveTokenStore(
         }
     }
 
-    private fun keyFor(characterId: Long): String = "character_$characterId"
+    private fun keyFor(characterId: Long): String = "$KEY_PREFIX$characterId"
 
     private fun encrypt(plainText: String): String {
         val cipher = Cipher.getInstance(TRANSFORMATION)
@@ -87,7 +85,8 @@ class EveTokenStore(
     }
 
     companion object {
-        const val PREFS_NAME = "pyerite_eve_sso_tokens"
+        private const val PREFS_NAME = "pyerite_eve_sso_tokens"
+        private const val KEY_PREFIX = "character_"
         private const val ANDROID_KEYSTORE = "AndroidKeyStore"
         private const val KEY_ALIAS = "pyerite_eve_sso_master"
         private const val TRANSFORMATION = "AES/GCM/NoPadding"

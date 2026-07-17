@@ -170,7 +170,20 @@
     <string name="character_delete_cancel">取消</string>
     <string name="character_exit_current">退出当前角色</string>
     <string name="character_sso_signing_in">正在登录 EVE SSO…</string>
+    <string name="character_sso_awaiting_browser">请在浏览器中完成登录</string>
+    <string name="character_sso_cancel">取消登录</string>
     <string name="character_sso_success">已添加角色 %1$s</string>
     <string name="character_sso_failed">登录失败：%1$s</string>
     <string name="character_sso_ok">确定</string>
+    <string name="character_sso_error_missing_client_id">未配置 EVE_SSO_CLIENT_ID（local.properties）</string>
+    <string name="character_sso_error_invalid_callback">无效的 SSO 回调</string>
+    <string name="character_sso_error_state_mismatch">SSO state 校验失败或登录已过期</string>
+    <string name="character_sso_error_generic">SSO 登录失败</string>
+    <string name="character_sso_error_provider">%1$s</string>
+    <string name="character_sso_error_provider_denied">已取消或拒绝授权</string>
+    <string name="character_status_online">在线</string>
+    <string name="character_status_offline">离线</string>
+    <string name="character_duration_hms">%1$d时%2$d分%3$d秒</string>
+    <string name="character_duration_ms">%1$d分%2$d秒</string>
+    <string name="character_duration_s">%1$d秒</string>
 </resources>

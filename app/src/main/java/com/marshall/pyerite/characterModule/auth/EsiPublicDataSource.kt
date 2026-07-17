@@ -4,7 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 
-class EsiPublicDataSource(
+internal class EsiPublicDataSource(
     private val api: EsiApi,
 ) {
     suspend fun fetchCharacter(characterId: Long): EsiCharacterPublic = withContext(Dispatchers.IO) {
@@ -18,7 +18,8 @@ class EsiPublicDataSource(
         )
     }
 
-    suspend fun fetchCorporation(corporationId: Int): EsiOrganization = withContext(Dispatchers.IO) {
+    /** Public corp name/ticker — character detail only returns corporation_id. */
+    suspend fun fetchCorporation(corporationId: Long): EsiOrganization = withContext(Dispatchers.IO) {
         val dto = getDto { api.fetchCorporation(corporationId) }
         EsiOrganization(
             id = corporationId,
@@ -27,13 +28,18 @@ class EsiPublicDataSource(
         )
     }
 
-    suspend fun fetchAlliance(allianceId: Int): EsiOrganization = withContext(Dispatchers.IO) {
+    /** Public alliance name/ticker — character detail only returns alliance_id. */
+    suspend fun fetchAlliance(allianceId: Long): EsiOrganization = withContext(Dispatchers.IO) {
         val dto = getDto { api.fetchAlliance(allianceId) }
         EsiOrganization(
             id = allianceId,
             name = dto.name,
             ticker = dto.ticker?.takeIf { it.isNotBlank() },
         )
+    }
+
+    suspend fun fetchSolarSystemName(systemId: Long): String? = withContext(Dispatchers.IO) {
+        runCatching { getDto { api.fetchSolarSystem(systemId) }.name }.getOrNull()
     }
 
     private suspend fun <T> getDto(call: suspend () -> T): T {
@@ -46,11 +52,11 @@ class EsiPublicDataSource(
     }
 }
 
-fun portraitUrl(characterId: Long, size: Int = 128): String =
+internal fun portraitUrl(characterId: Long, size: Int = EveSsoConfig.Image.PORTRAIT_SIZE): String =
     "${EveSsoConfig.IMAGE_BASE_URL}characters/$characterId/portrait?size=$size"
 
-fun corporationLogoUrl(corporationId: Int, size: Int = 64): String =
+internal fun corporationLogoUrl(corporationId: Long, size: Int = EveSsoConfig.Image.LOGO_SIZE): String =
     "${EveSsoConfig.IMAGE_BASE_URL}corporations/$corporationId/logo?size=$size"
 
-fun allianceLogoUrl(allianceId: Int, size: Int = 64): String =
+internal fun allianceLogoUrl(allianceId: Long, size: Int = EveSsoConfig.Image.LOGO_SIZE): String =
     "${EveSsoConfig.IMAGE_BASE_URL}alliances/$allianceId/logo?size=$size"

@@ -14,7 +14,7 @@ data class SkillQueueProgress(
     val skillName: String,
     val level: Int,
     val progress: Float,
-    val timeRemaining: String,
+    val remainingSeconds: Long,
 )
 
 data class LoggedInCharacter(
@@ -23,7 +23,7 @@ data class LoggedInCharacter(
     val portraitUrl: String?,
     val securityStatus: Double?,
     val location: String?,
-    val locationStatus: String?,
+    val isOnline: Boolean?,
     val walletBalance: String?,
     val totalSkillPoints: String?,
     val unallocatedSkillPoints: String?,
