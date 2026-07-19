@@ -38,6 +38,10 @@ class EveTokenManager internal constructor(
     fun hasStoredSession(characterId: Long): Boolean =
         tokenStore.get(characterId) != null
 
+    /** Granted scopes for UI / feature gates — never returns token material. */
+    fun grantedScopes(characterId: Long): Set<EveSsoScope> =
+        tokenStore.get(characterId)?.grantedScopes.orEmpty()
+
     /** Persist after SSO code exchange. */
     internal fun save(tokenSet: EveTokenSet): EveStoredSession {
         tokenStore.save(tokenSet)

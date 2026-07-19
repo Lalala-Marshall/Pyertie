@@ -1,6 +1,7 @@
 package com.marshall.pyerite.characterModule.viewModel
 
 import com.marshall.pyerite.characterModule.auth.CharacterSelectionStore
+import com.marshall.pyerite.characterModule.auth.EveSsoScope
 import com.marshall.pyerite.characterModule.auth.EveTokenManager
 import com.marshall.pyerite.characterModule.model.CharacterSummary
 import com.marshall.pyerite.characterModule.model.LoggedInCharacter
@@ -45,6 +46,15 @@ class CharacterRepository internal constructor(
     fun upsertLoggedInCharacter(character: LoggedInCharacter) {
         val without = _loggedInCharacters.value.filterNot { it.characterId == character.characterId }
         _loggedInCharacters.value = without + character
+    }
+
+    /** Scopes for the current character from the in-memory logged-in list (no token access). */
+    fun currentGrantedScopes(): Set<EveSsoScope> {
+        val currentId = _currentCharacter.value?.characterId ?: return emptySet()
+        return _loggedInCharacters.value
+            .find { it.characterId == currentId }
+            ?.grantedScopes
+            .orEmpty()
     }
 
     fun removeLoggedInCharacter(characterId: Long) {

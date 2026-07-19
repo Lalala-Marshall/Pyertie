@@ -95,6 +95,7 @@ internal class CharacterProfileLoader(
                 allianceName = formatOrgLabel(alliance),
                 allianceIconUrl = public?.allianceId?.let { allianceLogoUrl(it) },
                 skillQueue = queue,
+                grantedScopes = tokenManager.grantedScopes(session.characterId),
             )
         }
     }

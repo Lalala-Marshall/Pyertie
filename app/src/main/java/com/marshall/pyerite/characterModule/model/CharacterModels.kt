@@ -1,5 +1,7 @@
 package com.marshall.pyerite.characterModule.model
 
+import com.marshall.pyerite.characterModule.auth.EveSsoScope
+
 data class CharacterSummary(
     val characterId: Long,
     val name: String,
@@ -32,4 +34,6 @@ data class LoggedInCharacter(
     val allianceName: String?,
     val allianceIconUrl: String?,
     val skillQueue: SkillQueueProgress?,
+    /** Parsed SSO scopes for UI / feature gates; no token material. */
+    val grantedScopes: Set<EveSsoScope> = emptySet(),
 )

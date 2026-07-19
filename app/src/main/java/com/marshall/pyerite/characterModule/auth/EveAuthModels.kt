@@ -15,7 +15,13 @@ internal data class EveTokenSet(
     val tokenType: String = EveSsoConfig.TOKEN_TYPE_BEARER,
     val expiresAtEpochMs: Long,
     val scopes: List<String> = emptyList(),
-)
+) {
+    /**
+     * Parsed once per in-memory instance (not persisted — body property with no backing field
+     * for serialization). [copy] / reload from store creates a new instance and re-parses once.
+     */
+    val grantedScopes: Set<EveSsoScope> by lazy { EveSsoScope.parseGranted(scopes) }
+}
 
 /** Non-secret session identity for restore / UI wiring. */
 internal data class EveStoredSession(

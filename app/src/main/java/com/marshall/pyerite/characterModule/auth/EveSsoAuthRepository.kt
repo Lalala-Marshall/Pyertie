@@ -181,7 +181,7 @@ class EveSsoAuthRepository internal constructor(
         state: String,
         codeChallenge: String,
     ): String {
-        val scope = EveSsoConfig.requestedScopes.joinToString(" ")
+        val scope = EveSsoConfig.requestedScopeApiValues.joinToString(" ")
         val query = listOf(
             EveSsoConfig.OAuth.PARAM_RESPONSE_TYPE to EveSsoConfig.OAuth.RESPONSE_TYPE_CODE,
             EveSsoConfig.OAuth.PARAM_REDIRECT_URI to EveSsoConfig.redirectUri,

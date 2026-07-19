@@ -55,4 +55,6 @@ class CharacterViewModel(
     fun clearSsoStatus() = authRepository.clearStatus()
 
     fun cancelSsoLogin() = authRepository.cancelLogin()
+
+    fun currentGrantedScopes() = repository.currentGrantedScopes()
 }
