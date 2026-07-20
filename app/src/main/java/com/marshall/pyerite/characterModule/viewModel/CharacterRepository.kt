@@ -46,6 +46,9 @@ class CharacterRepository internal constructor(
     fun upsertLoggedInCharacter(character: LoggedInCharacter) {
         val without = _loggedInCharacters.value.filterNot { it.characterId == character.characterId }
         _loggedInCharacters.value = without + character
+        if (_currentCharacter.value?.characterId == character.characterId) {
+            _currentCharacter.value = character.toSummary()
+        }
     }
 
     /** Scopes for the current character from the in-memory logged-in list (no token access). */

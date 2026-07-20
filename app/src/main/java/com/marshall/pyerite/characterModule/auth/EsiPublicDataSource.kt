@@ -3,11 +3,17 @@ package com.marshall.pyerite.characterModule.auth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
+import java.util.concurrent.ConcurrentHashMap
 
 internal class EsiPublicDataSource(
     private val api: EsiApi,
 ) {
+    private val characterCache = ConcurrentHashMap<Long, EsiCharacterPublic>()
+    private val corporationCache = ConcurrentHashMap<Long, EsiOrganization>()
+    private val allianceCache = ConcurrentHashMap<Long, EsiOrganization>()
+
     suspend fun fetchCharacter(characterId: Long): EsiCharacterPublic = withContext(Dispatchers.IO) {
+        characterCache[characterId]?.let { return@withContext it }
         val dto = getDto { api.fetchCharacter(characterId) }
         EsiCharacterPublic(
             characterId = characterId,
@@ -15,27 +21,29 @@ internal class EsiPublicDataSource(
             corporationId = dto.corporationId,
             allianceId = dto.allianceId,
             securityStatus = dto.securityStatus,
-        )
+        ).also { characterCache[characterId] = it }
     }
 
     /** Public corp name/ticker — character detail only returns corporation_id. */
     suspend fun fetchCorporation(corporationId: Long): EsiOrganization = withContext(Dispatchers.IO) {
+        corporationCache[corporationId]?.let { return@withContext it }
         val dto = getDto { api.fetchCorporation(corporationId) }
         EsiOrganization(
             id = corporationId,
             name = dto.name,
             ticker = dto.ticker?.takeIf { it.isNotBlank() },
-        )
+        ).also { corporationCache[corporationId] = it }
     }
 
     /** Public alliance name/ticker — character detail only returns alliance_id. */
     suspend fun fetchAlliance(allianceId: Long): EsiOrganization = withContext(Dispatchers.IO) {
+        allianceCache[allianceId]?.let { return@withContext it }
         val dto = getDto { api.fetchAlliance(allianceId) }
         EsiOrganization(
             id = allianceId,
             name = dto.name,
             ticker = dto.ticker?.takeIf { it.isNotBlank() },
-        )
+        ).also { allianceCache[allianceId] = it }
     }
 
     suspend fun fetchSolarSystemName(systemId: Long): String? = withContext(Dispatchers.IO) {

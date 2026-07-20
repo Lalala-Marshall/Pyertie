@@ -10,12 +10,16 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import java.util.concurrent.atomic.AtomicBoolean
 
 sealed interface EveSsoUiStatus {
     data object Idle : EveSsoUiStatus
@@ -35,9 +39,12 @@ class EveSsoAuthRepository internal constructor(
     private val characterRepository: CharacterRepository,
     private val callbackBus: EveSsoCallbackBus,
     private val pendingLoginStore: EvePendingLoginStore,
+    private val profileCache: CharacterProfileCache,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val mutex = Mutex()
+    /** Cold start already refreshed tokens in [restoreSessions]; skip one ProcessLifecycle onStart. */
+    private val skipNextForegroundRefresh = AtomicBoolean(false)
 
     private val _status = MutableStateFlow<EveSsoUiStatus>(EveSsoUiStatus.Idle)
     val status: StateFlow<EveSsoUiStatus> = _status.asStateFlow()
@@ -85,6 +92,7 @@ class EveSsoAuthRepository internal constructor(
     }
 
     suspend fun refreshStoredSessionsOnForeground() {
+        if (skipNextForegroundRefresh.compareAndSet(true, false)) return
         withContext(Dispatchers.IO) {
             applyRefreshResults(tokenManager.refreshAllIfNeeded())
         }
@@ -94,6 +102,7 @@ class EveSsoAuthRepository internal constructor(
         scope.launch(Dispatchers.IO) {
             val refreshToken = tokenManager.peekRefreshToken(characterId)
             tokenManager.remove(characterId)
+            profileCache.remove(characterId)
             characterRepository.removeLoggedInCharacter(characterId)
             if (!refreshToken.isNullOrBlank()) {
                 runCatching { remote.revokeRefreshToken(refreshToken) }
@@ -145,6 +154,7 @@ class EveSsoAuthRepository internal constructor(
                 )
 
                 val loggedIn = profileLoader.load(session)
+                profileCache.save(loggedIn)
                 characterRepository.upsertLoggedInCharacter(loggedIn)
                 if (characterRepository.currentCharacter.value == null) {
                     characterRepository.selectCurrentCharacter(loggedIn)
@@ -156,21 +166,59 @@ class EveSsoAuthRepository internal constructor(
         }
     }
 
+    /**
+     * Startup restore priority: must (local session) → cache → deferred network enrich.
+     * UI is hydrated before any ESI profile calls so a slow network never looks like logout.
+     */
     private suspend fun restoreSessions() {
         withContext(Dispatchers.IO) {
-            applyRefreshResults(tokenManager.refreshAllIfNeeded())
-            tokenManager.storedSessions().forEach { session ->
-                runCatching {
-                    characterRepository.upsertLoggedInCharacter(profileLoader.load(session))
-                }
-            }
+            val sessions = tokenManager.storedSessions()
+            hydrateLocalCharacters(sessions)
             characterRepository.restoreCurrentCharacterSelection()
+
+            skipNextForegroundRefresh.set(true)
+            applyRefreshResults(tokenManager.refreshAllIfNeeded())
+
+            val remaining = tokenManager.storedSessions()
+            enrichProfilesDeferred(remaining)
+        }
+    }
+
+    private fun hydrateLocalCharacters(sessions: List<EveStoredSession>) {
+        sessions.forEach { session ->
+            val scopes = tokenManager.grantedScopes(session.characterId)
+            val cached = profileCache.get(session.characterId)
+            val display = when {
+                cached != null -> cached.copy(
+                    name = session.characterName.ifBlank { cached.name },
+                    portraitUrl = portraitUrl(session.characterId),
+                    grantedScopes = scopes.ifEmpty { cached.grantedScopes },
+                )
+                else -> localLoggedInCharacter(session, scopes)
+            }
+            characterRepository.upsertLoggedInCharacter(display)
+        }
+    }
+
+    private suspend fun enrichProfilesDeferred(sessions: List<EveStoredSession>) {
+        if (sessions.isEmpty()) return
+        coroutineScope {
+            sessions.map { session ->
+                async {
+                    runCatching {
+                        val loaded = profileLoader.load(session)
+                        profileCache.save(loaded)
+                        characterRepository.upsertLoggedInCharacter(loaded)
+                    }
+                }
+            }.awaitAll()
         }
     }
 
     private fun applyRefreshResults(results: List<EveTokenRefreshResult>) {
         results.forEach { result ->
             if (result is EveTokenRefreshResult.Failed && result.permanent) {
+                profileCache.remove(result.characterId)
                 characterRepository.removeLoggedInCharacter(result.characterId)
             }
         }

@@ -19,6 +19,7 @@ val authModule = module {
     single { EveTokenStore(androidContext()) }
     single { EvePendingLoginStore(androidContext()) }
     single { CharacterSelectionStore(androidContext()) }
+    single { CharacterProfileCache(androidContext()) }
     singleOf(::EveSsoRemoteDataSource)
     singleOf(::EveTokenManager)
     singleOf(::EsiPublicDataSource)
@@ -31,6 +32,7 @@ val authModule = module {
             characterRepository = get(),
             callbackBus = get(),
             pendingLoginStore = get(),
+            profileCache = get(),
         )
     }
     single(createdAtStart = true) {
