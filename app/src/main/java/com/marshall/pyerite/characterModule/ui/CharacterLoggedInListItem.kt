@@ -9,6 +9,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
@@ -79,23 +81,19 @@ fun CharacterLoggedInListItem(
     onDeleteClick: (() -> Unit)? = null,
 ) {
     val innerPadding = dimensionResource(R.dimen.character_card_inner_padding)
-    val clickAction = when {
-        isEditMode && onDeleteClick != null -> onDeleteClick
-        !isEditMode && onClick != null -> onClick
-        else -> null
-    }
+    val selectClick = if (!isEditMode) onClick else null
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .then(
-                if (clickAction != null) {
+                if (selectClick != null) {
                     Modifier
                         .semantics { role = Role.Button }
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
-                            onClick = clickAction,
+                            onClick = selectClick,
                         )
                 } else {
                     Modifier
@@ -164,17 +162,51 @@ fun CharacterLoggedInListItem(
             }
             if (isEditMode) {
                 Spacer(modifier = Modifier.width(dimensionResource(R.dimen.character_delete_icon_gap)))
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = stringResource(R.string.character_delete),
-                    tint = colorResource(R.color.character_delete),
-                    modifier = Modifier.size(dimensionResource(R.dimen.character_delete_icon_size)),
-                )
+                CharacterEditTrailingActions(onDeleteClick = onDeleteClick)
             }
         }
         if (showDivider) {
             ItemDivider()
         }
+    }
+}
+
+@Composable
+private fun CharacterEditTrailingActions(
+    onDeleteClick: (() -> Unit)?,
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(
+            dimensionResource(R.dimen.character_edit_actions_gap),
+        ),
+    ) {
+        Icon(
+            imageVector = Icons.Default.DragHandle,
+            contentDescription = stringResource(R.string.character_reorder),
+            tint = colorResource(R.color.text_caption),
+            modifier = Modifier.size(dimensionResource(R.dimen.character_drag_icon_size)),
+        )
+        Icon(
+            imageVector = Icons.Default.Delete,
+            contentDescription = stringResource(R.string.character_delete),
+            tint = colorResource(R.color.character_delete),
+            modifier = Modifier
+                .size(dimensionResource(R.dimen.character_delete_icon_size))
+                .then(
+                    if (onDeleteClick != null) {
+                        Modifier
+                            .semantics { role = Role.Button }
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = onDeleteClick,
+                            )
+                    } else {
+                        Modifier
+                    },
+                ),
+        )
     }
 }
 

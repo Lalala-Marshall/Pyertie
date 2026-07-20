@@ -160,9 +160,7 @@ class EveSsoAuthRepository internal constructor(
                 val loggedIn = profileLoader.load(session)
                 profileCache.save(loggedIn)
                 characterRepository.upsertLoggedInCharacter(loggedIn)
-                if (characterRepository.currentCharacter.value == null) {
-                    characterRepository.selectCurrentCharacter(loggedIn)
-                }
+                characterRepository.selectCurrentCharacter(loggedIn)
                 _status.value = EveSsoUiStatus.Succeeded(loggedIn.name)
             } catch (_: Exception) {
                 _status.value = EveSsoUiStatus.Failed(R.string.character_sso_error_generic)
@@ -230,6 +228,7 @@ class EveSsoAuthRepository internal constructor(
             }
             characterRepository.upsertLoggedInCharacter(display)
         }
+        characterRepository.applyPersistedCharacterOrder()
     }
 
     private suspend fun enrichProfilesDeferred(sessions: List<EveStoredSession>) {

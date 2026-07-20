@@ -1,5 +1,6 @@
 package com.marshall.pyerite.characterModule.viewModel
 
+import com.marshall.pyerite.characterModule.auth.CharacterOrderStore
 import com.marshall.pyerite.characterModule.auth.CharacterSelectionStore
 import com.marshall.pyerite.characterModule.auth.EveSsoScope
 import com.marshall.pyerite.characterModule.auth.EveTokenManager
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 class CharacterRepository internal constructor(
     private val tokenManager: EveTokenManager,
     private val selectionStore: CharacterSelectionStore,
+    private val orderStore: CharacterOrderStore,
 ) {
 
     private val _currentCharacter = MutableStateFlow<CharacterSummary?>(null)
@@ -43,12 +45,62 @@ class CharacterRepository internal constructor(
         selectionStore.setCurrentCharacterId(character.characterId)
     }
 
+    /**
+     * Existing id: update in place (display order unchanged).
+     * New id: append last and extend the persisted manual order.
+     */
     fun upsertLoggedInCharacter(character: LoggedInCharacter) {
-        val without = _loggedInCharacters.value.filterNot { it.characterId == character.characterId }
-        _loggedInCharacters.value = without + character
+        val current = _loggedInCharacters.value
+        val existingIndex = current.indexOfFirst { it.characterId == character.characterId }
+        if (existingIndex >= 0) {
+            _loggedInCharacters.value = current.toMutableList().also { it[existingIndex] = character }
+        } else {
+            _loggedInCharacters.value = current + character
+            appendToPersistedOrder(character.characterId)
+        }
         if (_currentCharacter.value?.characterId == character.characterId) {
             _currentCharacter.value = character.toSummary()
         }
+    }
+
+    /**
+     * After cold-start hydrate: show characters in the persisted manual order.
+     * Does not invent a new order — only drops removed ids and appends unknown ids last.
+     */
+    fun applyPersistedCharacterOrder() {
+        val current = _loggedInCharacters.value
+        if (current.isEmpty()) return
+
+        val byId = current.associateBy { it.characterId }
+        val stored = orderStore.getOrderedIds()
+        if (stored.isEmpty()) {
+            // First run / empty prefs: seed with current list so later restarts have a baseline.
+            orderStore.setOrderedIds(current.map { it.characterId })
+            return
+        }
+
+        val storedSet = stored.toSet()
+        val stillPresent = stored.filter { it in byId }
+        val newlySeen = current.map { it.characterId }.filter { it !in storedSet }
+        val nextOrder = stillPresent + newlySeen
+        if (nextOrder != stored) {
+            orderStore.setOrderedIds(nextOrder)
+        }
+        _loggedInCharacters.value = nextOrder.mapNotNull { byId[it] }
+    }
+
+    /** Manual drag reorder — the only path that rearranges existing characters. */
+    fun reorderLoggedInCharacters(fromIndex: Int, toIndex: Int) {
+        val current = _loggedInCharacters.value
+        if (fromIndex == toIndex) return
+        if (fromIndex !in current.indices || toIndex !in current.indices) return
+
+        val reordered = current.toMutableList().also { list ->
+            val moved = list.removeAt(fromIndex)
+            list.add(toIndex, moved)
+        }
+        _loggedInCharacters.value = reordered
+        orderStore.setOrderedIds(reordered.map { it.characterId })
     }
 
     /** Scopes for the current character from the in-memory logged-in list (no token access). */
@@ -63,6 +115,7 @@ class CharacterRepository internal constructor(
     fun removeLoggedInCharacter(characterId: Long) {
         val remaining = _loggedInCharacters.value.filterNot { it.characterId == characterId }
         _loggedInCharacters.value = remaining
+        orderStore.setOrderedIds(orderStore.getOrderedIds().filterNot { it == characterId })
         pruneHistory(characterId)
 
         if (_currentCharacter.value?.characterId != characterId) return
@@ -79,6 +132,12 @@ class CharacterRepository internal constructor(
         val match = _loggedInCharacters.value.find { it.characterId == savedId } ?: return
         if (!isSessionUsable(match)) return
         _currentCharacter.value = match.toSummary()
+    }
+
+    private fun appendToPersistedOrder(characterId: Long) {
+        val stored = orderStore.getOrderedIds()
+        if (characterId in stored) return
+        orderStore.setOrderedIds(stored + characterId)
     }
 
     private fun pushCurrentToHistoryIfChanging(nextCharacterId: Long?) {

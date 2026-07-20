@@ -42,6 +42,9 @@ class CharacterViewModel(
     fun selectCurrentCharacter(character: LoggedInCharacter) =
         repository.selectCurrentCharacter(character)
 
+    fun reorderLoggedInCharacters(fromIndex: Int, toIndex: Int) =
+        repository.reorderLoggedInCharacters(fromIndex, toIndex)
+
     fun clearCurrentCharacter() = repository.setCurrentCharacter(null)
 
     fun removeLoggedInCharacter(characterId: Long) {

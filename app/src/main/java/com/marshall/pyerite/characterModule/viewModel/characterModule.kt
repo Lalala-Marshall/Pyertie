@@ -8,6 +8,7 @@ val characterModule = module {
         CharacterRepository(
             tokenManager = get(),
             selectionStore = get(),
+            orderStore = get(),
         )
     }
     viewModelOf(::CharacterViewModel)

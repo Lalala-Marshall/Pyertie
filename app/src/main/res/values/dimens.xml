@@ -117,6 +117,8 @@
     <dimen name="character_pull_refresh_icon_size">24dp</dimen>
     <dimen name="character_delete_icon_size">22dp</dimen>
     <dimen name="character_delete_icon_gap">8dp</dimen>
+    <dimen name="character_drag_icon_size">22dp</dimen>
+    <dimen name="character_edit_actions_gap">6dp</dimen>
     <dimen name="character_skill_queue_top_spacing">6dp</dimen>
     <dimen name="character_skill_queue_label_spacing">4dp</dimen>
     <dimen name="character_skill_queue_icon_gap">4dp</dimen>

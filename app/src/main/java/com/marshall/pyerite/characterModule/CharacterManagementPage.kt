@@ -2,6 +2,7 @@ package com.marshall.pyerite.characterModule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,8 +33,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +46,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
@@ -57,6 +63,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.zIndex
 import androidx.browser.customtabs.CustomTabsIntent
 import android.content.Context
 import android.content.Intent
@@ -206,6 +213,7 @@ fun CharacterManagementPage(
                                 navigateUp?.invoke()
                             },
                             onDeleteClick = { pendingDeleteCharacter = it },
+                            onReorder = viewModel::reorderLoggedInCharacters,
                         )
                     }
                 }
@@ -528,8 +536,15 @@ private fun CharacterLoggedInCard(
     isEditMode: Boolean,
     onCharacterClick: (LoggedInCharacter) -> Unit,
     onDeleteClick: (LoggedInCharacter) -> Unit,
+    onReorder: (fromIndex: Int, toIndex: Int) -> Unit,
 ) {
     val cardCornerRadius = dimensionResource(R.dimen.detail_card_corner_radius)
+    val density = LocalDensity.current
+    var draggingCharacterId by remember { mutableStateOf<Long?>(null) }
+    var dragOffsetY by remember { mutableFloatStateOf(0f) }
+    val itemHeightsPx = remember { mutableMapOf<Long, Float>() }
+    val latestCharacters by rememberUpdatedState(characters)
+    val latestOnReorder by rememberUpdatedState(onReorder)
 
     Column(
         modifier = Modifier
@@ -538,22 +553,101 @@ private fun CharacterLoggedInCard(
     ) {
         characters.forEachIndexed { index, character ->
             val shape = sectionItemShape(index, characters.size, cardCornerRadius)
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(shape)
-                    .background(colorResource(R.color.second_background), shape),
-            ) {
-                CharacterLoggedInListItem(
-                    character = character,
-                    showDivider = index < characters.lastIndex,
-                    isEditMode = isEditMode,
-                    onClick = { onCharacterClick(character) },
-                    onDeleteClick = { onDeleteClick(character) },
-                )
+            val isDragging = draggingCharacterId == character.characterId
+            key(character.characterId) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .zIndex(if (isDragging) CharacterReorderConfig.DRAGGING_Z_INDEX else 0f)
+                        .onSizeChanged { size ->
+                            itemHeightsPx[character.characterId] = size.height.toFloat()
+                        }
+                        .graphicsLayer {
+                            translationY = if (isDragging) dragOffsetY else 0f
+                            shadowElevation = if (isDragging) {
+                                CharacterReorderConfig.DRAGGING_ELEVATION_PX
+                            } else {
+                                0f
+                            }
+                            alpha = if (isDragging) {
+                                CharacterReorderConfig.DRAGGING_ALPHA
+                            } else {
+                                CharacterReorderConfig.OPAQUE_ALPHA
+                            }
+                        }
+                        .clip(shape)
+                        .background(colorResource(R.color.second_background), shape)
+                        .then(
+                            if (isEditMode) {
+                                Modifier.pointerInput(character.characterId) {
+                                    detectDragGesturesAfterLongPress(
+                                        onDragStart = {
+                                            draggingCharacterId = character.characterId
+                                            dragOffsetY = 0f
+                                        },
+                                        onDragCancel = {
+                                            draggingCharacterId = null
+                                            dragOffsetY = 0f
+                                        },
+                                        onDragEnd = {
+                                            draggingCharacterId = null
+                                            dragOffsetY = 0f
+                                        },
+                                        onDrag = { change, dragAmount ->
+                                            change.consume()
+                                            val draggingId = draggingCharacterId
+                                                ?: return@detectDragGesturesAfterLongPress
+                                            dragOffsetY += dragAmount.y
+
+                                            val currentCharacters = latestCharacters
+                                            val fromIndex = currentCharacters.indexOfFirst {
+                                                it.characterId == draggingId
+                                            }
+                                            if (fromIndex < 0) return@detectDragGesturesAfterLongPress
+
+                                            val itemHeight = itemHeightsPx[draggingId]
+                                                ?: with(density) {
+                                                    CharacterReorderConfig.FALLBACK_ITEM_HEIGHT_DP.toPx()
+                                                }
+                                            if (itemHeight <= 0f) return@detectDragGesturesAfterLongPress
+
+                                            val moveBy = (dragOffsetY / itemHeight).toInt()
+                                            if (moveBy == 0) return@detectDragGesturesAfterLongPress
+
+                                            val toIndex = (fromIndex + moveBy)
+                                                .coerceIn(0, currentCharacters.lastIndex)
+                                            if (toIndex == fromIndex) return@detectDragGesturesAfterLongPress
+
+                                            latestOnReorder(fromIndex, toIndex)
+                                            dragOffsetY -= (toIndex - fromIndex) * itemHeight
+                                        },
+                                    )
+                                }
+                            } else {
+                                Modifier
+                            },
+                        ),
+                ) {
+                    CharacterLoggedInListItem(
+                        character = character,
+                        showDivider = index < characters.lastIndex,
+                        isEditMode = isEditMode,
+                        onClick = { onCharacterClick(character) },
+                        onDeleteClick = { onDeleteClick(character) },
+                    )
+                }
             }
         }
     }
+}
+
+private object CharacterReorderConfig {
+    const val DRAGGING_Z_INDEX = 1f
+    const val DRAGGING_ELEVATION_PX = 12f
+    /** 80% opacity while dragging so the card reads as translucent. */
+    const val DRAGGING_ALPHA = 0.8f
+    const val OPAQUE_ALPHA = 1f
+    val FALLBACK_ITEM_HEIGHT_DP = 88.dp
 }
 
 private fun sectionItemShape(indexInSection: Int, sectionItemCount: Int, corner: Dp): Shape {

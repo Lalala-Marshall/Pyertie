@@ -164,6 +164,7 @@
     <string name="character_org_none_placeholder">[-] - -</string>
     <string name="character_open_management">打开角色管理</string>
     <string name="character_delete">删除角色</string>
+    <string name="character_reorder">拖动排序</string>
     <string name="character_delete_confirm_title">移除角色</string>
     <string name="character_delete_confirm">移除</string>
     <string name="character_delete_cancel">取消</string>

@@ -19,6 +19,7 @@ val authModule = module {
     single { EveTokenStore(androidContext()) }
     single { EvePendingLoginStore(androidContext()) }
     single { CharacterSelectionStore(androidContext()) }
+    single { CharacterOrderStore(androidContext()) }
     single { CharacterProfileCache(androidContext()) }
     singleOf(::EveSsoRemoteDataSource)
     singleOf(::EveTokenManager)
