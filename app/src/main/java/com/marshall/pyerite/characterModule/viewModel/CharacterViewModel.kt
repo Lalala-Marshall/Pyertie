@@ -23,6 +23,7 @@ class CharacterViewModel(
     val currentCharacter: StateFlow<CharacterSummary?> = repository.currentCharacter
     val loggedInCharacters: StateFlow<List<LoggedInCharacter>> = repository.loggedInCharacters
     val ssoStatus: StateFlow<EveSsoUiStatus> = authRepository.status
+    val isRefreshing: StateFlow<Boolean> = authRepository.isRefreshing
 
     private val _isEditMode = MutableStateFlow(false)
     val isEditMode: StateFlow<Boolean> = _isEditMode.asStateFlow()
@@ -32,6 +33,10 @@ class CharacterViewModel(
 
     fun toggleEditMode() {
         _isEditMode.update { !it }
+    }
+
+    fun refreshLoggedInCharacters() {
+        authRepository.requestLoggedInProfilesRefresh()
     }
 
     fun selectCurrentCharacter(character: LoggedInCharacter) =

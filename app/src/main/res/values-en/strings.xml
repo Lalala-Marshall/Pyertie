@@ -144,6 +144,7 @@
 
     <!-- Character / OAuth -->
     <string name="character_add">Add Character</string>
+    <string name="character_pull_to_refresh">Pull to refresh</string>
     <string name="character_management">Character Management</string>
     <string name="character_edit">Edit</string>
     <string name="character_done">Done</string>

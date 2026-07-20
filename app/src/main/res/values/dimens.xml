@@ -114,6 +114,7 @@
     <dimen name="character_main_card_bottom_spacing">12dp</dimen>
     <dimen name="character_section_spacing">12dp</dimen>
     <dimen name="character_add_icon_size">24dp</dimen>
+    <dimen name="character_pull_refresh_icon_size">24dp</dimen>
     <dimen name="character_delete_icon_size">22dp</dimen>
     <dimen name="character_delete_icon_gap">8dp</dimen>
     <dimen name="character_skill_queue_top_spacing">6dp</dimen>

@@ -45,9 +45,13 @@ class EveSsoAuthRepository internal constructor(
     private val mutex = Mutex()
     /** Cold start already refreshed tokens in [restoreSessions]; skip one ProcessLifecycle onStart. */
     private val skipNextForegroundRefresh = AtomicBoolean(false)
+    private val profileRefreshInFlight = AtomicBoolean(false)
 
     private val _status = MutableStateFlow<EveSsoUiStatus>(EveSsoUiStatus.Idle)
     val status: StateFlow<EveSsoUiStatus> = _status.asStateFlow()
+
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     init {
         scope.launch {
@@ -167,6 +171,19 @@ class EveSsoAuthRepository internal constructor(
     }
 
     /**
+     * Manual / pull-to-refresh: runs on the auth repository scope so leaving the
+     * character list does not cancel work. No-ops if a refresh is already in flight.
+     */
+    fun requestLoggedInProfilesRefresh() {
+        scope.launch {
+            withProfileRefresh {
+                applyRefreshResults(tokenManager.refreshAllIfNeeded())
+                enrichProfilesDeferred(tokenManager.storedSessions())
+            }
+        }
+    }
+
+    /**
      * Startup restore priority: must (local session) → cache → deferred network enrich.
      * UI is hydrated before any ESI profile calls so a slow network never looks like logout.
      */
@@ -177,10 +194,25 @@ class EveSsoAuthRepository internal constructor(
             characterRepository.restoreCurrentCharacterSelection()
 
             skipNextForegroundRefresh.set(true)
-            applyRefreshResults(tokenManager.refreshAllIfNeeded())
-
             val remaining = tokenManager.storedSessions()
-            enrichProfilesDeferred(remaining)
+            if (remaining.isEmpty()) return@withContext
+            withProfileRefresh {
+                applyRefreshResults(tokenManager.refreshAllIfNeeded())
+                enrichProfilesDeferred(tokenManager.storedSessions())
+            }
+        }
+    }
+
+    private suspend fun withProfileRefresh(block: suspend () -> Unit) {
+        if (!profileRefreshInFlight.compareAndSet(false, true)) return
+        _isRefreshing.value = true
+        try {
+            withContext(Dispatchers.IO) {
+                block()
+            }
+        } finally {
+            _isRefreshing.value = false
+            profileRefreshInFlight.set(false)
         }
     }
 

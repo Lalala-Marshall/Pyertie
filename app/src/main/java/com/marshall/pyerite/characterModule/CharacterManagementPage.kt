@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,9 +20,14 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,7 +41,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
@@ -73,8 +81,10 @@ fun CharacterManagementPage(
 ) {
     val loggedInCharacters by viewModel.loggedInCharacters.collectAsState()
     val isEditMode by viewModel.isEditMode.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
     val ssoStatus by viewModel.ssoStatus.collectAsState()
     val listState = rememberLazyListState()
+    val pullRefreshState = rememberPullToRefreshState()
     val showCollapsedTitle = rememberLazyListTitleCollapsed(listState)
     var pendingDeleteCharacter by remember { mutableStateOf<LoggedInCharacter?>(null) }
     val navigateUp = navController.rememberNavigateUpAction()
@@ -93,19 +103,32 @@ fun CharacterManagementPage(
     } else {
         stringResource(R.string.character_edit)
     }
-    val endActions = if (hasLoggedInCharacters) {
-        listOf(
-            PyeriteTopBarActionItem(
-                onClick = viewModel::toggleEditMode,
-                icon = Icons.Default.Check,
-                contentDescription = editActionLabel,
-                label = editActionLabel,
-                accentColor = colorResource(R.color.hyperlink_text),
-                showIcon = false,
-            ),
-        )
-    } else {
-        emptyList()
+    val refreshActionLabel = stringResource(R.string.character_pull_to_refresh)
+    val endActions = buildList {
+        if (isRefreshing) {
+            add(
+                PyeriteTopBarActionItem(
+                    onClick = {},
+                    icon = Icons.Default.Refresh,
+                    contentDescription = refreshActionLabel,
+                    iconTint = colorResource(R.color.hyperlink_text),
+                    enabled = false,
+                    spinning = true,
+                ),
+            )
+        }
+        if (hasLoggedInCharacters) {
+            add(
+                PyeriteTopBarActionItem(
+                    onClick = viewModel::toggleEditMode,
+                    icon = Icons.Default.Check,
+                    contentDescription = editActionLabel,
+                    label = editActionLabel,
+                    accentColor = colorResource(R.color.hyperlink_text),
+                    showIcon = false,
+                ),
+            )
+        }
     }
 
     LaunchedEffect(hasLoggedInCharacters, isEditMode) {
@@ -120,55 +143,76 @@ fun CharacterManagementPage(
         onBack = navigateUp,
         endActions = endActions,
     ) { topBarPadding ->
-        LazyColumn(
-            state = listState,
+        val pullRefreshMaxDistance = PullToRefreshDefaults.IndicatorMaxDistance
+        val pullRefreshMaxDistancePx = with(LocalDensity.current) {
+            pullRefreshMaxDistance.toPx()
+        }
+        PullToRefreshBox(
+            // Keep false so the list snaps back on release while refresh continues in the top bar.
+            isRefreshing = false,
+            onRefresh = viewModel::refreshLoggedInCharacters,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(topBarPadding),
-        ) {
-            item(key = "page_title") {
-                Text(
-                    text = pageTitle,
-                    fontSize = dimensionResource(R.dimen.list_page_title_text_size).value.sp,
-                    fontWeight = FontWeight.Black,
-                    color = colorResource(R.color.text_primary),
-                    modifier = Modifier.padding(
-                        start = dimensionResource(R.dimen.type_detail_page_title_start_padding),
-                        top = dimensionResource(R.dimen.type_detail_page_title_vertical_padding),
-                        bottom = dimensionResource(R.dimen.list_page_title_bottom_padding),
-                    ),
+            state = pullRefreshState,
+            indicator = {
+                CharacterPullRefreshIndicator(
+                    state = pullRefreshState,
+                    maxDistance = pullRefreshMaxDistance,
                 )
-            }
-
-            item(key = "add_character") {
-                CharacterAddButton(onClick = viewModel::onAddCharacterClicked)
-            }
-
-            if (hasLoggedInCharacters) {
-                item(key = "logged_in_header") {
-                    CharacterSectionHeader(
-                        title = stringResource(
-                            R.string.character_logged_in_section,
-                            loggedInCharacters.size,
+            },
+        ) {
+            val contentOffsetY = pullRefreshState.distanceFraction * pullRefreshMaxDistancePx
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { translationY = contentOffsetY },
+            ) {
+                item(key = "page_title") {
+                    Text(
+                        text = pageTitle,
+                        fontSize = dimensionResource(R.dimen.list_page_title_text_size).value.sp,
+                        fontWeight = FontWeight.Black,
+                        color = colorResource(R.color.text_primary),
+                        modifier = Modifier.padding(
+                            start = dimensionResource(R.dimen.type_detail_page_title_start_padding),
+                            top = dimensionResource(R.dimen.type_detail_page_title_vertical_padding),
+                            bottom = dimensionResource(R.dimen.list_page_title_bottom_padding),
                         ),
                     )
                 }
 
-                item(key = "logged_in_card") {
-                    CharacterLoggedInCard(
-                        characters = loggedInCharacters,
-                        isEditMode = isEditMode,
-                        onCharacterClick = { character ->
-                            viewModel.selectCurrentCharacter(character)
-                            navigateUp?.invoke()
-                        },
-                        onDeleteClick = { pendingDeleteCharacter = it },
-                    )
+                item(key = "add_character") {
+                    CharacterAddButton(onClick = viewModel::onAddCharacterClicked)
                 }
-            }
 
-            item(key = "bottom_spacer") {
-                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.type_detail_bottom_padding)))
+                if (hasLoggedInCharacters) {
+                    item(key = "logged_in_header") {
+                        CharacterSectionHeader(
+                            title = stringResource(
+                                R.string.character_logged_in_section,
+                                loggedInCharacters.size,
+                            ),
+                        )
+                    }
+
+                    item(key = "logged_in_card") {
+                        CharacterLoggedInCard(
+                            characters = loggedInCharacters,
+                            isEditMode = isEditMode,
+                            onCharacterClick = { character ->
+                                viewModel.selectCurrentCharacter(character)
+                                navigateUp?.invoke()
+                            },
+                            onDeleteClick = { pendingDeleteCharacter = it },
+                        )
+                    }
+                }
+
+                item(key = "bottom_spacer") {
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.type_detail_bottom_padding)))
+                }
             }
         }
     }
@@ -353,6 +397,44 @@ fun CharacterManagementPage(
             }
         }
     }
+}
+
+@Composable
+private fun BoxScope.CharacterPullRefreshIndicator(
+    state: PullToRefreshState,
+    maxDistance: Dp,
+) {
+    val pullProgress = state.distanceFraction.coerceIn(
+        CharacterPullRefreshConfig.PROGRESS_MIN,
+        CharacterPullRefreshConfig.PROGRESS_MAX,
+    )
+
+    PullToRefreshDefaults.IndicatorBox(
+        state = state,
+        isRefreshing = false,
+        modifier = Modifier.align(Alignment.TopCenter),
+        maxDistance = maxDistance,
+        containerColor = Color.Transparent,
+        elevation = 0.dp,
+    ) {
+        Icon(
+            imageVector = Icons.Default.Refresh,
+            contentDescription = stringResource(R.string.character_pull_to_refresh),
+            tint = colorResource(R.color.hyperlink_text),
+            modifier = Modifier
+                .size(dimensionResource(R.dimen.character_pull_refresh_icon_size))
+                .graphicsLayer {
+                    rotationZ = pullProgress * CharacterPullRefreshConfig.PULL_ROTATION_DEGREES
+                    alpha = pullProgress
+                },
+        )
+    }
+}
+
+private object CharacterPullRefreshConfig {
+    const val PROGRESS_MIN = 0f
+    const val PROGRESS_MAX = 1f
+    const val PULL_ROTATION_DEGREES = 180f
 }
 
 @Composable
