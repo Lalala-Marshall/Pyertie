@@ -63,29 +63,33 @@ fun CharacterAvatar(
         }
 
         if (showBadges) {
-            CharacterBadgeIcon(
-                iconUrl = corporationIconUrl,
-                contentDescription = stringResource(R.string.character_corp_icon),
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .offset(x = -badgeOffset, y = badgeOffset)
-                    .size(badgeSize),
-            )
-            CharacterBadgeIcon(
-                iconUrl = allianceIconUrl,
-                contentDescription = stringResource(R.string.character_alliance_icon),
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .offset(x = badgeOffset, y = badgeOffset)
-                    .size(badgeSize),
-            )
+            if (!corporationIconUrl.isNullOrBlank()) {
+                CharacterBadgeIcon(
+                    iconUrl = corporationIconUrl,
+                    contentDescription = stringResource(R.string.character_corp_icon),
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .offset(x = -badgeOffset, y = badgeOffset)
+                        .size(badgeSize),
+                )
+            }
+            if (!allianceIconUrl.isNullOrBlank()) {
+                CharacterBadgeIcon(
+                    iconUrl = allianceIconUrl,
+                    contentDescription = stringResource(R.string.character_alliance_icon),
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .offset(x = badgeOffset, y = badgeOffset)
+                        .size(badgeSize),
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun CharacterBadgeIcon(
-    iconUrl: String?,
+    iconUrl: String,
     contentDescription: String,
     modifier: Modifier = Modifier,
 ) {
@@ -100,20 +104,11 @@ private fun CharacterBadgeIcon(
             .background(colorResource(R.color.main_background), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        if (iconUrl.isNullOrBlank()) {
-            Icon(
-                painter = painterResource(R.drawable.ic_character_avatar_placeholder),
-                contentDescription = contentDescription,
-                modifier = Modifier.size(dimensionResource(R.dimen.character_org_icon_size)),
-                tint = colorResource(R.color.hint_text),
-            )
-        } else {
-            AsyncImage(
-                model = iconUrl,
-                contentDescription = contentDescription,
-                modifier = Modifier.matchParentSize(),
-                contentScale = ContentScale.Crop,
-            )
-        }
+        AsyncImage(
+            model = iconUrl,
+            contentDescription = contentDescription,
+            modifier = Modifier.matchParentSize(),
+            contentScale = ContentScale.Crop,
+        )
     }
 }

@@ -158,6 +158,9 @@
     <string name="character_portrait">角色头像</string>
     <string name="character_corp_icon">军团图标</string>
     <string name="character_alliance_icon">联盟图标</string>
+    <string name="character_org_icon_placeholder">[-]</string>
+    <string name="character_org_name_placeholder">-</string>
+    <string name="character_org_none_placeholder">[-] - -</string>
     <string name="character_open_management">打开角色管理</string>
     <string name="character_delete">删除角色</string>
     <string name="character_delete_confirm_title">移除角色</string>

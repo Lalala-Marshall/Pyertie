@@ -24,7 +24,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -108,22 +107,18 @@ private fun MainPageSelectedCharacterRow(character: CharacterSummary) {
                 overflow = TextOverflow.Ellipsis,
                 style = compactTextStyle(orgLineHeight),
             )
-            character.corporationName?.let { corpName ->
-                CharacterOrgLine(
-                    iconUrl = character.corporationIconUrl,
-                    label = corpName,
-                    textSize = orgTextSize,
-                    lineHeight = orgLineHeight,
-                )
-            }
-            character.allianceName?.let { allianceName ->
-                CharacterOrgLine(
-                    iconUrl = character.allianceIconUrl,
-                    label = allianceName,
-                    textSize = orgTextSize,
-                    lineHeight = orgLineHeight,
-                )
-            }
+            CharacterOrgLine(
+                iconUrl = character.corporationIconUrl,
+                label = character.corporationName,
+                textSize = orgTextSize,
+                lineHeight = orgLineHeight,
+            )
+            CharacterOrgLine(
+                iconUrl = character.allianceIconUrl,
+                label = character.allianceName,
+                textSize = orgTextSize,
+                lineHeight = orgLineHeight,
+            )
         }
     }
 }
@@ -153,10 +148,24 @@ private fun MainPageCharacterRow(
 @Composable
 private fun CharacterOrgLine(
     iconUrl: String?,
-    label: String,
+    label: String?,
     textSize: TextUnit = dimensionResource(R.dimen.character_org_text_size).value.sp,
     lineHeight: TextUnit = textSize,
 ) {
+    val hasIcon = !iconUrl.isNullOrBlank()
+    val hasLabel = !label.isNullOrBlank()
+    if (!hasIcon && !hasLabel) {
+        Text(
+            text = stringResource(R.string.character_org_none_placeholder),
+            color = colorResource(R.color.hint_text),
+            fontSize = textSize,
+            lineHeight = lineHeight,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = compactTextStyle(lineHeight),
+        )
+        return
+    }
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -164,7 +173,11 @@ private fun CharacterOrgLine(
         CharacterOrgIcon(iconUrl = iconUrl)
         Spacer(modifier = Modifier.width(dimensionResource(R.dimen.character_org_icon_gap)))
         Text(
-            text = label,
+            text = if (hasLabel) {
+                label
+            } else {
+                stringResource(R.string.character_org_name_placeholder)
+            },
             color = colorResource(R.color.text_primary),
             fontSize = textSize,
             lineHeight = lineHeight,
@@ -188,11 +201,13 @@ private fun compactTextStyle(lineHeight: TextUnit): TextStyle = TextStyle(
 private fun CharacterOrgIcon(iconUrl: String?) {
     val iconSize = dimensionResource(R.dimen.character_org_icon_size)
     if (iconUrl.isNullOrBlank()) {
-        Icon(
-            painter = painterResource(R.drawable.ic_character_avatar_placeholder),
-            contentDescription = null,
-            modifier = Modifier.size(iconSize),
-            tint = colorResource(R.color.hint_text),
+        Text(
+            text = stringResource(R.string.character_org_icon_placeholder),
+            color = colorResource(R.color.hint_text),
+            fontSize = dimensionResource(R.dimen.character_org_text_size).value.sp,
+            lineHeight = iconSize.value.sp,
+            maxLines = 1,
+            style = compactTextStyle(iconSize.value.sp),
         )
     } else {
         AsyncImage(

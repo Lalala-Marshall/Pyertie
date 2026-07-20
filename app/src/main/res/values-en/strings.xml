@@ -156,6 +156,9 @@
     <string name="character_portrait">Character portrait</string>
     <string name="character_corp_icon">Corporation icon</string>
     <string name="character_alliance_icon">Alliance icon</string>
+    <string name="character_org_icon_placeholder">[-]</string>
+    <string name="character_org_name_placeholder">-</string>
+    <string name="character_org_none_placeholder">[-] - -</string>
     <string name="character_open_management">Open character management</string>
     <string name="character_delete">Delete character</string>
     <string name="character_delete_confirm_title">Remove Character</string>
