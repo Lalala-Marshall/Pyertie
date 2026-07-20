@@ -14,7 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
@@ -25,6 +25,11 @@ class PyeriteApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        // SDE must exist before auth restore (createdAtStart) resolves skill/location names.
+        runBlocking(Dispatchers.IO) {
+            BundledSdeUpdater.ensureUpToDate(this@PyeriteApp)
+        }
 
         startKoin {
             androidContext(this@PyeriteApp)
@@ -39,9 +44,6 @@ class PyeriteApp : Application() {
         }
 
         applicationScope.launch {
-            withContext(Dispatchers.IO) {
-                BundledSdeUpdater.ensureUpToDate(this@PyeriteApp)
-            }
             SdeUpdateLog.d("PyeriteApp", "starting background update check")
             GlobalContext.get().get<SdeUpdateController>().checkForUpdates()
         }

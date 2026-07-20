@@ -1,10 +1,16 @@
 package com.marshall.pyerite.characterModule.auth
 
+import com.marshall.pyerite.characterModule.model.CharacterLocationInfo
+import com.marshall.pyerite.characterModule.model.CharacterLocationPresence
 import com.marshall.pyerite.characterModule.model.LoggedInCharacter
+import com.marshall.pyerite.characterModule.model.SkillQueueEntry
 import com.marshall.pyerite.characterModule.model.SkillQueueProgress
+import com.marshall.pyerite.characterModule.model.SkillQueueTrainingState
 import com.marshall.pyerite.data.db.RoomProvider
 import com.marshall.pyerite.localization.LocaleController
 import com.marshall.pyerite.localization.displayName
+import com.marshall.pyerite.localization.localizedName
+import com.marshall.pyerite.util.NumberDisplayFormatter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -12,7 +18,6 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
-import kotlin.math.max
 
 /**
  * Builds [LoggedInCharacter] from public + authenticated ESI.
@@ -60,13 +65,6 @@ internal class CharacterProfileLoader(
                     }
                 }.getOrNull()
             }
-            val onlineDeferred = async {
-                runCatching {
-                    tokenManager.executeWithAuthRetry(session.characterId) { auth ->
-                        api.fetchOnline(session.characterId, auth)
-                    }
-                }.getOrNull()
-            }
 
             val public = publicDeferred.await()
             val skills = skillsDeferred.await()
@@ -77,7 +75,7 @@ internal class CharacterProfileLoader(
                 runCatching { publicEsi.fetchAlliance(id) }.getOrNull()
             }
             val location = locationDeferred.await()
-            val systemName = location?.solarSystemId?.let { publicEsi.fetchSolarSystemName(it) }
+            val locationInfo = resolveLocation(location)
             val queue = queueDeferred.await()?.let { entries -> mapSkillQueue(entries) }
 
             LoggedInCharacter(
@@ -85,11 +83,16 @@ internal class CharacterProfileLoader(
                 name = public?.name ?: session.characterName.ifBlank { session.characterId.toString() },
                 portraitUrl = portraitUrl(session.characterId),
                 securityStatus = public?.securityStatus,
-                location = systemName,
-                isOnline = onlineDeferred.await()?.online,
-                walletBalance = walletDeferred.await()?.let { formatIsk(it) },
-                totalSkillPoints = skills?.totalSp?.let { formatSp(it) },
-                unallocatedSkillPoints = skills?.unallocatedSp?.let { formatSp(it) },
+                location = locationInfo,
+                walletBalance = walletDeferred.await()?.let {
+                    NumberDisplayFormatter.format(it, NumberDisplayFormatter.Style.COMPACT)
+                },
+                totalSkillPoints = skills?.totalSp?.let {
+                    NumberDisplayFormatter.format(it, NumberDisplayFormatter.Style.COMPACT)
+                },
+                unallocatedSkillPoints = skills?.unallocatedSp?.let {
+                    NumberDisplayFormatter.format(it, NumberDisplayFormatter.Style.COMPACT)
+                },
                 corporationName = formatOrgLabel(corporation),
                 corporationIconUrl = public?.corporationId?.let { corporationLogoUrl(it) },
                 allianceName = formatOrgLabel(alliance),
@@ -100,37 +103,92 @@ internal class CharacterProfileLoader(
         }
     }
 
-    private suspend fun mapSkillQueue(entries: List<EsiSkillQueueEntryDto>): SkillQueueProgress? {
-        val active = entries
-            .filter { !it.finishDate.isNullOrBlank() }
-            .minByOrNull { it.queuePosition }
-            ?: return null
-        val finishMs = parseEsiDateMillis(active.finishDate) ?: return null
-        val startMs = active.startDate?.let { parseEsiDateMillis(it) }
-        val nowMs = System.currentTimeMillis()
-        val remainingSeconds = max(0L, (finishMs - nowMs) / EveSsoConfig.MILLIS_PER_SECOND)
-        val progress = if (startMs != null && finishMs > startMs) {
-            val total = (finishMs - startMs).toFloat()
-            val done = (nowMs - startMs).toFloat()
-            if (total > 0f) (done / total).coerceIn(0f, 1f) else 0f
-        } else {
-            0f
+    private suspend fun mapSkillQueue(entries: List<EsiSkillQueueEntryDto>): SkillQueueProgress {
+        if (entries.isEmpty()) {
+            return SkillQueueProgress(
+                state = SkillQueueTrainingState.IDLE,
+                entries = emptyList(),
+            )
         }
-        val skillName = resolveSkillName(active.skillId)
-        return SkillQueueProgress(
-            skillName = skillName,
-            level = active.finishedLevel,
-            progress = progress,
-            remainingSeconds = remainingSeconds,
+        val mapped = entries
+            .sortedBy { it.queuePosition }
+            .map { entry ->
+                SkillQueueEntry(
+                    skillName = resolveSkillName(entry.skillId),
+                    level = entry.finishedLevel,
+                    startAtEpochMs = entry.startDate?.let { parseEsiDateMillis(it) },
+                    finishAtEpochMs = entry.finishDate?.let { parseEsiDateMillis(it) },
+                    trainingStartSp = entry.trainingStartSp,
+                    levelStartSp = entry.levelStartSp,
+                    levelEndSp = entry.levelEndSp,
+                )
+            }
+        val trainingEntries = mapped.filter { it.finishAtEpochMs != null }
+        return if (trainingEntries.isNotEmpty()) {
+            SkillQueueProgress(
+                state = SkillQueueTrainingState.TRAINING,
+                entries = trainingEntries,
+            )
+        } else {
+            SkillQueueProgress(
+                state = SkillQueueTrainingState.PAUSED,
+                entries = mapped,
+            )
+        }
+    }
+
+    private suspend fun resolveLocation(
+        dto: EsiCharacterLocationDto?,
+    ): CharacterLocationInfo? {
+        dto ?: return null
+        val row = runCatching {
+            roomProvider.getDatabase().mapDao().getSolarSystemLocation(dto.solarSystemId)
+        }.getOrNull()
+        val language = localeController.contentLanguage
+        val systemName = localizedName(
+            zh = row?.systemZhName,
+            en = row?.systemEnName,
+            fallback = row?.systemName,
+            language = language,
+        ).ifBlank {
+            publicEsi.fetchSolarSystemName(dto.solarSystemId).orEmpty()
+        }
+        if (systemName.isBlank()) return null
+        val regionName = localizedName(
+            zh = row?.regionZhName,
+            en = row?.regionEnName,
+            fallback = row?.regionName,
+            language = language,
+        )
+        val security = row?.securityStatus
+            ?: publicEsi.fetchSolarSystemSecurity(dto.solarSystemId)
+            ?: return null
+        val presence = if (dto.stationId != null || dto.structureId != null) {
+            CharacterLocationPresence.IN_STRUCTURE
+        } else {
+            CharacterLocationPresence.IN_SPACE
+        }
+        return CharacterLocationInfo(
+            systemSecurityStatus = security,
+            systemName = systemName,
+            regionName = regionName,
+            presence = presence,
         )
     }
 
     private suspend fun resolveSkillName(typeId: Int): String {
-        val entity = runCatching {
-            roomProvider.getDatabase().typeDao().getTypeById(typeId)
-        }.getOrNull()
-        return entity?.displayName(localeController)?.takeIf { it.isNotBlank() }
-            ?: typeId.toString()
+        val fromSde = runCatching {
+            roomProvider.getDatabase().typeDao().getTypeDisplayName(typeId)
+                ?.displayName(localeController)
+        }.getOrNull()?.takeIf { it.isNotBlank() }
+        if (fromSde != null) return fromSde
+
+        val fromEsi = runCatching { publicEsi.fetchTypeName(typeId) }
+            .getOrNull()
+            ?.takeIf { it.isNotBlank() }
+        if (fromEsi != null) return fromEsi
+
+        return typeId.toString()
     }
 
     private fun parseEsiDateMillis(raw: String?): Long? {
@@ -157,10 +215,4 @@ internal class CharacterProfileLoader(
         val ticker = org.ticker?.let { "[$it] " }.orEmpty()
         return "$ticker${org.name}"
     }
-
-    private fun formatIsk(value: Double): String =
-        String.format(Locale.US, "%,.2f", value)
-
-    private fun formatSp(value: Long): String =
-        String.format(Locale.US, "%,d", value)
 }

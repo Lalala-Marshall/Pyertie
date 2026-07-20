@@ -42,6 +42,14 @@ internal class EsiPublicDataSource(
         runCatching { getDto { api.fetchSolarSystem(systemId) }.name }.getOrNull()
     }
 
+    suspend fun fetchSolarSystemSecurity(systemId: Long): Double? = withContext(Dispatchers.IO) {
+        runCatching { getDto { api.fetchSolarSystem(systemId) }.securityStatus }.getOrNull()
+    }
+
+    suspend fun fetchTypeName(typeId: Int): String? = withContext(Dispatchers.IO) {
+        runCatching { getDto { api.fetchUniverseType(typeId) }.name }.getOrNull()
+    }
+
     private suspend fun <T> getDto(call: suspend () -> T): T {
         return try {
             call()

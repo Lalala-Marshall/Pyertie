@@ -29,6 +29,10 @@ internal interface EsiApi {
     suspend fun fetchSolarSystem(@Path("system_id") systemId: Long): EsiUniverseSystemDto
 
     @Headers("Accept: application/json")
+    @GET("universe/types/{type_id}")
+    suspend fun fetchUniverseType(@Path("type_id") typeId: Int): EsiUniverseTypeDto
+
+    @Headers("Accept: application/json")
     @GET("characters/{character_id}/wallet")
     suspend fun fetchWallet(
         @Path("character_id") characterId: Long,
@@ -55,11 +59,4 @@ internal interface EsiApi {
         @Path("character_id") characterId: Long,
         @Header("Authorization") authorization: String,
     ): EsiCharacterLocationDto
-
-    @Headers("Accept: application/json")
-    @GET("characters/{character_id}/online")
-    suspend fun fetchOnline(
-        @Path("character_id") characterId: Long,
-        @Header("Authorization") authorization: String,
-    ): EsiCharacterOnlineDto
 }

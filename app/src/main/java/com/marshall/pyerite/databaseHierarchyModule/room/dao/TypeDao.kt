@@ -12,6 +12,7 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufac
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingProduct
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingSkill
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeBlueprintDetail
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeDisplayNameRow
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeApplicableBlueprintCount
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputSummary
@@ -40,6 +41,16 @@ interface TypeDao {
 
     @Query("SELECT * FROM types WHERE type_id = :typeId")
     suspend fun getTypeById(typeId: Int): TypeEntity?
+
+    @Query(
+        """
+        SELECT type_id AS id, name, zh_name AS zhName, en_name AS enName
+        FROM types
+        WHERE type_id = :typeId
+        LIMIT 1
+        """,
+    )
+    suspend fun getTypeDisplayName(typeId: Int): TypeDisplayNameRow?
 
     @Query("""
         SELECT 

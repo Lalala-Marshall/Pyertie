@@ -104,13 +104,6 @@
     <string name="type_detail_invention_skills">所需技能</string>
     <string name="type_detail_invention_time">发明时间</string>
 
-    <string name="duration_part_years">%1$d年</string>
-    <string name="duration_part_months">%1$d月</string>
-    <string name="duration_part_days">%1$d日</string>
-    <string name="duration_part_hours">%1$d时</string>
-    <string name="duration_part_minutes">%1$d分</string>
-    <string name="duration_part_seconds">%1$d秒</string>
-
     <string name="sde_update_download">下载数据库更新</string>
     <string name="sde_update_available">可更新</string>
     <string name="sde_update_check_manually">检查更新</string>
@@ -160,6 +153,8 @@
     <string name="character_wallet">钱包: %1$s</string>
     <string name="character_total_skill_points">总技能点: %1$s SP (可分配: %2$s)</string>
     <string name="character_training_skill">%1$s %2$d</string>
+    <string name="character_skill_queue_idle">No skill in training</string>
+    <string name="character_skill_queue_paused">已暂停</string>
     <string name="character_portrait">角色头像</string>
     <string name="character_corp_icon">军团图标</string>
     <string name="character_alliance_icon">联盟图标</string>
@@ -181,9 +176,7 @@
     <string name="character_sso_error_generic">SSO 登录失败</string>
     <string name="character_sso_error_provider">%1$s</string>
     <string name="character_sso_error_provider_denied">已取消或拒绝授权</string>
-    <string name="character_status_online">在线</string>
-    <string name="character_status_offline">离线</string>
-    <string name="character_duration_hms">%1$d时%2$d分%3$d秒</string>
-    <string name="character_duration_ms">%1$d分%2$d秒</string>
-    <string name="character_duration_s">%1$d秒</string>
+    <string name="character_location_system_region">%1$s/%2$s</string>
+    <string name="character_location_in_structure">（在建筑中）</string>
+    <string name="character_location_in_space">（在太空中）</string>
 </resources>

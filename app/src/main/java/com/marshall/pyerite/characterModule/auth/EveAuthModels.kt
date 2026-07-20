@@ -148,12 +148,13 @@ internal data class EsiCharacterLocationDto(
 )
 
 @Serializable
-internal data class EsiCharacterOnlineDto(
-    val online: Boolean = false,
+internal data class EsiUniverseSystemDto(
+    val name: String,
+    @SerialName("security_status") val securityStatus: Double? = null,
 )
 
 @Serializable
-internal data class EsiUniverseSystemDto(
+internal data class EsiUniverseTypeDto(
     val name: String,
 )
 

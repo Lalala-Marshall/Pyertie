@@ -4,6 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.marshall.pyerite.databaseHierarchyModule.room.dao.CategoryDao
 import com.marshall.pyerite.databaseHierarchyModule.room.dao.GroupDao
+import com.marshall.pyerite.databaseHierarchyModule.room.dao.MapDao
 import com.marshall.pyerite.databaseHierarchyModule.room.dao.MetaGroupDao
 import com.marshall.pyerite.databaseHierarchyModule.room.dao.TraitDao
 import com.marshall.pyerite.databaseHierarchyModule.room.dao.TypeDao
@@ -22,10 +23,13 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.DogmaAttributeEn
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.DogmaCategoryEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.GroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.MetaGroupEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.RegionEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.SolarSystemEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TraitEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeMaterialEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.UniverseLinkEntity
 
 @Database(
     entities = [
@@ -48,6 +52,9 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeMaterialEnti
         BlueprintResearchMaterialMaterialEntity::class,
         BlueprintResearchTimeMaterialEntity::class,
         TypeMaterialEntity::class,
+        SolarSystemEntity::class,
+        RegionEntity::class,
+        UniverseLinkEntity::class,
     ],
     version = 1,
     exportSchema = false,
@@ -58,4 +65,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun typeDao(): TypeDao
     abstract fun metaGroupDao(): MetaGroupDao
     abstract fun traitDao(): TraitDao
+    abstract fun mapDao(): MapDao
 }

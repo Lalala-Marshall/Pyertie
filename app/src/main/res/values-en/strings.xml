@@ -103,13 +103,6 @@
     <string name="type_detail_invention_skills">Skills required</string>
     <string name="type_detail_invention_time">Invention time</string>
 
-    <string name="duration_part_years">%1$dy</string>
-    <string name="duration_part_months">%1$dmo</string>
-    <string name="duration_part_days">%1$dd</string>
-    <string name="duration_part_hours">%1$dh</string>
-    <string name="duration_part_minutes">%1$dm</string>
-    <string name="duration_part_seconds">%1$ds</string>
-
     <string name="sde_update_download">Download database update</string>
     <string name="sde_update_available">Update</string>
     <string name="sde_update_check_manually">Check for updates</string>
@@ -158,6 +151,8 @@
     <string name="character_wallet">Wallet: %1$s</string>
     <string name="character_total_skill_points">Total SP: %1$s SP (Unallocated: %2$s)</string>
     <string name="character_training_skill">%1$s %2$d</string>
+    <string name="character_skill_queue_idle">No skill in training</string>
+    <string name="character_skill_queue_paused">Paused</string>
     <string name="character_portrait">Character portrait</string>
     <string name="character_corp_icon">Corporation icon</string>
     <string name="character_alliance_icon">Alliance icon</string>
@@ -179,9 +174,7 @@
     <string name="character_sso_error_generic">SSO login failed</string>
     <string name="character_sso_error_provider">%1$s</string>
     <string name="character_sso_error_provider_denied">Authorization cancelled or denied</string>
-    <string name="character_status_online">Online</string>
-    <string name="character_status_offline">Offline</string>
-    <string name="character_duration_hms">%1$dh %2$dm %3$ds</string>
-    <string name="character_duration_ms">%1$dm %2$ds</string>
-    <string name="character_duration_s">%1$ds</string>
+    <string name="character_location_system_region">%1$s/%2$s</string>
+    <string name="character_location_in_structure">(In structure)</string>
+    <string name="character_location_in_space">(In space)</string>
 </resources>
