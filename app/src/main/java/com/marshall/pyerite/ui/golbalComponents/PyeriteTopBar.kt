@@ -1,12 +1,6 @@
 package com.marshall.pyerite.ui.golbalComponents
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,6 +15,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.ScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Text
@@ -42,6 +37,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.background
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+
 
 @Composable
 fun rememberTopBarTotalHeight(): Dp {
@@ -239,7 +241,16 @@ fun PyeriteTopBar(
                     contentAlignment = Alignment.CenterEnd,
                 ) {
                     if (endActions.isNotEmpty()) {
-                        PyeriteTopBarActions(actions = endActions)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(
+                                dimensionResource(R.dimen.top_bar_end_action_gap),
+                            ),
+                        ) {
+                            endActions.forEach { action ->
+                                PyeriteTopBarActions(actions = listOf(action))
+                            }
+                        }
                     }
                 }
             }

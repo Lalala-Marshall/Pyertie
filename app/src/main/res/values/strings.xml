@@ -104,13 +104,6 @@
     <string name="type_detail_invention_skills">所需技能</string>
     <string name="type_detail_invention_time">发明时间</string>
 
-    <string name="duration_part_years">%1$d年</string>
-    <string name="duration_part_months">%1$d月</string>
-    <string name="duration_part_days">%1$d日</string>
-    <string name="duration_part_hours">%1$d时</string>
-    <string name="duration_part_minutes">%1$d分</string>
-    <string name="duration_part_seconds">%1$d秒</string>
-
     <string name="sde_update_download">下载数据库更新</string>
     <string name="sde_update_available">可更新</string>
     <string name="sde_update_check_manually">检查更新</string>
@@ -150,4 +143,45 @@
     <string name="search_preview_page_title">护卫舰蓝图</string>
     <string name="search_preview_hint">搜索</string>
     <string name="search_preview_tap_to_toggle_active">点击此区域模拟搜索激活态</string>
+
+    <!-- Character / OAuth -->
+    <string name="character_add">添加角色</string>
+    <string name="character_pull_to_refresh">下拉刷新</string>
+    <string name="character_management">角色管理</string>
+    <string name="character_edit">编辑</string>
+    <string name="character_done">完成</string>
+    <string name="character_logged_in_section">已登录角色 (%1$d)</string>
+    <string name="character_wallet">钱包: %1$s</string>
+    <string name="character_total_skill_points">总技能点: %1$s SP (可分配: %2$s)</string>
+    <string name="character_training_skill">%1$s %2$d</string>
+    <string name="character_skill_queue_idle">当前没有技能在训练</string>
+    <string name="character_skill_queue_paused">已暂停</string>
+    <string name="character_portrait">角色头像</string>
+    <string name="character_corp_icon">军团图标</string>
+    <string name="character_alliance_icon">联盟图标</string>
+    <string name="character_org_icon_placeholder">[-]</string>
+    <string name="character_org_name_placeholder">-</string>
+    <string name="character_org_none_placeholder">[-] - -</string>
+    <string name="character_open_management">打开角色管理</string>
+    <string name="character_delete">删除角色</string>
+    <string name="character_reorder">拖动排序</string>
+    <string name="character_delete_confirm_title">移除角色</string>
+    <string name="character_delete_confirm">移除</string>
+    <string name="character_delete_cancel">取消</string>
+    <string name="character_exit_current">退出当前角色</string>
+    <string name="character_sso_signing_in">正在登录 EVE SSO…</string>
+    <string name="character_sso_awaiting_browser">请在浏览器中完成登录</string>
+    <string name="character_sso_cancel">取消登录</string>
+    <string name="character_sso_success">已添加角色 %1$s</string>
+    <string name="character_sso_failed">登录失败：%1$s</string>
+    <string name="character_sso_ok">确定</string>
+    <string name="character_sso_error_missing_client_id">未配置 EVE_SSO_CLIENT_ID（local.properties）</string>
+    <string name="character_sso_error_invalid_callback">无效的 SSO 回调</string>
+    <string name="character_sso_error_state_mismatch">SSO state 校验失败或登录已过期</string>
+    <string name="character_sso_error_generic">SSO 登录失败</string>
+    <string name="character_sso_error_provider">%1$s</string>
+    <string name="character_sso_error_provider_denied">已取消或拒绝授权</string>
+    <string name="character_location_system_region">%1$s/%2$s</string>
+    <string name="character_location_in_structure">（在建筑中）</string>
+    <string name="character_location_in_space">（在太空中）</string>
 </resources>

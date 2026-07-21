@@ -28,4 +28,14 @@
 
     <color name="sde_update_accent">#34A853</color>
 
+    <color name="character_security_negative">#EF5350</color>
+    <color name="character_security_low">#F06292</color>
+    <color name="character_security_high">#64B5F6</color>
+    <color name="character_skill_progress_active">#34A853</color>
+    <color name="character_skill_progress_paused">#9E9E9E</color>
+    <color name="character_skill_progress_track">#353535</color>
+    <color name="character_skill_progress_shimmer">#FFFFFF</color>
+    <color name="character_delete">#EF5350</color>
+    <color name="character_org_badge_background">#000000</color>
+
 </resources>

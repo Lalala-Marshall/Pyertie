@@ -1,5 +1,11 @@
 package com.marshall.pyerite.ui.golbalComponents
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -17,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,6 +31,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
@@ -45,6 +53,8 @@ data class PyeriteTopBarActionItem(
     val iconTint: Color = Color.Unspecified,
     val enabled: Boolean = true,
     val iconBadge: Boolean = false,
+    val showIcon: Boolean = true,
+    val spinning: Boolean = false,
 )
 
 /**
@@ -145,11 +155,15 @@ private fun TopBarActionSegment(
                     modifier = Modifier.size(badgeIconSize),
                 )
             }
-        } else {
-            Box(
-                modifier = Modifier.size(if (inPill) buttonSize else iconSize),
-                contentAlignment = Alignment.Center,
-            ) {
+        } else if (action.showIcon) {
+            if (action.spinning) {
+                SpinningTopBarIcon(
+                    imageVector = action.icon,
+                    contentDescription = action.contentDescription,
+                    tint = iconTint,
+                    modifier = Modifier.size(iconSize),
+                )
+            } else {
                 Icon(
                     imageVector = action.icon,
                     contentDescription = action.contentDescription,
@@ -198,7 +212,41 @@ private fun TopBarActionSegment(
 }
 
 @Composable
-internal fun Modifier.topBarActionSurface(shape: Shape): Modifier {
+private fun SpinningTopBarIcon(
+    imageVector: ImageVector,
+    contentDescription: String,
+    tint: Color,
+    modifier: Modifier = Modifier,
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "top_bar_action_spin")
+    val degrees by infiniteTransition.animateFloat(
+        initialValue = TopBarActionSpinConfig.PROGRESS_MIN,
+        targetValue = TopBarActionSpinConfig.FULL_CIRCLE_DEGREES,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = TopBarActionSpinConfig.DURATION_MS,
+                easing = LinearEasing,
+            ),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "top_bar_action_spin_degrees",
+    )
+    Icon(
+        imageVector = imageVector,
+        contentDescription = contentDescription,
+        tint = tint,
+        modifier = modifier.graphicsLayer { rotationZ = degrees },
+    )
+}
+
+private object TopBarActionSpinConfig {
+    const val PROGRESS_MIN = 0f
+    const val FULL_CIRCLE_DEGREES = 360f
+    const val DURATION_MS = 1_000
+}
+
+@Composable
+fun Modifier.topBarActionSurface(shape: Shape): Modifier {
     return this
         .shadow(elevation = 2.dp, shape = shape, clip = false)
         .clip(shape)

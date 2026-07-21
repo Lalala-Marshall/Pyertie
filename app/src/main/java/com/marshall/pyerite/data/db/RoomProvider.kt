@@ -30,6 +30,9 @@ class RoomProvider(
         if (existing != null && cachedDbName == dbName) return existing
 
         val dbFile = context.getDatabasePath(dbName)
+        check(dbFile.exists()) {
+            "SDE database missing: $dbName. BundledSdeUpdater must run before Room opens."
+        }
         val database = Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, dbName)
             .createFromFile(dbFile)
             .build()

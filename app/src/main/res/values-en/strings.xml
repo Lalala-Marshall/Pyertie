@@ -103,13 +103,6 @@
     <string name="type_detail_invention_skills">Skills required</string>
     <string name="type_detail_invention_time">Invention time</string>
 
-    <string name="duration_part_years">%1$dy</string>
-    <string name="duration_part_months">%1$dmo</string>
-    <string name="duration_part_days">%1$dd</string>
-    <string name="duration_part_hours">%1$dh</string>
-    <string name="duration_part_minutes">%1$dm</string>
-    <string name="duration_part_seconds">%1$ds</string>
-
     <string name="sde_update_download">Download database update</string>
     <string name="sde_update_available">Update</string>
     <string name="sde_update_check_manually">Check for updates</string>
@@ -148,4 +141,45 @@
     <string name="search_preview_hint">Search</string>
     <string name="search_preview_page_title">Frigate Blueprints</string>
     <string name="search_preview_tap_to_toggle_active">Tap here to simulate active search</string>
+
+    <!-- Character / OAuth -->
+    <string name="character_add">Add Character</string>
+    <string name="character_pull_to_refresh">Pull to refresh</string>
+    <string name="character_management">Character Management</string>
+    <string name="character_edit">Edit</string>
+    <string name="character_done">Done</string>
+    <string name="character_logged_in_section">Logged-in Characters (%1$d)</string>
+    <string name="character_wallet">Wallet: %1$s</string>
+    <string name="character_total_skill_points">Total SP: %1$s SP (Unallocated: %2$s)</string>
+    <string name="character_training_skill">%1$s %2$d</string>
+    <string name="character_skill_queue_idle">No skill in training</string>
+    <string name="character_skill_queue_paused">Paused</string>
+    <string name="character_portrait">Character portrait</string>
+    <string name="character_corp_icon">Corporation icon</string>
+    <string name="character_alliance_icon">Alliance icon</string>
+    <string name="character_org_icon_placeholder">[-]</string>
+    <string name="character_org_name_placeholder">-</string>
+    <string name="character_org_none_placeholder">[-] - -</string>
+    <string name="character_open_management">Open character management</string>
+    <string name="character_delete">Delete character</string>
+    <string name="character_reorder">Reorder</string>
+    <string name="character_delete_confirm_title">Remove Character</string>
+    <string name="character_delete_confirm">Remove</string>
+    <string name="character_delete_cancel">Cancel</string>
+    <string name="character_exit_current">Exit current character</string>
+    <string name="character_sso_signing_in">Signing in with EVE SSO…</string>
+    <string name="character_sso_awaiting_browser">Complete sign-In in the browser</string>
+    <string name="character_sso_cancel">Cancel sign-in</string>
+    <string name="character_sso_success">Added character %1$s</string>
+    <string name="character_sso_failed">Sign-in failed: %1$s</string>
+    <string name="character_sso_ok">OK</string>
+    <string name="character_sso_error_missing_client_id">Missing EVE_SSO_CLIENT_ID in local.properties</string>
+    <string name="character_sso_error_invalid_callback">Invalid SSO callback</string>
+    <string name="character_sso_error_state_mismatch">SSO state mismatch or login expired</string>
+    <string name="character_sso_error_generic">SSO login failed</string>
+    <string name="character_sso_error_provider">%1$s</string>
+    <string name="character_sso_error_provider_denied">Authorization cancelled or denied</string>
+    <string name="character_location_system_region">%1$s/%2$s</string>
+    <string name="character_location_in_structure">(In structure)</string>
+    <string name="character_location_in_space">(In space)</string>
 </resources>

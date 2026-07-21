@@ -1,7 +1,9 @@
 package com.marshall.pyerite.data.sde
 
 import android.content.Context
-import org.json.JSONObject
+import com.marshall.pyerite.data.network.PyeriteJson
+import com.marshall.pyerite.data.sde.network.SdeLatestJsonDto
+import kotlinx.serialization.decodeFromString
 
 data class SdeVersionKey(
     val buildNumber: Int,
@@ -14,7 +16,6 @@ data class SdeVersionKey(
         if (releaseDate != other.releaseDate) return releaseDate.compareTo(other.releaseDate)
         return completionTime.compareTo(other.completionTime)
     }
-
 }
 
 data class SdeReleaseMeta(
@@ -35,14 +36,8 @@ data class SdeReleaseMeta(
     companion object {
         private const val ASSET_LATEST = "latest.txt"
 
-        fun fromJsonObject(json: JSONObject): SdeReleaseMeta = SdeReleaseMeta(
-            buildNumber = json.optString("build_number", "0"),
-            releaseDate = json.optString("release_date", ""),
-            completionTime = json.optString("completion_time", ""),
-            iconVersion = json.optInt("icon_version", -1).takeIf { it >= 0 },
-            iconSha256 = json.optString("icon_sha256").ifBlank { null },
-            sdeSha256 = json.optString("sde_sha256").ifBlank { null },
-        )
+        fun fromJson(json: String): SdeReleaseMeta =
+            PyeriteJson.decodeFromString<SdeLatestJsonDto>(json).toReleaseMeta()
 
         fun fromAssets(context: Context): SdeReleaseMeta? {
             for (assetName in listOf(ASSET_LATEST, "latest.json")) {
@@ -54,7 +49,7 @@ data class SdeReleaseMeta(
 
         private fun readFromAsset(context: Context, assetName: String): SdeReleaseMeta? = try {
             context.assets.open(assetName).bufferedReader().use { reader ->
-                fromJsonObject(JSONObject(reader.readText()))
+                fromJson(reader.readText())
             }
         } catch (_: Exception) {
             null
