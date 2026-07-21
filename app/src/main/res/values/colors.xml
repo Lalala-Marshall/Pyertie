@@ -44,4 +44,5 @@
     <color name="character_skill_progress_track">#E6E8EC</color>
     <color name="character_skill_progress_shimmer">#FFFFFF</color>
     <color name="character_delete">#E53935</color>
+    <color name="character_org_badge_background">#FFFFFF</color>
 </resources>

@@ -36,5 +36,6 @@
     <color name="character_skill_progress_track">#353535</color>
     <color name="character_skill_progress_shimmer">#FFFFFF</color>
     <color name="character_delete">#EF5350</color>
+    <color name="character_org_badge_background">#000000</color>
 
 </resources>

@@ -98,10 +98,10 @@ private fun CharacterBadgeIcon(
             .clip(CircleShape)
             .border(
                 width = dimensionResource(R.dimen.character_avatar_border_width),
-                color = colorResource(R.color.second_background),
+                color = colorResource(R.color.border),
                 shape = CircleShape,
             )
-            .background(colorResource(R.color.main_background), CircleShape),
+            .background(colorResource(R.color.character_org_badge_background), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         AsyncImage(
