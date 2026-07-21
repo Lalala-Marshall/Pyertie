@@ -113,7 +113,12 @@ internal data class EsiCharacterDto(
     val name: String,
     @SerialName("corporation_id") val corporationId: Long? = null,
     @SerialName("alliance_id") val allianceId: Long? = null,
-    @SerialName("security_status") val securityStatus: Double? = null,
+)
+
+@Serializable
+internal data class EveOAuthErrorDto(
+    val error: String? = null,
+    @SerialName("error_description") val errorDescription: String? = null,
 )
 
 @Serializable
@@ -163,7 +168,6 @@ internal data class EsiCharacterPublic(
     val name: String,
     val corporationId: Long?,
     val allianceId: Long?,
-    val securityStatus: Double?,
 )
 
 internal data class EsiOrganization(

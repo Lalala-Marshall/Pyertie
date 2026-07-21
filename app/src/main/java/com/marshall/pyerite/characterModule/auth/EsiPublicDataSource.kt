@@ -20,7 +20,6 @@ internal class EsiPublicDataSource(
             name = dto.name,
             corporationId = dto.corporationId,
             allianceId = dto.allianceId,
-            securityStatus = dto.securityStatus,
         ).also { characterCache[characterId] = it }
     }
 

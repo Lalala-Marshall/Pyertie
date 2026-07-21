@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.annotation.StringRes
 import com.marshall.pyerite.R
 import com.marshall.pyerite.characterModule.viewModel.CharacterRepository
+import com.marshall.pyerite.data.network.PyeriteJson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -52,6 +53,9 @@ class EveSsoAuthRepository internal constructor(
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    private val _refreshFailed = MutableStateFlow(false)
+    val refreshFailed: StateFlow<Boolean> = _refreshFailed.asStateFlow()
 
     init {
         scope.launch {
@@ -119,7 +123,8 @@ class EveSsoAuthRepository internal constructor(
             val error = uri.queryParamOrNull(EveSsoConfig.OAuth.QUERY_ERROR)
             if (error != null) {
                 pendingLoginStore.clear()
-                _status.value = EveSsoUiStatus.Failed(R.string.character_sso_error_provider_denied)
+                val description = uri.queryParamOrNull(EveSsoConfig.OAuth.QUERY_ERROR_DESCRIPTION)
+                _status.value = providerOrDeniedFailure(description)
                 return
             }
 
@@ -162,8 +167,8 @@ class EveSsoAuthRepository internal constructor(
                 characterRepository.upsertLoggedInCharacter(loggedIn)
                 characterRepository.selectCurrentCharacter(loggedIn)
                 _status.value = EveSsoUiStatus.Succeeded(loggedIn.name)
-            } catch (_: Exception) {
-                _status.value = EveSsoUiStatus.Failed(R.string.character_sso_error_generic)
+            } catch (error: Exception) {
+                _status.value = failureFromException(error)
             }
         }
     }
@@ -175,8 +180,9 @@ class EveSsoAuthRepository internal constructor(
     fun requestLoggedInProfilesRefresh() {
         scope.launch {
             withProfileRefresh {
-                applyRefreshResults(tokenManager.refreshAllIfNeeded())
-                enrichProfilesDeferred(tokenManager.storedSessions())
+                val tokensOk = applyRefreshResults(tokenManager.refreshAllIfNeeded())
+                val profilesOk = enrichProfilesDeferred(tokenManager.storedSessions())
+                tokensOk && profilesOk
             }
         }
     }
@@ -195,21 +201,27 @@ class EveSsoAuthRepository internal constructor(
             val remaining = tokenManager.storedSessions()
             if (remaining.isEmpty()) return@withContext
             withProfileRefresh {
-                applyRefreshResults(tokenManager.refreshAllIfNeeded())
-                enrichProfilesDeferred(tokenManager.storedSessions())
+                val tokensOk = applyRefreshResults(tokenManager.refreshAllIfNeeded())
+                val profilesOk = enrichProfilesDeferred(tokenManager.storedSessions())
+                tokensOk && profilesOk
             }
         }
     }
 
-    private suspend fun withProfileRefresh(block: suspend () -> Unit) {
+    private suspend fun withProfileRefresh(block: suspend () -> Boolean) {
         if (!profileRefreshInFlight.compareAndSet(false, true)) return
         _isRefreshing.value = true
+        _refreshFailed.value = false
+        var success = false
         try {
             withContext(Dispatchers.IO) {
-                block()
+                success = block()
             }
+        } catch (_: Exception) {
+            success = false
         } finally {
             _isRefreshing.value = false
+            _refreshFailed.value = !success
             profileRefreshInFlight.set(false)
         }
     }
@@ -231,28 +243,40 @@ class EveSsoAuthRepository internal constructor(
         characterRepository.applyPersistedCharacterOrder()
     }
 
-    private suspend fun enrichProfilesDeferred(sessions: List<EveStoredSession>) {
-        if (sessions.isEmpty()) return
-        coroutineScope {
+    /** @return false if any profile enrich failed. */
+    private suspend fun enrichProfilesDeferred(sessions: List<EveStoredSession>): Boolean {
+        if (sessions.isEmpty()) return true
+        val results = coroutineScope {
             sessions.map { session ->
                 async {
                     runCatching {
                         val loaded = profileLoader.load(session)
                         profileCache.save(loaded)
                         characterRepository.upsertLoggedInCharacter(loaded)
-                    }
+                    }.isSuccess
                 }
             }.awaitAll()
         }
+        return results.all { it }
     }
 
-    private fun applyRefreshResults(results: List<EveTokenRefreshResult>) {
+    /**
+     * Applies permanent session removals.
+     * @return false if any non-permanent token refresh failed.
+     */
+    private fun applyRefreshResults(results: List<EveTokenRefreshResult>): Boolean {
+        var hadTransientFailure = false
         results.forEach { result ->
-            if (result is EveTokenRefreshResult.Failed && result.permanent) {
-                profileCache.remove(result.characterId)
-                characterRepository.removeLoggedInCharacter(result.characterId)
+            if (result is EveTokenRefreshResult.Failed) {
+                if (result.permanent) {
+                    profileCache.remove(result.characterId)
+                    characterRepository.removeLoggedInCharacter(result.characterId)
+                } else {
+                    hadTransientFailure = true
+                }
             }
         }
+        return !hadTransientFailure
     }
 
     private fun buildAuthorizationUrl(
@@ -278,4 +302,50 @@ class EveSsoAuthRepository internal constructor(
 
     private fun enc(value: String): String =
         URLEncoder.encode(value, StandardCharsets.UTF_8.name())
+}
+
+private fun providerOrDeniedFailure(description: String?): EveSsoUiStatus.Failed {
+    val detail = description?.trim()?.takeIf { it.isNotEmpty() }
+    return if (detail != null) {
+        EveSsoUiStatus.Failed(
+            messageRes = R.string.character_sso_error_provider,
+            formatArgs = listOf(detail),
+        )
+    } else {
+        EveSsoUiStatus.Failed(R.string.character_sso_error_provider_denied)
+    }
+}
+
+private fun failureFromException(error: Exception): EveSsoUiStatus.Failed {
+    val detail = oauthErrorDetail(error)?.trim()?.takeIf { it.isNotEmpty() }
+    return if (detail != null) {
+        EveSsoUiStatus.Failed(
+            messageRes = R.string.character_sso_error_provider,
+            formatArgs = listOf(detail),
+        )
+    } else {
+        EveSsoUiStatus.Failed(R.string.character_sso_error_generic)
+    }
+}
+
+private fun oauthErrorDetail(error: Throwable): String? {
+    when (error) {
+        is EveSsoHttpException -> {
+            parseOAuthErrorDescription(error.errorBody)?.let { return it }
+            error.message?.takeIf { it.isNotBlank() }?.let { return it }
+        }
+        else -> {
+            error.message?.takeIf { it.isNotBlank() }?.let { return it }
+        }
+    }
+    return null
+}
+
+private fun parseOAuthErrorDescription(rawBody: String): String? {
+    if (rawBody.isBlank()) return null
+    return runCatching {
+        val dto = PyeriteJson.decodeFromString<EveOAuthErrorDto>(rawBody)
+        dto.errorDescription?.takeIf { it.isNotBlank() }
+            ?: dto.error?.takeIf { it.isNotBlank() }
+    }.getOrNull()
 }

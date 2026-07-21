@@ -24,6 +24,7 @@ class CharacterViewModel(
     val loggedInCharacters: StateFlow<List<LoggedInCharacter>> = repository.loggedInCharacters
     val ssoStatus: StateFlow<EveSsoUiStatus> = authRepository.status
     val isRefreshing: StateFlow<Boolean> = authRepository.isRefreshing
+    val refreshFailed: StateFlow<Boolean> = authRepository.refreshFailed
 
     private val _isEditMode = MutableStateFlow(false)
     val isEditMode: StateFlow<Boolean> = _isEditMode.asStateFlow()

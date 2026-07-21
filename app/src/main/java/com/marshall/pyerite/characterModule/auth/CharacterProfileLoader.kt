@@ -82,7 +82,6 @@ internal class CharacterProfileLoader(
                 characterId = session.characterId,
                 name = public?.name ?: session.characterName.ifBlank { session.characterId.toString() },
                 portraitUrl = portraitUrl(session.characterId),
-                securityStatus = public?.securityStatus,
                 location = locationInfo,
                 walletBalance = walletDeferred.await()?.let {
                     NumberDisplayFormatter.format(it, NumberDisplayFormatter.Style.COMPACT)

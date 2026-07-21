@@ -192,8 +192,6 @@ data class LoggedInCharacter(
     val characterId: Long,
     val name: String,
     val portraitUrl: String?,
-    /** Character standings from public ESI (not system security). */
-    val securityStatus: Double?,
     val location: CharacterLocationInfo?,
     val walletBalance: String?,
     val totalSkillPoints: String?,

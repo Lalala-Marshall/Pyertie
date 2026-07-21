@@ -154,7 +154,7 @@
     <string name="character_wallet">钱包: %1$s</string>
     <string name="character_total_skill_points">总技能点: %1$s SP (可分配: %2$s)</string>
     <string name="character_training_skill">%1$s %2$d</string>
-    <string name="character_skill_queue_idle">No skill in training</string>
+    <string name="character_skill_queue_idle">当前没有技能在训练</string>
     <string name="character_skill_queue_paused">已暂停</string>
     <string name="character_portrait">角色头像</string>
     <string name="character_corp_icon">军团图标</string>

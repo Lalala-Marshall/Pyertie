@@ -89,6 +89,7 @@ fun CharacterManagementPage(
     val loggedInCharacters by viewModel.loggedInCharacters.collectAsState()
     val isEditMode by viewModel.isEditMode.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
+    val refreshFailed by viewModel.refreshFailed.collectAsState()
     val ssoStatus by viewModel.ssoStatus.collectAsState()
     val listState = rememberLazyListState()
     val pullRefreshState = rememberPullToRefreshState()
@@ -111,16 +112,26 @@ fun CharacterManagementPage(
         stringResource(R.string.character_edit)
     }
     val refreshActionLabel = stringResource(R.string.character_pull_to_refresh)
+    val showRefreshAction = hasLoggedInCharacters && (isRefreshing || refreshFailed)
     val endActions = buildList {
-        if (isRefreshing) {
+        if (showRefreshAction) {
+            val refreshingNow = isRefreshing
             add(
                 PyeriteTopBarActionItem(
-                    onClick = {},
+                    onClick = {
+                        if (!refreshingNow) {
+                            viewModel.refreshLoggedInCharacters()
+                        }
+                    },
                     icon = Icons.Default.Refresh,
                     contentDescription = refreshActionLabel,
-                    iconTint = colorResource(R.color.hyperlink_text),
-                    enabled = false,
-                    spinning = true,
+                    iconTint = if (refreshingNow) {
+                        colorResource(R.color.hyperlink_text)
+                    } else {
+                        colorResource(R.color.character_delete)
+                    },
+                    enabled = !refreshingNow,
+                    spinning = refreshingNow,
                 ),
             )
         }
