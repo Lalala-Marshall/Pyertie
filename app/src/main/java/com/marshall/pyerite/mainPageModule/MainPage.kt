@@ -16,28 +16,34 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
+import com.marshall.pyerite.characterSheetModule.navHost.CharacterSheetRoute
+import com.marshall.pyerite.characterSheetModule.ui.MainPageCharacterSheetItem
+import com.marshall.pyerite.charactersListModule.navHost.CharacterRoute
+import com.marshall.pyerite.charactersListModule.ui.MainPageCharacterCard
+import com.marshall.pyerite.charactersListModule.viewModel.CharacterViewModel
 import com.marshall.pyerite.data.sde.SdeUpdateBottomSheet
 import com.marshall.pyerite.data.sde.SdeUpdateUiState
 import com.marshall.pyerite.data.sde.SdeUpdateViewModel
 import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
-import com.marshall.pyerite.characterModule.navHost.CharacterRoute
-import com.marshall.pyerite.characterModule.ui.MainPageCharacterCard
-import com.marshall.pyerite.characterModule.viewModel.CharacterViewModel
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
 import com.marshall.pyerite.ui.golbalComponents.PageTitle
 import com.marshall.pyerite.ui.golbalComponents.PyeritePageScaffold
 import com.marshall.pyerite.ui.golbalComponents.PyeriteTopBarActionItem
 import com.marshall.pyerite.ui.golbalComponents.rememberLazyListTitleCollapsed
+import com.marshall.pyerite.util.NumberDisplayFormatter
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -48,8 +54,20 @@ fun MainPage(
 ) {
     val uiState by sdeUpdateViewModel.uiState.collectAsState()
     val currentCharacter by characterViewModel.currentCharacter.collectAsState()
+    val loggedInCharacters by characterViewModel.loggedInCharacters.collectAsState()
     val listState = rememberLazyListState()
     val showCollapsedTitle = rememberLazyListTitleCollapsed(listState)
+
+    val currentTotalSp = remember(currentCharacter?.characterId, loggedInCharacters) {
+        val characterId = currentCharacter?.characterId ?: return@remember null
+        loggedInCharacters.find { it.characterId == characterId }?.totalSp
+    }
+    val characterSheetHint = currentTotalSp?.let { totalSp ->
+        stringResource(
+            R.string.character_sheet_skill_points,
+            NumberDisplayFormatter.format(totalSp, NumberDisplayFormatter.Style.FULL),
+        )
+    }.orEmpty()
 
     val updateActionLabel = when (uiState) {
         is SdeUpdateUiState.CheckFailed -> stringResource(R.string.sde_update_check_manually)
@@ -58,6 +76,7 @@ fun MainPage(
     val showUpdateIcon = uiState is SdeUpdateUiState.UpdateReady ||
         uiState is SdeUpdateUiState.CheckFailed
     val pageTitle = stringResource(R.string.main_page)
+    val characterSectionTitle = stringResource(R.string.character)
     val dataSectionTitle = stringResource(R.string.data)
     val endActions = buildList {
         if (showUpdateIcon) {
@@ -102,6 +121,18 @@ fun MainPage(
                 MainPageCharacterCard(
                     currentCharacter = currentCharacter,
                     onClick = { navController.navigate(CharacterRoute.Root.route) },
+                )
+            }
+            item(key = "character_section_header") {
+                MainPageSectionHeader(title = characterSectionTitle)
+            }
+            item(key = "character_sheet_entry") {
+                MainPageCharacterSheetItem(
+                    skillPointsHint = characterSheetHint,
+                    onClick = {
+                        val characterId = currentCharacter?.characterId ?: return@MainPageCharacterSheetItem
+                        navController.navigate(CharacterSheetRoute.Sheet.create(characterId))
+                    },
                 )
             }
             item(key = "data_section_header") {
@@ -153,16 +184,7 @@ private fun MainPageSectionHeader(title: String) {
 
 @Composable
 private fun MainPageDatabaseItem(onClick: () -> Unit) {
-    val cardCornerRadius = dimensionResource(R.dimen.detail_card_corner_radius)
-    val shape = RoundedCornerShape(cardCornerRadius)
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = dimensionResource(R.dimen.detail_card_horizontal_padding))
-            .clip(shape)
-            .background(colorResource(R.color.second_background), shape),
-    ) {
+    MainPageSectionCard {
         BaseLazyColumnItem(
             model = BaseLazyColumnItemModel(
                 iconRes = R.drawable.ic_database,
@@ -171,5 +193,25 @@ private fun MainPageDatabaseItem(onClick: () -> Unit) {
             ),
             showDivider = false,
         )
+    }
+}
+
+@Composable
+private fun MainPageSectionCard(
+    bottomSpacing: Dp = 0.dp,
+    content: @Composable () -> Unit,
+) {
+    val cardCornerRadius = dimensionResource(R.dimen.detail_card_corner_radius)
+    val shape = RoundedCornerShape(cardCornerRadius)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = dimensionResource(R.dimen.detail_card_horizontal_padding))
+            .padding(bottom = bottomSpacing)
+            .clip(shape)
+            .background(colorResource(R.color.second_background), shape),
+    ) {
+        content()
     }
 }

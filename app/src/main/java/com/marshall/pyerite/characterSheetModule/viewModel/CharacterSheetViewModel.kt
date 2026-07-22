@@ -1,0 +1,89 @@
+package com.marshall.pyerite.characterSheetModule.viewModel
+
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.marshall.pyerite.characterSheetModule.model.CharacterSheet
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+internal class CharacterSheetViewModel(
+    savedStateHandle: SavedStateHandle,
+    private val repository: CharacterSheetRepository,
+) : ViewModel() {
+
+    private val characterId: Long = checkNotNull(savedStateHandle[NAV_ARG_CHARACTER_ID]) {
+        "Missing $NAV_ARG_CHARACTER_ID"
+    }
+
+    private val _uiState = MutableStateFlow(initialUiState())
+    val uiState: StateFlow<CharacterSheetUiState> = _uiState.asStateFlow()
+
+    init {
+        if (!_uiState.value.detailsReady) {
+            loadSheet(forceRefresh = false)
+        }
+    }
+
+    fun refresh() {
+        loadSheet(forceRefresh = true)
+    }
+
+    private fun initialUiState(): CharacterSheetUiState {
+        val cached = repository.cachedSheet(characterId)
+        return if (cached != null) {
+            CharacterSheetUiState(
+                sheet = cached,
+                isLoading = false,
+                loadFailed = false,
+                detailsReady = true,
+            )
+        } else {
+            CharacterSheetUiState(
+                sheet = repository.seedSheet(characterId),
+                isLoading = true,
+                loadFailed = false,
+                detailsReady = false,
+            )
+        }
+    }
+
+    private fun loadSheet(forceRefresh: Boolean) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, loadFailed = false) }
+            val result = runCatching {
+                repository.loadSheet(characterId, forceRefresh = forceRefresh)
+            }
+            _uiState.update { current ->
+                result.fold(
+                    onSuccess = { sheet ->
+                        current.copy(
+                            sheet = sheet,
+                            isLoading = false,
+                            loadFailed = false,
+                            detailsReady = true,
+                        )
+                    },
+                    onFailure = {
+                        current.copy(isLoading = false, loadFailed = true)
+                    },
+                )
+            }
+        }
+    }
+
+    companion object {
+        const val NAV_ARG_CHARACTER_ID = "characterId"
+    }
+}
+
+data class CharacterSheetUiState(
+    val sheet: CharacterSheet,
+    val isLoading: Boolean,
+    val loadFailed: Boolean,
+    /** True after at least one successful sheet ESI load (or cache hit). */
+    val detailsReady: Boolean,
+)

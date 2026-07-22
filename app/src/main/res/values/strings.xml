@@ -5,6 +5,9 @@
 
     <string name="data">数据</string>
     <string name="database">数据库</string>
+    <string name="character">人物</string>
+    <string name="character_sheet">人物表单</string>
+    <string name="character_sheet_skill_points">%1$s SP</string>
     <string name="group">集合</string>
     <string name="type">类型</string>
     <string name="published">已发布</string>
@@ -184,4 +187,22 @@
     <string name="character_location_system_region">%1$s/%2$s</string>
     <string name="character_location_in_structure">（在建筑中）</string>
     <string name="character_location_in_space">（在太空中）</string>
+    <string name="character_sheet_basic_info">基本信息</string>
+    <string name="character_sheet_timers">计时器</string>
+    <string name="character_sheet_medals">奖章</string>
+    <string name="character_sheet_birthday">出生日期</string>
+    <string name="character_sheet_birthday_value">%1$s (%2$d年%3$d月%4$d天)</string>
+    <string name="character_sheet_security_status">安全等级</string>
+    <string name="character_sheet_current_location">当前位置</string>
+    <string name="character_sheet_location_with_place">%1$s - %2$s</string>
+    <string name="character_sheet_current_ship">当前飞船</string>
+    <string name="character_sheet_jump_fatigue">跳跃疲劳</string>
+    <string name="character_sheet_jump_fatigue_none">无跳跃疲劳</string>
+    <string name="character_sheet_last_jump">上次跳跃时间: %1$s</string>
+    <string name="character_sheet_loading">加载中…</string>
+    <string name="character_sheet_load_failed">加载失败</string>
+    <string name="character_sheet_retry">重试</string>
+    <string name="character_sheet_value_placeholder">—</string>
+    <string name="character_sheet_online">在线</string>
+    <string name="character_sheet_offline">离线</string>
 </resources>

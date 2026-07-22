@@ -4,6 +4,9 @@
     <string name="nav_back">Back</string>
     <string name="data">Data</string>
     <string name="database">Database</string>
+    <string name="character">Character</string>
+    <string name="character_sheet">Character Sheet</string>
+    <string name="character_sheet_skill_points">%1$s SP</string>
     <string name="group">Group</string>
     <string name="type">Type</string>
     <string name="published">Published</string>
@@ -182,4 +185,22 @@
     <string name="character_location_system_region">%1$s/%2$s</string>
     <string name="character_location_in_structure">(In structure)</string>
     <string name="character_location_in_space">(In space)</string>
+    <string name="character_sheet_basic_info">Basic Info</string>
+    <string name="character_sheet_timers">Timers</string>
+    <string name="character_sheet_medals">Medals</string>
+    <string name="character_sheet_birthday">Date of Birth</string>
+    <string name="character_sheet_birthday_value">%1$s (%2$dy %3$dmo %4$dd)</string>
+    <string name="character_sheet_security_status">Security Status</string>
+    <string name="character_sheet_current_location">Current Location</string>
+    <string name="character_sheet_location_with_place">%1$s - %2$s</string>
+    <string name="character_sheet_current_ship">Current Ship</string>
+    <string name="character_sheet_jump_fatigue">Jump Fatigue</string>
+    <string name="character_sheet_jump_fatigue_none">No jump fatigue</string>
+    <string name="character_sheet_last_jump">Last jump: %1$s</string>
+    <string name="character_sheet_loading">Loading…</string>
+    <string name="character_sheet_load_failed">Failed to load</string>
+    <string name="character_sheet_retry">Retry</string>
+    <string name="character_sheet_value_placeholder">—</string>
+    <string name="character_sheet_online">Online</string>
+    <string name="character_sheet_offline">Offline</string>
 </resources>
