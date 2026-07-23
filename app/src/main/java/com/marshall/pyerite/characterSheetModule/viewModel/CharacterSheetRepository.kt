@@ -39,7 +39,11 @@ internal class CharacterSheetRepository(
     ): CharacterSheet = withContext(Dispatchers.IO) {
         pruneRemovedCharacters()
         if (!forceRefresh) {
-            sheetByCharacterId[characterId]?.let { return@withContext it }
+            sheetByCharacterId[characterId]?.let { cached ->
+                if (!cached.missingTypeIcons()) {
+                    return@withContext cached
+                }
+            }
         }
         val fallbackName = characterRepository.loggedInCharacters.value
             .find { it.characterId == characterId }

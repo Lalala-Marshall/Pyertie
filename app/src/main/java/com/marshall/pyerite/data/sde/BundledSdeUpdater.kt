@@ -9,8 +9,9 @@ object BundledSdeUpdater {
     fun ensureUpToDate(context: Context) {
         val bundled = SdeReleaseMeta.fromAssets(context)
         if (bundled == null) {
-            SdeUpdateLog.d("BundledSde", "no bundled metadata, ensuring databases only")
+            SdeUpdateLog.d("BundledSde", "no bundled metadata, ensuring databases and icons only")
             SdeAssetFiles.ensureDatabasesPresent(context)
+            SdeAssetFiles.ensureIconsPresent(context)
             return
         }
 
@@ -46,6 +47,7 @@ object BundledSdeUpdater {
                     "local up to date build=${installed.buildNumber} icons=${installed.iconVersion}",
                 )
                 SdeAssetFiles.ensureDatabasesPresent(context)
+                SdeAssetFiles.ensureIconsPresent(context)
             }
         }
     }
@@ -54,7 +56,7 @@ object BundledSdeUpdater {
         SdeAssetFiles.deleteAllDatabases(context)
         SdeAssetFiles.copyDatabaseFromAssets(context, SdeDatabase.ZH_FILE_NAME)
         SdeAssetFiles.copyDatabaseFromAssets(context, SdeDatabase.EN_FILE_NAME)
-        SdeAssetFiles.deleteIcons(context)
+        SdeAssetFiles.extractIconsFromAssets(context)
         SdeVersionStore(context).save(bundled)
     }
 }

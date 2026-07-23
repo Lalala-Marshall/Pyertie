@@ -3,6 +3,7 @@ package com.marshall.pyerite.databaseHierarchyModule.room.dao
 import androidx.room.Dao
 import androidx.room.Query
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SolarSystemLocationRow
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.StationLocationRow
 
 @Dao
 interface MapDao {
@@ -24,4 +25,14 @@ interface MapDao {
         """,
     )
     suspend fun getSolarSystemLocation(solarSystemId: Long): SolarSystemLocationRow?
+
+    @Query(
+        """
+        SELECT stationID, stationTypeID, stationName
+        FROM stations
+        WHERE stationID = :stationId
+        LIMIT 1
+        """,
+    )
+    suspend fun getStation(stationId: Long): StationLocationRow?
 }

@@ -1,4 +1,4 @@
-package com.marshall.pyerite.charactersListModule.auth
+package com.marshall.pyerite.esiModule
 
 import java.text.SimpleDateFormat
 import java.util.Locale

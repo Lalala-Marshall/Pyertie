@@ -1,11 +1,9 @@
-package com.marshall.pyerite.characterSheetModule
+package com.marshall.pyerite.characterSheetModule.viewModel
 
+import com.marshall.pyerite.characterSheetModule.data.CharacterSheetLoader
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
-import com.marshall.pyerite.characterSheetModule.data.CharacterSheetLoader
-import com.marshall.pyerite.characterSheetModule.viewModel.CharacterSheetRepository
-import com.marshall.pyerite.characterSheetModule.viewModel.CharacterSheetViewModel
 
 val characterSheetModule = module {
     singleOf(::CharacterSheetLoader)

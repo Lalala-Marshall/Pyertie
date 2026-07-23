@@ -7,8 +7,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.marshall.pyerite.appNavHost.AppNavHost
-import com.marshall.pyerite.charactersListModule.auth.EveSsoCallbackBus
-import com.marshall.pyerite.charactersListModule.auth.EveSsoConfig
+import com.marshall.pyerite.eveAuthModule.EveSsoCallbackBus
+import com.marshall.pyerite.eveAuthModule.EveSsoConfig
 import com.marshall.pyerite.ui.theme.PyeriteTheme
 import org.koin.android.ext.android.inject
 import androidx.core.net.toUri

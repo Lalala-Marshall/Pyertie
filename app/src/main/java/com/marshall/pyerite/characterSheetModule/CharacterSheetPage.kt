@@ -45,10 +45,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
 import com.marshall.pyerite.R
-import com.marshall.pyerite.charactersListModule.auth.EsiDateTimeConfig
-import com.marshall.pyerite.charactersListModule.auth.EveSsoConfig
+import com.marshall.pyerite.esiModule.EsiDateTimeConfig
+import com.marshall.pyerite.eveAuthModule.EveSsoConfig
 import com.marshall.pyerite.charactersListModule.model.CharacterLocationInfo
 import com.marshall.pyerite.characterSheetModule.model.CharacterMedal
 import com.marshall.pyerite.characterSheetModule.model.CharacterSheet
@@ -78,6 +77,9 @@ private object CharacterSheetDisplayConfig {
     const val LOCATION_SEGMENT_GAP = " "
     const val ONLINE_DOT_SIZE_DP = 8
     const val ONLINE_DOT_GAP_DP = 6
+    const val TYPE_ICON_SIZE_DP = 24
+    const val TYPE_ICON_CORNER_DP = 4
+    const val TYPE_ICON_PADDING_DP = 1
 }
 
 @Composable
@@ -194,14 +196,13 @@ private fun CharacterSheetBasicInfoSection(
             CharacterSheetLocationRow(
                 location = sheet.location,
                 placeholder = placeholder,
+                detailsPending = detailsPending,
             )
-            BaseDetailRow(
-                model = BaseDetailRowModel(
-                    iconRes = R.drawable.ic_character_ship_placeholder,
-                    iconFileName = sheet.shipIconFilename.takeUnless { detailsPending },
-                    label = stringResource(R.string.character_sheet_current_ship),
-                    value = sheet.shipDisplayName?.takeIf { it.isNotBlank() } ?: placeholder,
-                ),
+            CharacterSheetLabeledValueRow(
+                iconRes = R.drawable.ic_character_ship_placeholder,
+                iconFileName = sheet.shipIconFilename.takeUnless { detailsPending },
+                label = stringResource(R.string.character_sheet_current_ship),
+                value = sheet.shipDisplayName?.takeIf { it.isNotBlank() } ?: placeholder,
                 showDivider = false,
             )
         }
@@ -395,6 +396,7 @@ private fun CharacterSheetOrgLine(
 private fun CharacterSheetLocationRow(
     location: CharacterLocationInfo?,
     placeholder: String,
+    detailsPending: Boolean,
 ) {
     if (location == null) {
         CharacterSheetLabeledValueRow(
@@ -417,6 +419,7 @@ private fun CharacterSheetLocationRow(
 
     CharacterSheetLabeledValueRow(
         iconRes = R.drawable.ic_character_location,
+        iconFileName = location.placeIconFilename.takeUnless { detailsPending },
         label = stringResource(R.string.character_sheet_current_location),
         valueAnnotated = buildAnnotatedString {
             withStyle(SpanStyle(color = securityColor)) {
@@ -488,7 +491,6 @@ private fun CharacterSheetLabeledValueRow(
     valueColor: Color = colorResource(R.color.hint_text),
     iconFileName: String? = null,
     showDivider: Boolean,
-    iconManager: IconManager = koinInject(),
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -497,16 +499,9 @@ private fun CharacterSheetLabeledValueRow(
                 .padding(horizontal = 12.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            val iconFile = iconFileName?.let { iconManager.getIconFile(it) }
-            Icon(
-                modifier = Modifier.size(24.dp),
-                painter = if (iconFile != null) {
-                    rememberAsyncImagePainter(iconFile)
-                } else {
-                    painterResource(iconRes)
-                },
-                contentDescription = null,
-                tint = Color.Unspecified,
+            CharacterSheetLeadingIcon(
+                iconFileName = iconFileName,
+                fallbackRes = iconRes,
             )
             Spacer(modifier = Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -530,6 +525,40 @@ private fun CharacterSheetLabeledValueRow(
             }
         }
         if (showDivider) ItemDivider()
+    }
+}
+
+/**
+ * Loads a type icon from the local SDE icon pack ([IconManager]) by filename
+ * resolved from a remote type id. Falls back to [fallbackRes] when missing.
+ */
+@Composable
+private fun CharacterSheetLeadingIcon(
+    iconFileName: String?,
+    fallbackRes: Int,
+    iconManager: IconManager = koinInject(),
+) {
+    val iconFile = iconFileName?.let { iconManager.getIconFile(it) }
+    if (iconFile != null) {
+        AsyncImage(
+            model = iconFile,
+            contentDescription = null,
+            modifier = Modifier
+                .size(CharacterSheetDisplayConfig.TYPE_ICON_SIZE_DP.dp)
+                .clip(RoundedCornerShape(CharacterSheetDisplayConfig.TYPE_ICON_CORNER_DP.dp))
+                .background(colorResource(R.color.white))
+                .padding(CharacterSheetDisplayConfig.TYPE_ICON_PADDING_DP.dp),
+            contentScale = ContentScale.Fit,
+            placeholder = painterResource(fallbackRes),
+            error = painterResource(fallbackRes),
+        )
+    } else {
+        Icon(
+            modifier = Modifier.size(CharacterSheetDisplayConfig.TYPE_ICON_SIZE_DP.dp),
+            painter = painterResource(fallbackRes),
+            contentDescription = null,
+            tint = Color.Unspecified,
+        )
     }
 }
 

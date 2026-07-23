@@ -1,4 +1,4 @@
-package com.marshall.pyerite.charactersListModule.auth
+package com.marshall.pyerite.esiModule
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -55,6 +55,18 @@ internal class EsiPublicDataSource(
         runCatching { getDto { api.fetchSolarSystem(systemId) }.securityStatus }.getOrNull()
     }
 
+    /** Sun type for a system (ESI system → star → type_id). */
+    suspend fun fetchSolarSystemStarTypeId(systemId: Long): Int? = withContext(Dispatchers.IO) {
+        runCatching {
+            val starId = getDto { api.fetchSolarSystem(systemId) }.starId ?: return@runCatching null
+            getDto { api.fetchStar(starId) }.typeId
+        }.getOrNull()
+    }
+
+    suspend fun fetchStation(stationId: Long): EsiUniverseStationDto? = withContext(Dispatchers.IO) {
+        runCatching { getDto { api.fetchStation(stationId) } }.getOrNull()
+    }
+
     suspend fun fetchTypeName(typeId: Int): String? = withContext(Dispatchers.IO) {
         runCatching { getDto { api.fetchUniverseType(typeId) }.name }.getOrNull()
     }
@@ -69,11 +81,11 @@ internal class EsiPublicDataSource(
     }
 }
 
-internal fun portraitUrl(characterId: Long, size: Int = EveSsoConfig.Image.PORTRAIT_SIZE): String =
-    "${EveSsoConfig.IMAGE_BASE_URL}characters/$characterId/portrait?size=$size"
+internal fun portraitUrl(characterId: Long, size: Int = EsiConfig.Image.PORTRAIT_SIZE): String =
+    "${EsiConfig.IMAGE_BASE_URL}characters/$characterId/portrait?size=$size"
 
-internal fun corporationLogoUrl(corporationId: Long, size: Int = EveSsoConfig.Image.LOGO_SIZE): String =
-    "${EveSsoConfig.IMAGE_BASE_URL}corporations/$corporationId/logo?size=$size"
+internal fun corporationLogoUrl(corporationId: Long, size: Int = EsiConfig.Image.LOGO_SIZE): String =
+    "${EsiConfig.IMAGE_BASE_URL}corporations/$corporationId/logo?size=$size"
 
-internal fun allianceLogoUrl(allianceId: Long, size: Int = EveSsoConfig.Image.LOGO_SIZE): String =
-    "${EveSsoConfig.IMAGE_BASE_URL}alliances/$allianceId/logo?size=$size"
+internal fun allianceLogoUrl(allianceId: Long, size: Int = EsiConfig.Image.LOGO_SIZE): String =
+    "${EsiConfig.IMAGE_BASE_URL}alliances/$allianceId/logo?size=$size"

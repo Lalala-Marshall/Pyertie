@@ -1,4 +1,4 @@
-package com.marshall.pyerite.charactersListModule.auth
+package com.marshall.pyerite.eveAuthModule
 
 /**
  * EVE SSO / ESI OAuth scopes.

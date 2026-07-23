@@ -1,10 +1,25 @@
-package com.marshall.pyerite.charactersListModule.auth
+package com.marshall.pyerite.charactersListModule.data
 
 import android.net.Uri
 import androidx.annotation.StringRes
 import com.marshall.pyerite.R
 import com.marshall.pyerite.charactersListModule.viewModel.CharacterRepository
 import com.marshall.pyerite.data.network.PyeriteJson
+import com.marshall.pyerite.esiModule.portraitUrl
+import com.marshall.pyerite.eveAuthModule.EveJwtDecoder
+import com.marshall.pyerite.eveAuthModule.EveOAuthErrorDto
+import com.marshall.pyerite.eveAuthModule.EvePendingLoginStore
+import com.marshall.pyerite.eveAuthModule.EveSsoCallbackBus
+import com.marshall.pyerite.eveAuthModule.EveSsoConfig
+import com.marshall.pyerite.eveAuthModule.EveSsoHttpException
+import com.marshall.pyerite.eveAuthModule.EveSsoPkce
+import com.marshall.pyerite.eveAuthModule.EveSsoRemoteDataSource
+import com.marshall.pyerite.eveAuthModule.EveStoredSession
+import com.marshall.pyerite.eveAuthModule.EveTokenManager
+import com.marshall.pyerite.eveAuthModule.EveTokenRefreshResult
+import com.marshall.pyerite.eveAuthModule.EveTokenSet
+import com.marshall.pyerite.eveAuthModule.normalizeTokenType
+import com.marshall.pyerite.eveAuthModule.queryParamOrNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

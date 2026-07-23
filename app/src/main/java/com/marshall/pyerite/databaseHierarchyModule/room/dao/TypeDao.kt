@@ -44,6 +44,16 @@ interface TypeDao {
 
     @Query(
         """
+        SELECT icon_filename
+        FROM types
+        WHERE type_id = :typeId
+        LIMIT 1
+        """,
+    )
+    suspend fun getTypeIconFilename(typeId: Int): String?
+
+    @Query(
+        """
         SELECT type_id AS id, name, zh_name AS zhName, en_name AS enName
         FROM types
         WHERE type_id = :typeId

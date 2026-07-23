@@ -25,6 +25,7 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.GroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.MetaGroupEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.RegionEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.SolarSystemEntity
+import com.marshall.pyerite.databaseHierarchyModule.room.entity.StationEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TraitEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeEntity
 import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
@@ -55,8 +56,9 @@ import com.marshall.pyerite.databaseHierarchyModule.room.entity.UniverseLinkEnti
         SolarSystemEntity::class,
         RegionEntity::class,
         UniverseLinkEntity::class,
+        StationEntity::class,
     ],
-    version = 1,
+    version = 4,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {

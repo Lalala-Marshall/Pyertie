@@ -1,4 +1,4 @@
-package com.marshall.pyerite.charactersListModule.auth
+package com.marshall.pyerite.esiModule
 
 import okhttp3.ResponseBody
 import retrofit2.http.GET
@@ -27,6 +27,10 @@ internal interface EsiApi {
     @Headers("Accept: application/json")
     @GET("universe/systems/{system_id}")
     suspend fun fetchSolarSystem(@Path("system_id") systemId: Long): EsiUniverseSystemDto
+
+    @Headers("Accept: application/json")
+    @GET("universe/stars/{star_id}")
+    suspend fun fetchStar(@Path("star_id") starId: Long): EsiUniverseStarDto
 
     @Headers("Accept: application/json")
     @GET("universe/types/{type_id}")
@@ -94,4 +98,8 @@ internal interface EsiApi {
         @Path("structure_id") structureId: Long,
         @Header("Authorization") authorization: String,
     ): EsiUniverseStructureDto
+
+    @Headers("Accept: application/json")
+    @GET("universe/stations/{station_id}")
+    suspend fun fetchStation(@Path("station_id") stationId: Long): EsiUniverseStationDto
 }

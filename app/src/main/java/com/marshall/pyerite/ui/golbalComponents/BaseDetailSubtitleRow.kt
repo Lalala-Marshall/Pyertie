@@ -71,15 +71,11 @@ fun BaseDetailSubtitleRow(
                 model.iconFile != null ||
                 model.iconRes != R.drawable.ic_database
             if (shouldShowIcon) {
+                val resolvedFile = model.iconFile
+                    ?: model.iconFileName?.let { iconManager.getIconFile(it) }
                 val painter = when {
-                    model.iconFileName != null ->
-                        rememberAsyncImagePainter(iconManager.getIconFile(model.iconFileName))
-
-                    model.iconFile != null ->
-                        rememberAsyncImagePainter(model.iconFile)
-
-                    else ->
-                        painterResource(model.iconRes)
+                    resolvedFile != null -> rememberAsyncImagePainter(resolvedFile)
+                    else -> painterResource(model.iconRes)
                 }
 
                 Icon(

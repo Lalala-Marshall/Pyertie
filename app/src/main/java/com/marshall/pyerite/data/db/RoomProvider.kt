@@ -35,6 +35,11 @@ class RoomProvider(
         }
         val database = Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, dbName)
             .createFromFile(dbFile)
+            .addMigrations(
+                AppDatabaseMigrations.MIGRATION_1_2,
+                AppDatabaseMigrations.MIGRATION_2_3,
+                AppDatabaseMigrations.MIGRATION_3_4,
+            )
             .build()
         cachedDbName = dbName
         cachedDatabase = database

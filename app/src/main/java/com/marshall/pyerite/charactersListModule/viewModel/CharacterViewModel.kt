@@ -2,8 +2,8 @@ package com.marshall.pyerite.charactersListModule.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.marshall.pyerite.charactersListModule.auth.EveSsoAuthRepository
-import com.marshall.pyerite.charactersListModule.auth.EveSsoUiStatus
+import com.marshall.pyerite.charactersListModule.data.EveSsoAuthRepository
+import com.marshall.pyerite.charactersListModule.data.EveSsoUiStatus
 import com.marshall.pyerite.charactersListModule.model.CharacterSummary
 import com.marshall.pyerite.charactersListModule.model.LoggedInCharacter
 import kotlinx.coroutines.channels.Channel

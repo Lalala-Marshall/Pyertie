@@ -1,4 +1,4 @@
-package com.marshall.pyerite.charactersListModule.auth
+package com.marshall.pyerite.charactersListModule.data
 
 import com.marshall.pyerite.charactersListModule.model.CharacterLocationInfo
 import com.marshall.pyerite.charactersListModule.model.CharacterLocationPresence
@@ -7,6 +7,17 @@ import com.marshall.pyerite.charactersListModule.model.SkillQueueEntry
 import com.marshall.pyerite.charactersListModule.model.SkillQueueProgress
 import com.marshall.pyerite.charactersListModule.model.SkillQueueTrainingState
 import com.marshall.pyerite.data.db.RoomProvider
+import com.marshall.pyerite.esiModule.EsiApi
+import com.marshall.pyerite.esiModule.EsiCharacterLocationDto
+import com.marshall.pyerite.esiModule.EsiOrganization
+import com.marshall.pyerite.esiModule.EsiPublicDataSource
+import com.marshall.pyerite.esiModule.EsiSkillQueueEntryDto
+import com.marshall.pyerite.esiModule.allianceLogoUrl
+import com.marshall.pyerite.esiModule.corporationLogoUrl
+import com.marshall.pyerite.esiModule.parseEsiDateMillis
+import com.marshall.pyerite.esiModule.portraitUrl
+import com.marshall.pyerite.eveAuthModule.EveStoredSession
+import com.marshall.pyerite.eveAuthModule.EveTokenManager
 import com.marshall.pyerite.localization.LocaleController
 import com.marshall.pyerite.localization.displayName
 import com.marshall.pyerite.localization.localizedName

@@ -2,15 +2,16 @@ package com.marshall.pyerite.application
 
 import android.app.Application
 import com.marshall.pyerite.data.appModule
-import com.marshall.pyerite.charactersListModule.auth.authModule
 import com.marshall.pyerite.data.network.networkModule
 import com.marshall.pyerite.data.sde.BundledSdeUpdater
 import com.marshall.pyerite.data.sde.SdeUpdateController
 import com.marshall.pyerite.data.sde.SdeUpdateLog
 import com.marshall.pyerite.data.sde.sdeModule
-import com.marshall.pyerite.characterSheetModule.characterSheetModule
+import com.marshall.pyerite.characterSheetModule.viewModel.characterSheetModule
 import com.marshall.pyerite.charactersListModule.viewModel.charactersListModule
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.databaseHierarchyModule
+import com.marshall.pyerite.esiModule.esiModule
+import com.marshall.pyerite.eveAuthModule.eveAuthModule
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -38,7 +39,8 @@ class PyeriteApp : Application() {
                 appModule,
                 networkModule,
                 sdeModule,
-                authModule,
+                eveAuthModule,
+                esiModule,
                 databaseHierarchyModule,
                 charactersListModule,
                 characterSheetModule,

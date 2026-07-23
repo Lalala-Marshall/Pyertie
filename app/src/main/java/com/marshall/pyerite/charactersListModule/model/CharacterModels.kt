@@ -1,6 +1,6 @@
 package com.marshall.pyerite.charactersListModule.model
 
-import com.marshall.pyerite.charactersListModule.auth.EveSsoScope
+import com.marshall.pyerite.eveAuthModule.EveSsoScope
 
 data class CharacterSummary(
     val characterId: Long,
@@ -25,6 +25,10 @@ data class CharacterLocationInfo(
     val presence: CharacterLocationPresence,
     /** Station / structure name when known (sheet location line). */
     val placeName: String? = null,
+    /** Structure / station / sun type id for image-server icons. */
+    val placeTypeId: Int? = null,
+    /** Optional local SDE icon basename when available. */
+    val placeIconFilename: String? = null,
 )
 
 enum class SkillQueueTrainingState {

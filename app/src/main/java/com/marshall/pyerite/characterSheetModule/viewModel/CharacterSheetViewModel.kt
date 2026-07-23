@@ -34,7 +34,7 @@ internal class CharacterSheetViewModel(
 
     private fun initialUiState(): CharacterSheetUiState {
         val cached = repository.cachedSheet(characterId)
-        return if (cached != null) {
+        return if (cached != null && !cached.missingTypeIcons()) {
             CharacterSheetUiState(
                 sheet = cached,
                 isLoading = false,
@@ -43,7 +43,7 @@ internal class CharacterSheetViewModel(
             )
         } else {
             CharacterSheetUiState(
-                sheet = repository.seedSheet(characterId),
+                sheet = cached ?: repository.seedSheet(characterId),
                 isLoading = true,
                 loadFailed = false,
                 detailsReady = false,
@@ -87,3 +87,16 @@ data class CharacterSheetUiState(
     /** True after at least one successful sheet ESI load (or cache hit). */
     val detailsReady: Boolean,
 )
+
+/** True when a fully loaded sheet is missing local type icons (stale cache). */
+internal fun CharacterSheet.missingTypeIcons(): Boolean {
+    val detailsWereLoaded = birthdayEpochMs != null ||
+        shipTypeId != null ||
+        securityStatus != null
+    if (!detailsWereLoaded) return false
+    val shipMissing = shipTypeId != null && shipIconFilename.isNullOrBlank()
+    val locationMissing = location != null && (
+        location.placeTypeId == null || location.placeIconFilename.isNullOrBlank()
+    )
+    return shipMissing || locationMissing
+}

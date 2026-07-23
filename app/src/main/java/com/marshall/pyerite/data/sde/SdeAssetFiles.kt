@@ -65,17 +65,37 @@ object SdeAssetFiles {
         val iconDir = File(context.filesDir, ICONS_DIR_NAME)
         iconDir.mkdirs()
         zipFile.inputStream().use { input ->
-            ZipInputStream(input).use { zip ->
-                var entry = zip.nextEntry
-                while (entry != null) {
-                    val outFile = File(iconDir, entry.name)
-                    outFile.parentFile?.mkdirs()
-                    outFile.outputStream().use { output ->
-                        zip.copyTo(output)
-                    }
-                    zip.closeEntry()
-                    entry = zip.nextEntry
+            extractIconsZip(input, iconDir)
+        }
+    }
+
+    /** Unpack bundled [assets/icons/icons.zip] into filesDir/icons. */
+    fun extractIconsFromAssets(context: Context) {
+        deleteIcons(context)
+        val iconDir = File(context.filesDir, ICONS_DIR_NAME)
+        iconDir.mkdirs()
+        context.assets.open("icons/icons.zip").use { input ->
+            extractIconsZip(input, iconDir)
+        }
+    }
+
+    fun ensureIconsPresent(context: Context) {
+        val iconDir = File(context.filesDir, ICONS_DIR_NAME)
+        if (iconDir.exists() && iconDir.list()?.isNotEmpty() == true) return
+        extractIconsFromAssets(context)
+    }
+
+    private fun extractIconsZip(input: java.io.InputStream, iconDir: File) {
+        ZipInputStream(input).use { zip ->
+            var entry = zip.nextEntry
+            while (entry != null) {
+                val outFile = File(iconDir, entry.name)
+                outFile.parentFile?.mkdirs()
+                outFile.outputStream().use { output ->
+                    zip.copyTo(output)
                 }
+                zip.closeEntry()
+                entry = zip.nextEntry
             }
         }
     }

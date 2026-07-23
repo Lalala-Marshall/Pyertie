@@ -1,4 +1,4 @@
-package com.marshall.pyerite.charactersListModule.auth
+package com.marshall.pyerite.eveAuthModule
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock

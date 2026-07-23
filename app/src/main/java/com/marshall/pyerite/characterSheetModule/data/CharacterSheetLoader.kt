@@ -2,15 +2,15 @@ package com.marshall.pyerite.characterSheetModule.data
 
 import com.marshall.pyerite.characterSheetModule.model.CharacterMedal
 import com.marshall.pyerite.characterSheetModule.model.CharacterSheet
-import com.marshall.pyerite.charactersListModule.auth.EsiApi
-import com.marshall.pyerite.charactersListModule.auth.EsiCharacterLocationDto
-import com.marshall.pyerite.charactersListModule.auth.EsiOrganization
-import com.marshall.pyerite.charactersListModule.auth.EsiPublicDataSource
-import com.marshall.pyerite.charactersListModule.auth.EveTokenManager
-import com.marshall.pyerite.charactersListModule.auth.allianceLogoUrl
-import com.marshall.pyerite.charactersListModule.auth.corporationLogoUrl
-import com.marshall.pyerite.charactersListModule.auth.parseEsiDateMillis
-import com.marshall.pyerite.charactersListModule.auth.portraitUrl
+import com.marshall.pyerite.esiModule.EsiApi
+import com.marshall.pyerite.esiModule.EsiCharacterLocationDto
+import com.marshall.pyerite.esiModule.EsiOrganization
+import com.marshall.pyerite.esiModule.EsiPublicDataSource
+import com.marshall.pyerite.eveAuthModule.EveTokenManager
+import com.marshall.pyerite.esiModule.allianceLogoUrl
+import com.marshall.pyerite.esiModule.corporationLogoUrl
+import com.marshall.pyerite.esiModule.parseEsiDateMillis
+import com.marshall.pyerite.esiModule.portraitUrl
 import com.marshall.pyerite.charactersListModule.model.CharacterLocationInfo
 import com.marshall.pyerite.charactersListModule.model.CharacterLocationPresence
 import com.marshall.pyerite.data.db.RoomProvider
@@ -85,7 +85,7 @@ internal class CharacterSheetLoader(
                 val locationDto = locationDeferred.await()
                 val location = resolveLocation(characterId, locationDto)
                 val ship = shipDeferred.await()
-                val shipType = ship?.shipTypeId?.let { resolveShipType(it) }
+                val shipType = ship?.shipTypeId?.let { resolveType(it) }
                 val fatigue = fatigueDeferred.await()
                 val medals = medalsDeferred.await().orEmpty()
                     .map { dto ->
@@ -153,37 +153,98 @@ internal class CharacterSheetLoader(
         } else {
             CharacterLocationPresence.IN_SPACE
         }
-        val placeName = dto.structureId?.let { structureId ->
-            runCatching {
-                tokenManager.executeWithAuthRetry(characterId) { auth ->
-                    api.fetchStructure(structureId, auth).name
-                }
-            }.getOrNull()?.takeIf { it.isNotBlank() }
-        }
+        val place = resolvePlace(characterId, dto)
+        val placeIconFilename = place.typeId?.let { resolveTypeIconFilename(it) }
         return CharacterLocationInfo(
             systemSecurityStatus = security,
             systemName = systemName,
             regionName = regionName,
             presence = presence,
-            placeName = placeName,
+            placeName = place.name,
+            placeTypeId = place.typeId,
+            placeIconFilename = placeIconFilename,
         )
     }
 
-    private suspend fun resolveShipType(typeId: Int): ResolvedShipType {
-        val entity = runCatching {
-            roomProvider.getDatabase().typeDao().getTypeById(typeId)
-        }.getOrNull()
+    private suspend fun resolvePlace(
+        characterId: Long,
+        dto: EsiCharacterLocationDto,
+    ): ResolvedPlace {
+        dto.structureId?.let { structureId ->
+            val structure = runCatching {
+                tokenManager.executeWithAuthRetry(characterId) { auth ->
+                    api.fetchStructure(structureId, auth)
+                }
+            }.getOrNull()
+            if (structure != null) {
+                return ResolvedPlace(
+                    name = structure.name.takeIf { it.isNotBlank() },
+                    typeId = structure.typeId,
+                )
+            }
+        }
+        dto.stationId?.let { stationId ->
+            val station = runCatching {
+                roomProvider.getDatabase().mapDao().getStation(stationId)
+            }.getOrNull()
+            if (station != null) {
+                return ResolvedPlace(
+                    name = station.name?.takeIf { it.isNotBlank() },
+                    typeId = station.typeId,
+                )
+            }
+            val fromEsi = publicEsi.fetchStation(stationId)
+            if (fromEsi != null) {
+                return ResolvedPlace(
+                    name = fromEsi.name.takeIf { it.isNotBlank() },
+                    typeId = fromEsi.typeId,
+                )
+            }
+        }
+        if (dto.stationId == null && dto.structureId == null) {
+            val starTypeId = publicEsi.fetchSolarSystemStarTypeId(dto.solarSystemId)
+                ?: CharacterSheetLocationConfig.FALLBACK_SUN_TYPE_ID
+            return ResolvedPlace(name = null, typeId = starTypeId)
+        }
+        return ResolvedPlace(name = null, typeId = null)
+    }
+
+    private suspend fun resolveType(typeId: Int): ResolvedType {
+        val dao = runCatching { roomProvider.getDatabase().typeDao() }.getOrNull()
+            ?: return ResolvedType(
+                displayName = publicEsi.fetchTypeName(typeId) ?: typeId.toString(),
+                iconFilename = null,
+            )
+        val entity = runCatching { dao.getTypeById(typeId) }.getOrNull()
         val displayName = entity?.displayName(localeController)?.takeIf { it.isNotBlank() }
             ?: runCatching {
-                roomProvider.getDatabase().typeDao().getTypeDisplayName(typeId)
-                    ?.displayName(localeController)
+                dao.getTypeDisplayName(typeId)?.displayName(localeController)
             }.getOrNull()?.takeIf { it.isNotBlank() }
             ?: publicEsi.fetchTypeName(typeId)
             ?: typeId.toString()
-        return ResolvedShipType(
+        val iconFilename = resolveTypeIconFilename(typeId, entity?.iconFilename)
+        return ResolvedType(
             displayName = displayName,
-            iconFilename = entity?.iconFilename,
+            iconFilename = iconFilename,
         )
+    }
+
+    /**
+     * Remote type id → local `types.icon_filename`.
+     * Prefer a dedicated column query; fall back to full type row.
+     */
+    private suspend fun resolveTypeIconFilename(
+        typeId: Int,
+        knownFilename: String? = null,
+    ): String? {
+        knownFilename?.takeIf { it.isNotBlank() }?.let { return it }
+        val dao = runCatching { roomProvider.getDatabase().typeDao() }.getOrNull()
+            ?: return null
+        val fromColumn = runCatching { dao.getTypeIconFilename(typeId) }
+            .getOrNull()?.takeIf { it.isNotBlank() }
+        if (fromColumn != null) return fromColumn
+        return runCatching { dao.getTypeById(typeId)?.iconFilename }
+            .getOrNull()?.takeIf { it.isNotBlank() }
     }
 
     private fun formatOrgLabel(org: EsiOrganization?): String? {
@@ -192,8 +253,19 @@ internal class CharacterSheetLoader(
         return "$ticker${org.name}"
     }
 
-    private data class ResolvedShipType(
+    private data class ResolvedType(
         val displayName: String,
         val iconFilename: String?,
     )
+
+    private data class ResolvedPlace(
+        val name: String?,
+        val typeId: Int?,
+    )
+}
+
+/** Location icon resolution defaults (SDE type ids). */
+internal object CharacterSheetLocationConfig {
+    /** Yellow G5 sun — used when ESI star lookup fails while in space. */
+    const val FALLBACK_SUN_TYPE_ID = 6
 }

@@ -1,17 +1,14 @@
-package com.marshall.pyerite.charactersListModule.auth
+package com.marshall.pyerite.eveAuthModule
 
 import com.marshall.pyerite.BuildConfig
-import com.marshall.pyerite.data.network.EsiNetworkConfig
 
 /**
- * Public EVE Online endpoint configuration (not secrets).
+ * Public EVE Online SSO configuration (not secrets).
  * Client ID / redirect URI come from [BuildConfig] via gitignored local.properties.
  */
 object EveSsoConfig {
     const val SSO_HOST = "login.eveonline.com"
     const val SSO_BASE_URL = "https://$SSO_HOST"
-    const val ESI_BASE_URL = EsiNetworkConfig.BASE_URL
-    const val IMAGE_BASE_URL = "https://images.evetech.net/"
 
     const val METADATA_URL =
         "$SSO_BASE_URL/.well-known/oauth-authorization-server"
@@ -74,11 +71,6 @@ object EveSsoConfig {
         const val ERROR_INVALID_GRANT = "invalid_grant"
         const val ERROR_INVALID_TOKEN = "invalid_token"
         const val ERROR_UNAUTHORIZED_CLIENT = "unauthorized_client"
-    }
-
-    object Image {
-        const val PORTRAIT_SIZE = 128
-        const val LOGO_SIZE = 64
     }
 
     val clientId: String get() = BuildConfig.EVE_SSO_CLIENT_ID

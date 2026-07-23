@@ -1,4 +1,4 @@
-package com.marshall.pyerite.charactersListModule.auth
+package com.marshall.pyerite.charactersListModule.data
 
 import android.content.Context
 import android.content.SharedPreferences

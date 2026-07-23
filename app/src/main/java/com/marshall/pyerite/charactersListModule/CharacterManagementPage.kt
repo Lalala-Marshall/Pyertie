@@ -72,7 +72,7 @@ import com.marshall.pyerite.R
 import com.marshall.pyerite.charactersListModule.model.LoggedInCharacter
 import com.marshall.pyerite.charactersListModule.ui.CharacterLoggedInListItem
 import com.marshall.pyerite.charactersListModule.viewModel.CharacterViewModel
-import com.marshall.pyerite.charactersListModule.auth.EveSsoUiStatus
+import com.marshall.pyerite.charactersListModule.data.EveSsoUiStatus
 import com.marshall.pyerite.ui.golbalComponents.PyeritePageScaffold
 import com.marshall.pyerite.ui.golbalComponents.PyeriteTopBarActionItem
 import com.marshall.pyerite.ui.golbalComponents.rememberLazyListTitleCollapsed
