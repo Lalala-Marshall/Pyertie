@@ -1,6 +1,6 @@
 package com.marshall.pyerite.localization
 
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeTraitDetail
+import com.marshall.pyerite.sdeModule.room.dogma.TypeTraitDetail
 
 fun localizedName(    zh: String?,
     en: String?,

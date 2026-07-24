@@ -26,11 +26,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.marshall.pyerite.R
-import com.marshall.pyerite.data.icons.IconManager
+import com.marshall.pyerite.iconModule.manager.IconManager
 import com.marshall.pyerite.localization.LocaleController
 import com.marshall.pyerite.localization.displayName
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeTraitDetail
+import com.marshall.pyerite.sdeModule.room.type.TypeEntity
+import com.marshall.pyerite.sdeModule.room.dogma.TypeTraitDetail
 import com.marshall.pyerite.databaseHierarchyModule.util.formatTraitBonusAnnotated
 import com.marshall.pyerite.databaseHierarchyModule.util.formatTypeDescriptionAnnotated
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer

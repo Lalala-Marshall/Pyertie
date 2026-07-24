@@ -1,7 +1,13 @@
 package com.marshall.pyerite.eveAuthModule
 
-import com.marshall.pyerite.data.network.NetworkDefaults
-import com.marshall.pyerite.data.network.createApi
+import com.marshall.pyerite.eveAuthModule.sso.EvePendingLoginStore
+import com.marshall.pyerite.eveAuthModule.sso.EveSsoApi
+import com.marshall.pyerite.eveAuthModule.sso.EveSsoCallbackBus
+import com.marshall.pyerite.eveAuthModule.sso.EveSsoRemoteDataSource
+import com.marshall.pyerite.eveAuthModule.token.EveTokenManager
+import com.marshall.pyerite.eveAuthModule.token.EveTokenStore
+import com.marshall.pyerite.infra.network.NetworkDefaults
+import com.marshall.pyerite.infra.network.createApi
 import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.singleOf

@@ -9,10 +9,10 @@ import com.marshall.pyerite.charactersListModule.model.LoggedInCharacter
 import com.marshall.pyerite.charactersListModule.model.SkillQueueEntry
 import com.marshall.pyerite.charactersListModule.model.SkillQueueProgress
 import com.marshall.pyerite.charactersListModule.model.SkillQueueTrainingState
-import com.marshall.pyerite.data.network.PyeriteJson
-import com.marshall.pyerite.esiModule.portraitUrl
-import com.marshall.pyerite.eveAuthModule.EveSsoScope
-import com.marshall.pyerite.eveAuthModule.EveStoredSession
+import com.marshall.pyerite.infra.network.PyeriteJson
+import com.marshall.pyerite.esiModule.data.portraitUrl
+import com.marshall.pyerite.eveAuthModule.model.EveSsoScope
+import com.marshall.pyerite.eveAuthModule.model.EveStoredSession
 import kotlinx.serialization.Serializable
 
 /**
@@ -109,9 +109,6 @@ private data class CachedLocationInfo(
     val systemName: String,
     val regionName: String,
     val presence: String,
-    val placeName: String? = null,
-    val placeTypeId: Int? = null,
-    val placeIconFilename: String? = null,
 ) {
     fun toModel(): CharacterLocationInfo = CharacterLocationInfo(
         systemSecurityStatus = systemSecurityStatus,
@@ -119,9 +116,6 @@ private data class CachedLocationInfo(
         regionName = regionName,
         presence = runCatching { CharacterLocationPresence.valueOf(presence) }
             .getOrDefault(CharacterLocationPresence.IN_SPACE),
-        placeName = placeName,
-        placeTypeId = placeTypeId,
-        placeIconFilename = placeIconFilename,
     )
 
     companion object {
@@ -130,9 +124,6 @@ private data class CachedLocationInfo(
             systemName = info.systemName,
             regionName = info.regionName,
             presence = info.presence.name,
-            placeName = info.placeName,
-            placeTypeId = info.placeTypeId,
-            placeIconFilename = info.placeIconFilename,
         )
     }
 }

@@ -2,18 +2,19 @@ package com.marshall.pyerite.characterSheetModule.data
 
 import com.marshall.pyerite.characterSheetModule.model.CharacterMedal
 import com.marshall.pyerite.characterSheetModule.model.CharacterSheet
-import com.marshall.pyerite.esiModule.EsiApi
-import com.marshall.pyerite.esiModule.EsiCharacterLocationDto
-import com.marshall.pyerite.esiModule.EsiOrganization
-import com.marshall.pyerite.esiModule.EsiPublicDataSource
-import com.marshall.pyerite.eveAuthModule.EveTokenManager
-import com.marshall.pyerite.esiModule.allianceLogoUrl
-import com.marshall.pyerite.esiModule.corporationLogoUrl
-import com.marshall.pyerite.esiModule.parseEsiDateMillis
-import com.marshall.pyerite.esiModule.portraitUrl
-import com.marshall.pyerite.charactersListModule.model.CharacterLocationInfo
-import com.marshall.pyerite.charactersListModule.model.CharacterLocationPresence
-import com.marshall.pyerite.data.db.RoomProvider
+import com.marshall.pyerite.characterSheetModule.model.CharacterSheetLocation
+import com.marshall.pyerite.characterSheetModule.model.CharacterSheetLocationPresence
+import com.marshall.pyerite.esiModule.api.EsiCharacterApi
+import com.marshall.pyerite.esiModule.model.EsiCharacterLocationDto
+import com.marshall.pyerite.esiModule.model.EsiOrganization
+import com.marshall.pyerite.esiModule.data.EsiPublicDataSource
+import com.marshall.pyerite.esiModule.api.EsiUniverseApi
+import com.marshall.pyerite.eveAuthModule.token.EveTokenManager
+import com.marshall.pyerite.esiModule.data.allianceLogoUrl
+import com.marshall.pyerite.esiModule.data.corporationLogoUrl
+import com.marshall.pyerite.esiModule.model.parseEsiDateMillis
+import com.marshall.pyerite.esiModule.data.portraitUrl
+import com.marshall.pyerite.sdeModule.room.RoomProvider
 import com.marshall.pyerite.localization.LocaleController
 import com.marshall.pyerite.localization.displayName
 import com.marshall.pyerite.localization.localizedName
@@ -29,7 +30,8 @@ import kotlinx.coroutines.withContext
 internal class CharacterSheetLoader(
     private val publicEsi: EsiPublicDataSource,
     private val tokenManager: EveTokenManager,
-    private val api: EsiApi,
+    private val characterApi: EsiCharacterApi,
+    private val universeApi: EsiUniverseApi,
     private val roomProvider: RoomProvider,
     private val localeController: LocaleController,
 ) {
@@ -42,35 +44,35 @@ internal class CharacterSheetLoader(
                 val locationDeferred = async {
                     runCatching {
                         tokenManager.executeWithAuthRetry(characterId) { auth ->
-                            api.fetchLocation(characterId, auth)
+                            characterApi.fetchLocation(characterId, auth)
                         }
                     }.getOrNull()
                 }
                 val shipDeferred = async {
                     runCatching {
                         tokenManager.executeWithAuthRetry(characterId) { auth ->
-                            api.fetchShip(characterId, auth)
+                            characterApi.fetchShip(characterId, auth)
                         }
                     }.getOrNull()
                 }
                 val fatigueDeferred = async {
                     runCatching {
                         tokenManager.executeWithAuthRetry(characterId) { auth ->
-                            api.fetchFatigue(characterId, auth)
+                            characterApi.fetchFatigue(characterId, auth)
                         }
                     }.getOrNull()
                 }
                 val medalsDeferred = async {
                     runCatching {
                         tokenManager.executeWithAuthRetry(characterId) { auth ->
-                            api.fetchMedals(characterId, auth)
+                            characterApi.fetchMedals(characterId, auth)
                         }
                     }.getOrNull()
                 }
                 val onlineDeferred = async {
                     runCatching {
                         tokenManager.executeWithAuthRetry(characterId) { auth ->
-                            api.fetchOnline(characterId, auth)
+                            characterApi.fetchOnline(characterId, auth)
                         }
                     }.getOrNull()
                 }
@@ -124,7 +126,7 @@ internal class CharacterSheetLoader(
     private suspend fun resolveLocation(
         characterId: Long,
         dto: EsiCharacterLocationDto?,
-    ): CharacterLocationInfo? {
+    ): CharacterSheetLocation? {
         dto ?: return null
         val row = runCatching {
             roomProvider.getDatabase().mapDao().getSolarSystemLocation(dto.solarSystemId)
@@ -149,13 +151,13 @@ internal class CharacterSheetLoader(
             ?: publicEsi.fetchSolarSystemSecurity(dto.solarSystemId)
             ?: return null
         val presence = if (dto.stationId != null || dto.structureId != null) {
-            CharacterLocationPresence.IN_STRUCTURE
+            CharacterSheetLocationPresence.IN_STRUCTURE
         } else {
-            CharacterLocationPresence.IN_SPACE
+            CharacterSheetLocationPresence.IN_SPACE
         }
         val place = resolvePlace(characterId, dto)
         val placeIconFilename = place.typeId?.let { resolveTypeIconFilename(it) }
-        return CharacterLocationInfo(
+        return CharacterSheetLocation(
             systemSecurityStatus = security,
             systemName = systemName,
             regionName = regionName,
@@ -173,7 +175,7 @@ internal class CharacterSheetLoader(
         dto.structureId?.let { structureId ->
             val structure = runCatching {
                 tokenManager.executeWithAuthRetry(characterId) { auth ->
-                    api.fetchStructure(structureId, auth)
+                    universeApi.fetchStructure(structureId, auth)
                 }
             }.getOrNull()
             if (structure != null) {
@@ -210,7 +212,7 @@ internal class CharacterSheetLoader(
     }
 
     private suspend fun resolveType(typeId: Int): ResolvedType {
-        val dao = runCatching { roomProvider.getDatabase().typeDao() }.getOrNull()
+        val dao = runCatching { roomProvider.getDatabase().sdeTypeDao() }.getOrNull()
             ?: return ResolvedType(
                 displayName = publicEsi.fetchTypeName(typeId) ?: typeId.toString(),
                 iconFilename = null,
@@ -238,7 +240,7 @@ internal class CharacterSheetLoader(
         knownFilename: String? = null,
     ): String? {
         knownFilename?.takeIf { it.isNotBlank() }?.let { return it }
-        val dao = runCatching { roomProvider.getDatabase().typeDao() }.getOrNull()
+        val dao = runCatching { roomProvider.getDatabase().sdeTypeDao() }.getOrNull()
             ?: return null
         val fromColumn = runCatching { dao.getTypeIconFilename(typeId) }
             .getOrNull()?.takeIf { it.isNotBlank() }

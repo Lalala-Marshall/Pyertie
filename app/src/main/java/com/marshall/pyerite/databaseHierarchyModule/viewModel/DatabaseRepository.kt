@@ -1,34 +1,34 @@
 package com.marshall.pyerite.databaseHierarchyModule.viewModel
 
-import com.marshall.pyerite.data.db.RoomProvider
+import com.marshall.pyerite.sdeModule.room.RoomProvider
 import com.marshall.pyerite.localization.ContentLanguage
 import com.marshall.pyerite.localization.LocaleController
 import com.marshall.pyerite.localization.displayName
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.CategoryEntity
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.DogmaAttributeEntity
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.GroupEntity
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.MetaGroupEntity
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintCopyDetail
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionMaterial
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionProduct
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionSkill
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingMaterial
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingProduct
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingSkill
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeBlueprintDetail
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeTraitDetail
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillRequirement
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeApplicableBlueprintCount
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeCompatibleGroupDetail
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputItem
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputSummary
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningSourceCount
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningSourceItem
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillLevelSpRow
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.SkillUnlockTypeRow
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeSkillMiscRow
+import com.marshall.pyerite.sdeModule.room.catalog.CategoryEntity
+import com.marshall.pyerite.sdeModule.room.dogma.DogmaAttributeEntity
+import com.marshall.pyerite.sdeModule.room.catalog.GroupEntity
+import com.marshall.pyerite.sdeModule.room.catalog.MetaGroupEntity
+import com.marshall.pyerite.sdeModule.room.dogma.TypeAttributeDetail
+import com.marshall.pyerite.sdeModule.room.industry.BlueprintCopyDetail
+import com.marshall.pyerite.sdeModule.room.industry.BlueprintInventionMaterial
+import com.marshall.pyerite.sdeModule.room.industry.BlueprintInventionProduct
+import com.marshall.pyerite.sdeModule.room.industry.BlueprintInventionSkill
+import com.marshall.pyerite.sdeModule.room.industry.BlueprintManufacturingMaterial
+import com.marshall.pyerite.sdeModule.room.industry.BlueprintManufacturingProduct
+import com.marshall.pyerite.sdeModule.room.industry.BlueprintManufacturingSkill
+import com.marshall.pyerite.sdeModule.room.industry.TypeBlueprintDetail
+import com.marshall.pyerite.sdeModule.room.dogma.TypeTraitDetail
+import com.marshall.pyerite.sdeModule.room.skill.SkillRequirement
+import com.marshall.pyerite.sdeModule.room.type.TypeEntity
+import com.marshall.pyerite.sdeModule.room.industry.TypeApplicableBlueprintCount
+import com.marshall.pyerite.sdeModule.room.type.TypeCompatibleGroupDetail
+import com.marshall.pyerite.sdeModule.room.industry.TypeRefiningOutputItem
+import com.marshall.pyerite.sdeModule.room.industry.TypeRefiningOutputSummary
+import com.marshall.pyerite.sdeModule.room.industry.TypeRefiningSourceCount
+import com.marshall.pyerite.sdeModule.room.industry.TypeRefiningSourceItem
+import com.marshall.pyerite.sdeModule.room.skill.SkillLevelSpRow
+import com.marshall.pyerite.sdeModule.room.skill.SkillUnlockTypeRow
+import com.marshall.pyerite.sdeModule.room.type.TypeSkillMiscRow
 import com.marshall.pyerite.databaseHierarchyModule.util.DogmaAttributeFormatting
 import com.marshall.pyerite.databaseHierarchyModule.util.SkillSpCalculator
 import kotlinx.coroutines.Dispatchers
@@ -51,6 +51,9 @@ class DatabaseRepository(
     private val metaGroupDao get() = roomProvider.getDatabase().metaGroupDao()
     private val groupDao get() = roomProvider.getDatabase().groupDao()
     private val typeDao get() = roomProvider.getDatabase().typeDao()
+    private val dogmaDao get() = roomProvider.getDatabase().dogmaDao()
+    private val industryDao get() = roomProvider.getDatabase().industryDao()
+    private val skillDao get() = roomProvider.getDatabase().skillDao()
     private val traitDao get() = roomProvider.getDatabase().traitDao()
 
     fun getCategories(): Flow<List<CategoryEntity>> = flow {
@@ -78,11 +81,11 @@ class DatabaseRepository(
     }.flowOn(Dispatchers.IO)
 
     fun getTypeAttributes(typeId: Int): Flow<List<TypeAttributeDetail>> = flow {
-        emit(typeDao.getTypeAttributeDetails(typeId))
+        emit(dogmaDao.getTypeAttributeDetails(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getDogmaAttributesByNames(names: List<String>): Flow<List<DogmaAttributeEntity>> = flow {
-        emit(typeDao.getDogmaAttributesByNames(names))
+        emit(dogmaDao.getDogmaAttributesByNames(names))
     }.flowOn(Dispatchers.IO)
 
     fun getTypeTraits(typeId: Int): Flow<List<TypeTraitDetail>> = flow {
@@ -90,75 +93,75 @@ class DatabaseRepository(
     }.flowOn(Dispatchers.IO)
 
     fun getBlueprintsForProduct(typeId: Int): Flow<List<TypeBlueprintDetail>> = flow {
-        emit(typeDao.getBlueprintsForProduct(typeId))
+        emit(industryDao.getBlueprintsForProduct(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getRefiningOutputSummary(typeId: Int): Flow<TypeRefiningOutputSummary?> = flow {
-        emit(typeDao.getRefiningOutputSummary(typeId))
+        emit(industryDao.getRefiningOutputSummary(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getApplicableBlueprintCount(typeId: Int): Flow<TypeApplicableBlueprintCount?> = flow {
-        emit(typeDao.getApplicableBlueprintCount(typeId))
+        emit(industryDao.getApplicableBlueprintCount(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getRefiningSourceCount(typeId: Int): Flow<TypeRefiningSourceCount?> = flow {
-        emit(typeDao.getRefiningSourceCount(typeId))
+        emit(industryDao.getRefiningSourceCount(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getRefiningOutputs(typeId: Int): Flow<List<TypeRefiningOutputItem>> = flow {
-        emit(typeDao.getRefiningOutputs(typeId))
+        emit(industryDao.getRefiningOutputs(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getRefiningSources(typeId: Int): Flow<List<TypeRefiningSourceItem>> = flow {
-        emit(typeDao.getRefiningSources(typeId))
+        emit(industryDao.getRefiningSources(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getApplicableBlueprints(typeId: Int): Flow<List<TypeBlueprintDetail>> = flow {
-        emit(typeDao.getApplicableBlueprints(typeId))
+        emit(industryDao.getApplicableBlueprints(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getBlueprintManufacturingProducts(typeId: Int): Flow<List<BlueprintManufacturingProduct>> = flow {
-        emit(typeDao.getBlueprintManufacturingProducts(typeId))
+        emit(industryDao.getBlueprintManufacturingProducts(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getBlueprintManufacturingMaterials(typeId: Int): Flow<List<BlueprintManufacturingMaterial>> = flow {
-        emit(typeDao.getBlueprintManufacturingMaterials(typeId))
+        emit(industryDao.getBlueprintManufacturingMaterials(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getBlueprintManufacturingSkills(typeId: Int): Flow<List<BlueprintManufacturingSkill>> = flow {
-        emit(typeDao.getBlueprintManufacturingSkills(typeId))
+        emit(industryDao.getBlueprintManufacturingSkills(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getBlueprintManufacturingTime(typeId: Int): Flow<Int?> = flow {
-        emit(typeDao.getBlueprintManufacturingTime(typeId))
+        emit(industryDao.getBlueprintManufacturingTime(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getBlueprintResearchMaterialTime(typeId: Int): Flow<Int?> = flow {
-        emit(typeDao.getBlueprintResearchMaterialTime(typeId))
+        emit(industryDao.getBlueprintResearchMaterialTime(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getBlueprintResearchTimeTime(typeId: Int): Flow<Int?> = flow {
-        emit(typeDao.getBlueprintResearchTimeTime(typeId))
+        emit(industryDao.getBlueprintResearchTimeTime(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getBlueprintCopyDetail(typeId: Int): Flow<BlueprintCopyDetail?> = flow {
-        emit(typeDao.getBlueprintCopyDetail(typeId))
+        emit(industryDao.getBlueprintCopyDetail(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getBlueprintInventionProducts(typeId: Int): Flow<List<BlueprintInventionProduct>> = flow {
-        emit(typeDao.getBlueprintInventionProducts(typeId))
+        emit(industryDao.getBlueprintInventionProducts(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getBlueprintInventionMaterials(typeId: Int): Flow<List<BlueprintInventionMaterial>> = flow {
-        emit(typeDao.getBlueprintInventionMaterials(typeId))
+        emit(industryDao.getBlueprintInventionMaterials(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getBlueprintInventionSkills(typeId: Int): Flow<List<BlueprintInventionSkill>> = flow {
-        emit(typeDao.getBlueprintInventionSkills(typeId))
+        emit(industryDao.getBlueprintInventionSkills(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getBlueprintInventionTime(typeId: Int): Flow<Int?> = flow {
-        emit(typeDao.getBlueprintInventionTime(typeId))
+        emit(industryDao.getBlueprintInventionTime(typeId))
     }.flowOn(Dispatchers.IO)
 
     fun getCompatibleGroups(typeId: Int): Flow<List<TypeCompatibleGroupDetail>> = flow {
@@ -203,22 +206,22 @@ class DatabaseRepository(
     }.flowOn(Dispatchers.IO)
 
     fun getTypesUnlockedBySkillAtLevel(skillTypeId: Int, level: Int): Flow<List<SkillUnlockTypeRow>> = flow {
-        emit(typeDao.getTypesUnlockedBySkillAtLevel(skillTypeId, level))
+        emit(skillDao.getTypesUnlockedBySkillAtLevel(skillTypeId, level))
     }.flowOn(Dispatchers.IO)
 
     private suspend fun resolveSkillUnlockLevels(typeId: Int): List<Int> {
-        val attrs = typeDao.getTypeAttributeDetails(typeId)
+        val attrs = dogmaDao.getTypeAttributeDetails(typeId)
         val hasSkillAnchor = attrs.any { it.name == SKILL_MISC_ANCHOR_NAME }
         if (!hasSkillAnchor) return emptyList()
 
         val maxLevel = SkillSpCalculator.resolveMaxTrainableLevel(
             attrs.find { it.name == SKILL_LEVEL_DOGMA_NAME }?.value,
         )
-        return typeDao.getSkillUnlockLevels(typeId, maxLevel)
+        return skillDao.getSkillUnlockLevels(typeId, maxLevel)
     }
 
     private suspend fun resolveSkillLevelSpRows(typeId: Int): List<SkillLevelSpRow> {
-        val attrs = typeDao.getTypeAttributeDetails(typeId)
+        val attrs = dogmaDao.getTypeAttributeDetails(typeId)
         val skillTimeConstant = attrs.find { it.name == SKILL_MISC_ANCHOR_NAME }?.value
             ?: return emptyList()
         if (skillTimeConstant <= 0) return emptyList()
@@ -250,14 +253,14 @@ class DatabaseRepository(
     private suspend fun getSkillMiscDefinitions(): List<DogmaAttributeEntity> {
         syncDefinitionsLanguage()
         cachedSkillMiscDefinitions?.let { return it }
-        return typeDao.getSkillMiscDogmaDefinitions(SKILL_MISC_ANCHOR_NAME)
+        return dogmaDao.getSkillMiscDogmaDefinitions(SKILL_MISC_ANCHOR_NAME)
             .also { cachedSkillMiscDefinitions = it }
     }
 
     private suspend fun getSkillBonusDefinitions(): List<DogmaAttributeEntity> {
         syncDefinitionsLanguage()
         cachedSkillBonusDefinitions?.let { return it }
-        return typeDao.getSkillBonusDogmaDefinitions(SKILL_MISC_ANCHOR_NAME)
+        return dogmaDao.getSkillBonusDogmaDefinitions(SKILL_MISC_ANCHOR_NAME)
             .also { cachedSkillBonusDefinitions = it }
     }
 
@@ -266,7 +269,7 @@ class DatabaseRepository(
         val bonusDefinitions = getSkillBonusDefinitions()
         if (metadataDefinitions.isEmpty() && bonusDefinitions.isEmpty()) return emptyList()
 
-        val typeAttrs = typeDao.getTypeAttributeDetails(typeId)
+        val typeAttrs = dogmaDao.getTypeAttributeDetails(typeId)
         val metadataRows = buildSkillMetadataRows(typeAttrs, metadataDefinitions)
         val bonusRows = buildSkillBonusRows(typeAttrs, bonusDefinitions)
         return metadataRows + bonusRows
@@ -299,7 +302,7 @@ class DatabaseRepository(
         val referencedDisplayById = if (referencedAttributeIds.isEmpty()) {
             emptyMap()
         } else {
-            typeDao.getDogmaAttributesByIds(referencedAttributeIds).associate { ref ->
+            dogmaDao.getDogmaAttributesByIds(referencedAttributeIds).associate { ref ->
                 ref.id to (ref.displayName?.takeIf { it.isNotBlank() } ?: ref.name.orEmpty())
             }
         }
@@ -393,7 +396,7 @@ class DatabaseRepository(
         typeId: Int,
         flattenedMap: MutableMap<Int, SkillRequirement> = mutableMapOf()
     ): List<SkillRequirement> {
-        val skillAttrs = typeDao.getTypeAttributeDetails(typeId).filter { it.categoryId == 8 }
+        val skillAttrs = dogmaDao.getTypeAttributeDetails(typeId).filter { it.categoryId == 8 }
 
         for (i in 1..6) {
             val skillAttr = skillAttrs.find { it.name == "requiredSkill$i" }

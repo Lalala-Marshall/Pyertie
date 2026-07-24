@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
 import com.marshall.pyerite.R
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
+import com.marshall.pyerite.sdeModule.room.dogma.TypeAttributeDetail
 import com.marshall.pyerite.databaseHierarchyModule.util.formatDurationFromMilliseconds
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
 import com.marshall.pyerite.ui.golbalComponents.BaseDetailRow

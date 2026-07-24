@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.marshall.pyerite.R
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintCopyDetail
+import com.marshall.pyerite.sdeModule.room.industry.BlueprintCopyDetail
 import com.marshall.pyerite.databaseHierarchyModule.util.formatDurationFromSeconds
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
 import com.marshall.pyerite.ui.golbalComponents.BaseSubMenuValueRow

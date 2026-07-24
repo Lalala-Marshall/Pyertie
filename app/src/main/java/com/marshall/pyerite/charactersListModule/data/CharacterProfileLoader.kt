@@ -6,18 +6,18 @@ import com.marshall.pyerite.charactersListModule.model.LoggedInCharacter
 import com.marshall.pyerite.charactersListModule.model.SkillQueueEntry
 import com.marshall.pyerite.charactersListModule.model.SkillQueueProgress
 import com.marshall.pyerite.charactersListModule.model.SkillQueueTrainingState
-import com.marshall.pyerite.data.db.RoomProvider
-import com.marshall.pyerite.esiModule.EsiApi
-import com.marshall.pyerite.esiModule.EsiCharacterLocationDto
-import com.marshall.pyerite.esiModule.EsiOrganization
-import com.marshall.pyerite.esiModule.EsiPublicDataSource
-import com.marshall.pyerite.esiModule.EsiSkillQueueEntryDto
-import com.marshall.pyerite.esiModule.allianceLogoUrl
-import com.marshall.pyerite.esiModule.corporationLogoUrl
-import com.marshall.pyerite.esiModule.parseEsiDateMillis
-import com.marshall.pyerite.esiModule.portraitUrl
-import com.marshall.pyerite.eveAuthModule.EveStoredSession
-import com.marshall.pyerite.eveAuthModule.EveTokenManager
+import com.marshall.pyerite.sdeModule.room.RoomProvider
+import com.marshall.pyerite.esiModule.api.EsiCharacterApi
+import com.marshall.pyerite.esiModule.model.EsiCharacterLocationDto
+import com.marshall.pyerite.esiModule.model.EsiOrganization
+import com.marshall.pyerite.esiModule.data.EsiPublicDataSource
+import com.marshall.pyerite.esiModule.model.EsiSkillQueueEntryDto
+import com.marshall.pyerite.esiModule.data.allianceLogoUrl
+import com.marshall.pyerite.esiModule.data.corporationLogoUrl
+import com.marshall.pyerite.esiModule.model.parseEsiDateMillis
+import com.marshall.pyerite.esiModule.data.portraitUrl
+import com.marshall.pyerite.eveAuthModule.model.EveStoredSession
+import com.marshall.pyerite.eveAuthModule.token.EveTokenManager
 import com.marshall.pyerite.localization.LocaleController
 import com.marshall.pyerite.localization.displayName
 import com.marshall.pyerite.localization.localizedName
@@ -34,7 +34,7 @@ import kotlinx.coroutines.withContext
 internal class CharacterProfileLoader(
     private val publicEsi: EsiPublicDataSource,
     private val tokenManager: EveTokenManager,
-    private val api: EsiApi,
+    private val characterApi: EsiCharacterApi,
     private val roomProvider: RoomProvider,
     private val localeController: LocaleController,
 ) {
@@ -46,7 +46,7 @@ internal class CharacterProfileLoader(
             val walletDeferred = async {
                 runCatching {
                     tokenManager.executeWithAuthRetry(session.characterId) { auth ->
-                        api.fetchWallet(session.characterId, auth).use { body ->
+                        characterApi.fetchWallet(session.characterId, auth).use { body ->
                             body.string().trim().toDouble()
                         }
                     }
@@ -55,21 +55,21 @@ internal class CharacterProfileLoader(
             val skillsDeferred = async {
                 runCatching {
                     tokenManager.executeWithAuthRetry(session.characterId) { auth ->
-                        api.fetchSkills(session.characterId, auth)
+                        characterApi.fetchSkills(session.characterId, auth)
                     }
                 }.getOrNull()
             }
             val queueDeferred = async {
                 runCatching {
                     tokenManager.executeWithAuthRetry(session.characterId) { auth ->
-                        api.fetchSkillQueue(session.characterId, auth)
+                        characterApi.fetchSkillQueue(session.characterId, auth)
                     }
                 }.getOrNull()
             }
             val locationDeferred = async {
                 runCatching {
                     tokenManager.executeWithAuthRetry(session.characterId) { auth ->
-                        api.fetchLocation(session.characterId, auth)
+                        characterApi.fetchLocation(session.characterId, auth)
                     }
                 }.getOrNull()
             }
@@ -186,7 +186,7 @@ internal class CharacterProfileLoader(
 
     private suspend fun resolveSkillName(typeId: Int): String {
         val fromSde = runCatching {
-            roomProvider.getDatabase().typeDao().getTypeDisplayName(typeId)
+            roomProvider.getDatabase().sdeTypeDao().getTypeDisplayName(typeId)
                 ?.displayName(localeController)
         }.getOrNull()?.takeIf { it.isNotBlank() }
         if (fromSde != null) return fromSde

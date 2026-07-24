@@ -25,10 +25,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
-import com.marshall.pyerite.data.icons.IconManager
+import com.marshall.pyerite.iconModule.manager.IconManager
 import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
 import com.marshall.pyerite.databaseHierarchyModule.navHost.rememberDatabaseRootBackStackEntry
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeBlueprintDetail
+import com.marshall.pyerite.sdeModule.room.industry.TypeBlueprintDetail
 import com.marshall.pyerite.databaseHierarchyModule.search.DatabaseListSearchHost
 import com.marshall.pyerite.databaseHierarchyModule.search.SearchNoResultsItem
 import com.marshall.pyerite.databaseHierarchyModule.search.matchesSearchQuery

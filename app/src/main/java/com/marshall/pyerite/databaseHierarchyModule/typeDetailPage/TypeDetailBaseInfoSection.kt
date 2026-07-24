@@ -5,8 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
 import com.marshall.pyerite.R
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.DogmaAttributeEntity
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
+import com.marshall.pyerite.sdeModule.room.dogma.DogmaAttributeEntity
+import com.marshall.pyerite.sdeModule.room.type.TypeEntity
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
 import com.marshall.pyerite.ui.golbalComponents.BaseDetailRow
 import com.marshall.pyerite.ui.golbalComponents.BaseDetailRowModel

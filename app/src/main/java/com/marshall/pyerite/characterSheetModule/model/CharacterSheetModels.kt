@@ -1,8 +1,5 @@
 package com.marshall.pyerite.characterSheetModule.model
 
-import com.marshall.pyerite.charactersListModule.model.CharacterLocationInfo
-import com.marshall.pyerite.charactersListModule.model.LoggedInCharacter
-
 /**
  * Full character sheet payload for the sheet detail page.
  * Presentation strings (dates, ages) are formatted in the UI layer.
@@ -18,7 +15,7 @@ data class CharacterSheet(
     val isOnline: Boolean?,
     val birthdayEpochMs: Long?,
     val securityStatus: Double?,
-    val location: CharacterLocationInfo?,
+    val location: CharacterSheetLocation?,
     val shipTypeId: Int?,
     val shipDisplayName: String?,
     val shipIconFilename: String?,
@@ -27,22 +24,19 @@ data class CharacterSheet(
     val medals: List<CharacterMedal>,
 ) {
     companion object {
-        /** Immediate shell from list-cache identity fields while ESI sheet loads. */
-        fun seed(
-            characterId: Long,
-            cached: LoggedInCharacter?,
-        ): CharacterSheet = CharacterSheet(
+        /** Immediate shell while ESI sheet loads. */
+        fun seed(characterId: Long, fallbackName: String = ""): CharacterSheet = CharacterSheet(
             characterId = characterId,
-            name = cached?.name?.takeIf { it.isNotBlank() } ?: characterId.toString(),
-            portraitUrl = cached?.portraitUrl,
-            corporationName = cached?.corporationName,
-            corporationIconUrl = cached?.corporationIconUrl,
-            allianceName = cached?.allianceName,
-            allianceIconUrl = cached?.allianceIconUrl,
+            name = fallbackName.ifBlank { characterId.toString() },
+            portraitUrl = null,
+            corporationName = null,
+            corporationIconUrl = null,
+            allianceName = null,
+            allianceIconUrl = null,
             isOnline = null,
             birthdayEpochMs = null,
             securityStatus = null,
-            location = cached?.location,
+            location = null,
             shipTypeId = null,
             shipDisplayName = null,
             shipIconFilename = null,
@@ -58,4 +52,20 @@ data class CharacterMedal(
     val title: String,
     val description: String,
     val dateEpochMs: Long?,
+)
+
+enum class CharacterSheetLocationPresence {
+    IN_STRUCTURE,
+    IN_SPACE,
+}
+
+/** Sheet-only location line (system + optional docked place / sun type icon). */
+data class CharacterSheetLocation(
+    val systemSecurityStatus: Double,
+    val systemName: String,
+    val regionName: String,
+    val presence: CharacterSheetLocationPresence,
+    val placeName: String? = null,
+    val placeTypeId: Int? = null,
+    val placeIconFilename: String? = null,
 )

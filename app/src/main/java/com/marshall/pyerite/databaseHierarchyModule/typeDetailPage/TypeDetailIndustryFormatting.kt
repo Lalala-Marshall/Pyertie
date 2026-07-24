@@ -1,6 +1,7 @@
 package com.marshall.pyerite.databaseHierarchyModule.typeDetailPage
 
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintResearchLevelTime
+import com.marshall.pyerite.sdeModule.room.industry.BlueprintResearchLevelTime
+import com.marshall.pyerite.util.NumberDisplayFormatter
 import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -18,9 +19,10 @@ internal fun formatRefiningSourceLabel(
 }
 
 internal fun formatIndustryCount(count: Int): String =
-    NumberFormat.getNumberInstance(Locale.getDefault()).format(count)
+    NumberDisplayFormatter.format(count.toLong(), NumberDisplayFormatter.Style.FULL)
 
-private val inventionProbabilityFormatter = NumberFormat.getNumberInstance(Locale.getDefault()).apply {
+/** Fixed [Locale.US] so display stays stable if the device locale changes at runtime. */
+private val inventionProbabilityFormatter = NumberFormat.getNumberInstance(Locale.US).apply {
     minimumFractionDigits = 0
     maximumFractionDigits = 1
 }

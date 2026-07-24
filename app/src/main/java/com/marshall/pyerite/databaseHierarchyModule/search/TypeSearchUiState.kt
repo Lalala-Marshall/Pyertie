@@ -1,6 +1,6 @@
 package com.marshall.pyerite.databaseHierarchyModule.search
 
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
+import com.marshall.pyerite.sdeModule.room.type.TypeEntity
 
 data class TypeSearchUiState(
     val results: List<TypeEntity> = emptyList(),

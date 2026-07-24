@@ -2,8 +2,8 @@ package com.marshall.pyerite.charactersListModule.viewModel
 
 import com.marshall.pyerite.charactersListModule.data.CharacterOrderStore
 import com.marshall.pyerite.charactersListModule.data.CharacterSelectionStore
-import com.marshall.pyerite.eveAuthModule.EveSsoScope
-import com.marshall.pyerite.eveAuthModule.EveTokenManager
+import com.marshall.pyerite.eveAuthModule.model.EveSsoScope
+import com.marshall.pyerite.eveAuthModule.token.EveTokenManager
 import com.marshall.pyerite.charactersListModule.model.CharacterSummary
 import com.marshall.pyerite.charactersListModule.model.LoggedInCharacter
 import kotlinx.coroutines.flow.MutableStateFlow
