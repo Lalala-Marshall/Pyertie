@@ -1,17 +1,17 @@
 package com.marshall.pyerite.databaseHierarchyModule.typeDetailPage
 
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeApplicableBlueprintCount
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintCopyDetail
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionMaterial
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionProduct
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintInventionSkill
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingMaterial
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingProduct
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingSkill
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeBlueprintDetail
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningOutputSummary
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeRefiningSourceCount
+import com.marshall.pyerite.sdeModule.room.dogma.TypeAttributeDetail
+import com.marshall.pyerite.sdeModule.room.industry.TypeApplicableBlueprintCount
+import com.marshall.pyerite.sdeModule.room.industry.BlueprintCopyDetail
+import com.marshall.pyerite.sdeModule.room.industry.BlueprintInventionMaterial
+import com.marshall.pyerite.sdeModule.room.industry.BlueprintInventionProduct
+import com.marshall.pyerite.sdeModule.room.industry.BlueprintInventionSkill
+import com.marshall.pyerite.sdeModule.room.industry.BlueprintManufacturingMaterial
+import com.marshall.pyerite.sdeModule.room.industry.BlueprintManufacturingProduct
+import com.marshall.pyerite.sdeModule.room.industry.BlueprintManufacturingSkill
+import com.marshall.pyerite.sdeModule.room.industry.TypeBlueprintDetail
+import com.marshall.pyerite.sdeModule.room.industry.TypeRefiningOutputSummary
+import com.marshall.pyerite.sdeModule.room.industry.TypeRefiningSourceCount
 
 internal fun hasDisplayableDogmaRows(attributes: List<TypeAttributeDetail>): Boolean =
     attributes.any { it.displayName != null && it.value != null }

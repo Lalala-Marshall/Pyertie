@@ -34,10 +34,10 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.marshall.pyerite.R
 import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingMaterial
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingProduct
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.BlueprintManufacturingSkill
-import com.marshall.pyerite.data.icons.IconManager
+import com.marshall.pyerite.sdeModule.room.industry.BlueprintManufacturingMaterial
+import com.marshall.pyerite.sdeModule.room.industry.BlueprintManufacturingProduct
+import com.marshall.pyerite.sdeModule.room.industry.BlueprintManufacturingSkill
+import com.marshall.pyerite.iconModule.manager.IconManager
 import com.marshall.pyerite.databaseHierarchyModule.util.formatDurationFromSeconds
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
 import com.marshall.pyerite.ui.golbalComponents.BaseSubMenuRow

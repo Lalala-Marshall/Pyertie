@@ -24,11 +24,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.marshall.pyerite.R
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeAttributeDetail
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeCompatibleGroupDetail
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeSkillMiscRow
+import com.marshall.pyerite.sdeModule.room.dogma.TypeAttributeDetail
+import com.marshall.pyerite.sdeModule.room.type.TypeCompatibleGroupDetail
+import com.marshall.pyerite.sdeModule.room.type.TypeSkillMiscRow
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
-import com.marshall.pyerite.data.icons.IconManager
+import com.marshall.pyerite.iconModule.manager.IconManager
 import com.marshall.pyerite.localization.LocaleController
 import com.marshall.pyerite.localization.displayName
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer

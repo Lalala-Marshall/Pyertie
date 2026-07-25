@@ -29,13 +29,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
-import com.marshall.pyerite.data.icons.IconManager
+import com.marshall.pyerite.iconModule.manager.IconManager
 import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
 import com.marshall.pyerite.localization.LocaleController
 import com.marshall.pyerite.localization.displayName
 import com.marshall.pyerite.databaseHierarchyModule.navHost.rememberDatabaseRootBackStackEntry
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.MetaGroupEntity
-import com.marshall.pyerite.databaseHierarchyModule.room.entity.TypeEntity
+import com.marshall.pyerite.sdeModule.room.catalog.MetaGroupEntity
+import com.marshall.pyerite.sdeModule.room.type.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.search.DatabaseListSearchHost
 import com.marshall.pyerite.databaseHierarchyModule.search.SearchNoResultsItem
 import com.marshall.pyerite.databaseHierarchyModule.search.matchingSearch
