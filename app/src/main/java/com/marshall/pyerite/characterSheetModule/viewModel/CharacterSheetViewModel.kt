@@ -29,6 +29,7 @@ internal class CharacterSheetViewModel(
     }
 
     fun refresh() {
+        if (_uiState.value.isLoading) return
         loadSheet(forceRefresh = true)
     }
 

@@ -6,7 +6,6 @@ import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,14 +20,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshState
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -49,7 +43,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
@@ -67,13 +60,16 @@ import androidx.compose.ui.zIndex
 import androidx.browser.customtabs.CustomTabsIntent
 import android.content.Context
 import android.content.Intent
+import androidx.compose.ui.platform.LocalDensity
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.charactersListModule.model.LoggedInCharacter
 import com.marshall.pyerite.charactersListModule.viewModel.CharacterViewModel
 import com.marshall.pyerite.charactersListModule.data.EveSsoUiStatus
 import com.marshall.pyerite.ui.golbalComponents.PyeritePageScaffold
+import com.marshall.pyerite.ui.golbalComponents.PyeritePullToRefreshBox
 import com.marshall.pyerite.ui.golbalComponents.PyeriteTopBarActionItem
+import com.marshall.pyerite.ui.golbalComponents.pyeritePullRefreshTopBarAction
 import com.marshall.pyerite.ui.golbalComponents.rememberLazyListTitleCollapsed
 import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
 import com.marshall.pyerite.ui.golbalComponents.topBarActionSurface
@@ -91,7 +87,6 @@ fun CharacterManagementPage(
     val refreshFailed by viewModel.refreshFailed.collectAsState()
     val ssoStatus by viewModel.ssoStatus.collectAsState()
     val listState = rememberLazyListState()
-    val pullRefreshState = rememberPullToRefreshState()
     val showCollapsedTitle = rememberLazyListTitleCollapsed(listState)
     var pendingDeleteCharacter by remember { mutableStateOf<LoggedInCharacter?>(null) }
     val navigateUp = navController.rememberNavigateUpAction()
@@ -110,31 +105,14 @@ fun CharacterManagementPage(
     } else {
         stringResource(R.string.character_edit)
     }
-    val refreshActionLabel = stringResource(R.string.character_pull_to_refresh)
-    val showRefreshAction = hasLoggedInCharacters && (isRefreshing || refreshFailed)
+    val refreshTopBarAction = pyeritePullRefreshTopBarAction(
+        isRefreshing = isRefreshing,
+        refreshFailed = refreshFailed,
+        onRefresh = viewModel::refreshLoggedInCharacters,
+    )
     val endActions = buildList {
-        if (showRefreshAction) {
-            val refreshingNow = isRefreshing
-            add(
-                PyeriteTopBarActionItem(
-                    onClick = {
-                        if (!refreshingNow) {
-                            viewModel.refreshLoggedInCharacters()
-                        }
-                    },
-                    icon = Icons.Default.Refresh,
-                    contentDescription = refreshActionLabel,
-                    iconTint = if (refreshingNow) {
-                        colorResource(R.color.hyperlink_text)
-                    } else {
-                        colorResource(R.color.character_delete)
-                    },
-                    enabled = !refreshingNow,
-                    spinning = refreshingNow,
-                ),
-            )
-        }
         if (hasLoggedInCharacters) {
+            refreshTopBarAction?.let(::add)
             add(
                 PyeriteTopBarActionItem(
                     onClick = viewModel::toggleEditMode,
@@ -160,31 +138,15 @@ fun CharacterManagementPage(
         onBack = navigateUp,
         endActions = endActions,
     ) { topBarPadding ->
-        val pullRefreshMaxDistance = PullToRefreshDefaults.IndicatorMaxDistance
-        val pullRefreshMaxDistancePx = with(LocalDensity.current) {
-            pullRefreshMaxDistance.toPx()
-        }
-        PullToRefreshBox(
-            // Keep false so the list snaps back on release while refresh continues in the top bar.
-            isRefreshing = false,
+        PyeritePullToRefreshBox(
             onRefresh = viewModel::refreshLoggedInCharacters,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(topBarPadding),
-            state = pullRefreshState,
-            indicator = {
-                CharacterPullRefreshIndicator(
-                    state = pullRefreshState,
-                    maxDistance = pullRefreshMaxDistance,
-                )
-            },
         ) {
-            val contentOffsetY = pullRefreshState.distanceFraction * pullRefreshMaxDistancePx
             LazyColumn(
                 state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer { translationY = contentOffsetY },
+                modifier = Modifier.fillMaxSize(),
             ) {
                 item(key = "page_title") {
                     Text(
@@ -415,44 +377,6 @@ fun CharacterManagementPage(
             }
         }
     }
-}
-
-@Composable
-private fun BoxScope.CharacterPullRefreshIndicator(
-    state: PullToRefreshState,
-    maxDistance: Dp,
-) {
-    val pullProgress = state.distanceFraction.coerceIn(
-        CharacterPullRefreshConfig.PROGRESS_MIN,
-        CharacterPullRefreshConfig.PROGRESS_MAX,
-    )
-
-    PullToRefreshDefaults.IndicatorBox(
-        state = state,
-        isRefreshing = false,
-        modifier = Modifier.align(Alignment.TopCenter),
-        maxDistance = maxDistance,
-        containerColor = Color.Transparent,
-        elevation = 0.dp,
-    ) {
-        Icon(
-            imageVector = Icons.Default.Refresh,
-            contentDescription = stringResource(R.string.character_pull_to_refresh),
-            tint = colorResource(R.color.hyperlink_text),
-            modifier = Modifier
-                .size(dimensionResource(R.dimen.character_pull_refresh_icon_size))
-                .graphicsLayer {
-                    rotationZ = pullProgress * CharacterPullRefreshConfig.PULL_ROTATION_DEGREES
-                    alpha = pullProgress
-                },
-        )
-    }
-}
-
-private object CharacterPullRefreshConfig {
-    const val PROGRESS_MIN = 0f
-    const val PROGRESS_MAX = 1f
-    const val PULL_ROTATION_DEGREES = 180f
 }
 
 @Composable

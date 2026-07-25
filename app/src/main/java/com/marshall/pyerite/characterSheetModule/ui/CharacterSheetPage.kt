@@ -56,6 +56,8 @@ import com.marshall.pyerite.ui.golbalComponents.BaseContainer
 import com.marshall.pyerite.ui.golbalComponents.ItemDivider
 import com.marshall.pyerite.ui.golbalComponents.PageTitle
 import com.marshall.pyerite.ui.golbalComponents.PyeritePageScaffold
+import com.marshall.pyerite.ui.golbalComponents.PyeritePullToRefreshBox
+import com.marshall.pyerite.ui.golbalComponents.pyeritePullRefreshTopBarAction
 import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
 import com.marshall.pyerite.ui.golbalComponents.rememberScrollTitleCollapsed
 import com.marshall.pyerite.util.DurationDisplayFormatter
@@ -88,38 +90,52 @@ internal fun CharacterSheetPage(
     val sheet = uiState.sheet
     val detailsPending = !uiState.detailsReady
     val placeholder = stringResource(R.string.character_sheet_value_placeholder)
+    val endActions = listOfNotNull(
+        pyeritePullRefreshTopBarAction(
+            isRefreshing = uiState.isLoading,
+            refreshFailed = uiState.loadFailed,
+            onRefresh = viewModel::refresh,
+        ),
+    )
 
     PyeritePageScaffold(
         title = pageTitle,
         showCollapsedTitle = showCollapsedTitle,
         onBack = onBack,
+        endActions = endActions,
     ) { topBarPadding ->
-        Column(
+        PyeritePullToRefreshBox(
+            onRefresh = viewModel::refresh,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(topBarPadding)
-                .verticalScroll(scrollState)
-                .padding(bottom = bottomPadding),
+                .padding(topBarPadding),
         ) {
-            PageTitle(text = pageTitle)
-            if (uiState.loadFailed) {
-                CharacterSheetLoadFailedBanner(onRetry = viewModel::refresh)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(bottom = bottomPadding),
+            ) {
+                PageTitle(text = pageTitle)
+                if (uiState.loadFailed) {
+                    CharacterSheetLoadFailedBanner(onRetry = viewModel::refresh)
+                    Spacer(modifier = Modifier.height(sectionGap))
+                }
+                CharacterSheetBasicInfoSection(
+                    sheet = sheet,
+                    detailsPending = detailsPending,
+                    placeholder = placeholder,
+                )
                 Spacer(modifier = Modifier.height(sectionGap))
-            }
-            CharacterSheetBasicInfoSection(
-                sheet = sheet,
-                detailsPending = detailsPending,
-                placeholder = placeholder,
-            )
-            Spacer(modifier = Modifier.height(sectionGap))
-            CharacterSheetTimersSection(
-                sheet = sheet,
-                detailsPending = detailsPending,
-                placeholder = placeholder,
-            )
-            if (sheet.medals.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(sectionGap))
-                CharacterSheetMedalsSection(medals = sheet.medals)
+                CharacterSheetTimersSection(
+                    sheet = sheet,
+                    detailsPending = detailsPending,
+                    placeholder = placeholder,
+                )
+                if (sheet.medals.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(sectionGap))
+                    CharacterSheetMedalsSection(medals = sheet.medals)
+                }
             }
         }
     }
