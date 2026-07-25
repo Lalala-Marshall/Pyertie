@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.marshall.pyerite.R
 
 /**
- * Pull-to-refresh shell shared by character list / sheet.
+ * Pull-to-refresh shell shared by main page / character list / sheet.
  *
  * Material [PullToRefreshBox] keeps `isRefreshing = false` so content snaps back on
  * release; in-progress / failure feedback belongs in the top bar via

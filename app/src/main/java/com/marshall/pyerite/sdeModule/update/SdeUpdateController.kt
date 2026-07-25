@@ -19,6 +19,9 @@ class SdeUpdateController(
     private val _uiState = MutableStateFlow<SdeUpdateUiState>(SdeUpdateUiState.Idle)
     val uiState: StateFlow<SdeUpdateUiState> = _uiState.asStateFlow()
 
+    private val _isUpdateCheckInFlight = MutableStateFlow(false)
+    val isUpdateCheckInFlight: StateFlow<Boolean> = _isUpdateCheckInFlight.asStateFlow()
+
     private var pendingUpdate: SdeRemotePackage? = null
     private var downloadJob: Job? = null
     private var checkJob: Job? = null
@@ -164,6 +167,7 @@ class SdeUpdateController(
         job.invokeOnCompletion { cause ->
             if (checkJob === job) {
                 checkJob = null
+                _isUpdateCheckInFlight.value = false
             }
             logAction(
                 "checkForUpdates",
@@ -377,6 +381,44 @@ class SdeUpdateController(
         checkForUpdates(inSheet = true)
     }
 
+    /**
+     * Main-page pull-to-refresh: re-run a background update check when idle,
+     * already up-to-date, or the last check failed. Clears to Idle first so
+     * [checkForUpdates] can start; MainPage keeps the PTR spinner via
+     * [isUpdateCheckInFlight] until the result arrives.
+     * Leaves UpdateReady / sheet / in-progress download alone.
+     */
+    fun refreshUpdateCheck() {
+        logAction("refreshUpdateCheck", describeJobs())
+        if (downloadJob?.isActive == true) {
+            logAction("refreshUpdateCheck", "skipped: download active")
+            return
+        }
+        if (checkJob?.isActive == true) {
+            logAction("refreshUpdateCheck", "skipped: check already active")
+            return
+        }
+        when (val state = _uiState.value) {
+            is SdeUpdateUiState.Idle,
+            is SdeUpdateUiState.UpToDate,
+            is SdeUpdateUiState.CheckFailed -> {
+                logAction(
+                    "refreshUpdateCheck",
+                    "resetting ${describeUiState(state)} -> Idle then checkForUpdates",
+                )
+                _uiState.value = SdeUpdateUiState.Idle
+                _isUpdateCheckInFlight.value = true
+                checkForUpdates(inSheet = false)
+            }
+            else -> {
+                logAction(
+                    "refreshUpdateCheck",
+                    "skipped: uiState=${describeUiState(state)}",
+                )
+            }
+        }
+    }
+
     private fun presentSheet(content: SdeUpdateSheetContent): SdeUpdateUiState.Sheet {
         sheetInstanceId++
         return SdeUpdateUiState.Sheet(content = content, instanceId = sheetInstanceId)
@@ -392,6 +434,7 @@ class SdeUpdateController(
         checkGeneration++
         checkJob?.cancel()
         checkJob = null
+        _isUpdateCheckInFlight.value = false
     }
 
     fun repairStaleCheckingState() {

@@ -41,7 +41,9 @@ import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
 import com.marshall.pyerite.ui.golbalComponents.PageTitle
 import com.marshall.pyerite.ui.golbalComponents.PyeritePageScaffold
+import com.marshall.pyerite.ui.golbalComponents.PyeritePullToRefreshBox
 import com.marshall.pyerite.ui.golbalComponents.PyeriteTopBarActionItem
+import com.marshall.pyerite.ui.golbalComponents.pyeritePullRefreshTopBarAction
 import com.marshall.pyerite.ui.golbalComponents.rememberLazyListTitleCollapsed
 import com.marshall.pyerite.util.NumberDisplayFormatter
 import org.koin.androidx.compose.koinViewModel
@@ -55,8 +57,19 @@ fun MainPage(
     val uiState by sdeUpdateViewModel.uiState.collectAsState()
     val currentCharacter by characterViewModel.currentCharacter.collectAsState()
     val loggedInCharacters by characterViewModel.loggedInCharacters.collectAsState()
+    val isCharacterRefreshing by characterViewModel.isRefreshing.collectAsState()
+    val isUpdateCheckInFlight by sdeUpdateViewModel.isUpdateCheckInFlight.collectAsState()
+    val isRefreshing = isCharacterRefreshing || isUpdateCheckInFlight
+    val refreshFailed by characterViewModel.refreshFailed.collectAsState()
     val listState = rememberLazyListState()
     val showCollapsedTitle = rememberLazyListTitleCollapsed(listState)
+
+    val onPullToRefresh = remember(characterViewModel, sdeUpdateViewModel) {
+        {
+            characterViewModel.refreshLoggedInCharacters()
+            sdeUpdateViewModel.refreshUpdateCheck()
+        }
+    }
 
     val currentTotalSp = remember(currentCharacter?.characterId, loggedInCharacters) {
         val characterId = currentCharacter?.characterId ?: return@remember null
@@ -78,7 +91,13 @@ fun MainPage(
     val pageTitle = stringResource(R.string.main_page)
     val characterSectionTitle = stringResource(R.string.character)
     val dataSectionTitle = stringResource(R.string.data)
+    val refreshTopBarAction = pyeritePullRefreshTopBarAction(
+        isRefreshing = isRefreshing,
+        refreshFailed = refreshFailed,
+        onRefresh = onPullToRefresh,
+    )
     val endActions = buildList {
+        refreshTopBarAction?.let(::add)
         if (showUpdateIcon) {
             add(
                 PyeriteTopBarActionItem(
@@ -108,40 +127,46 @@ fun MainPage(
         showCollapsedTitle = showCollapsedTitle,
         endActions = endActions,
     ) { topBarPadding ->
-        LazyColumn(
-            state = listState,
+        PyeritePullToRefreshBox(
+            onRefresh = onPullToRefresh,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(topBarPadding),
         ) {
-            item(key = "page_title") {
-                PageTitle(text = pageTitle)
-            }
-            item(key = "current_character") {
-                MainPageCharacterCard(
-                    currentCharacter = currentCharacter,
-                    onClick = { navController.navigate(CharacterRoute.Root.route) },
-                )
-            }
-            item(key = "character_section_header") {
-                MainPageSectionHeader(title = characterSectionTitle)
-            }
-            item(key = "character_sheet_entry") {
-                MainPageCharacterSheetItem(
-                    skillPointsHint = characterSheetHint,
-                    onClick = {
-                        val characterId = currentCharacter?.characterId ?: return@MainPageCharacterSheetItem
-                        navController.navigate(CharacterSheetRoute.Sheet.create(characterId))
-                    },
-                )
-            }
-            item(key = "data_section_header") {
-                MainPageSectionHeader(title = dataSectionTitle)
-            }
-            item(key = "database_entry") {
-                MainPageDatabaseItem(
-                    onClick = { navController.navigate(DatabaseRoute.Root.route) },
-                )
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                item(key = "page_title") {
+                    PageTitle(text = pageTitle)
+                }
+                item(key = "current_character") {
+                    MainPageCharacterCard(
+                        currentCharacter = currentCharacter,
+                        onClick = { navController.navigate(CharacterRoute.Root.route) },
+                    )
+                }
+                item(key = "character_section_header") {
+                    MainPageSectionHeader(title = characterSectionTitle)
+                }
+                item(key = "character_sheet_entry") {
+                    MainPageCharacterSheetItem(
+                        skillPointsHint = characterSheetHint,
+                        onClick = {
+                            val characterId = currentCharacter?.characterId
+                                ?: return@MainPageCharacterSheetItem
+                            navController.navigate(CharacterSheetRoute.Sheet.create(characterId))
+                        },
+                    )
+                }
+                item(key = "data_section_header") {
+                    MainPageSectionHeader(title = dataSectionTitle)
+                }
+                item(key = "database_entry") {
+                    MainPageDatabaseItem(
+                        onClick = { navController.navigate(DatabaseRoute.Root.route) },
+                    )
+                }
             }
         }
     }
