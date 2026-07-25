@@ -98,7 +98,7 @@ internal class CharacterSheetLoader(
                             dateEpochMs = parseEsiDateMillis(dto.date),
                         )
                     }
-                    .sortedByDescending { it.dateEpochMs ?: Long.MIN_VALUE }
+                    .sortedBy { it.dateEpochMs ?: Long.MAX_VALUE }
 
                 CharacterSheet(
                     characterId = characterId,

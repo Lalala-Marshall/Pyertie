@@ -41,7 +41,6 @@ import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -54,8 +53,6 @@ import com.marshall.pyerite.characterSheetModule.model.CharacterSheetLocation
 import com.marshall.pyerite.characterSheetModule.viewModel.CharacterSheetViewModel
 import com.marshall.pyerite.iconModule.manager.IconManager
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
-import com.marshall.pyerite.ui.golbalComponents.BaseDetailRow
-import com.marshall.pyerite.ui.golbalComponents.BaseDetailRowModel
 import com.marshall.pyerite.ui.golbalComponents.ItemDivider
 import com.marshall.pyerite.ui.golbalComponents.PageTitle
 import com.marshall.pyerite.ui.golbalComponents.PyeritePageScaffold
@@ -74,11 +71,6 @@ private object CharacterSheetDisplayConfig {
     const val CHARACTER_SECURITY_FORMAT = "%.2f"
     const val SYSTEM_SECURITY_FORMAT = "%.1f"
     const val LOCATION_SEGMENT_GAP = " "
-    const val ONLINE_DOT_SIZE_DP = 8
-    const val ONLINE_DOT_GAP_DP = 6
-    const val TYPE_ICON_SIZE_DP = 24
-    const val TYPE_ICON_CORNER_DP = 4
-    const val TYPE_ICON_PADDING_DP = 1
 }
 
 @Composable
@@ -166,12 +158,10 @@ private fun CharacterSheetBasicInfoSection(
         Column {
             CharacterSheetHeaderRow(sheet = sheet)
             ItemDivider()
-            BaseDetailRow(
-                model = BaseDetailRowModel(
-                    iconRes = R.drawable.ic_character_birthday,
-                    label = stringResource(R.string.character_sheet_birthday),
-                    value = sheet.birthdayEpochMs?.let { formatBirthdayValue(it) } ?: placeholder,
-                ),
+            CharacterSheetLabeledValueRow(
+                iconRes = R.drawable.ic_character_birthday,
+                label = stringResource(R.string.character_sheet_birthday),
+                value = sheet.birthdayEpochMs?.let { formatBirthdayValue(it) } ?: placeholder,
                 showDivider = true,
             )
             val security = sheet.securityStatus
@@ -251,6 +241,7 @@ private fun CharacterSheetTimersSection(
             labelHint = lastJumpHint,
             value = fatigueText,
             valueColor = fatigueColor,
+            valueAsTag = true,
             showDivider = false,
         )
     }
@@ -279,12 +270,15 @@ private fun CharacterSheetHeaderRow(sheet: CharacterSheet) {
     val nameSize = dimensionResource(R.dimen.character_main_name_text_size).value.sp
     val orgTextSize = dimensionResource(R.dimen.character_org_text_size).value.sp
     val orgLineHeight = dimensionResource(R.dimen.character_org_icon_size).value.sp
-    val onlineDotSize = CharacterSheetDisplayConfig.ONLINE_DOT_SIZE_DP.dp
+    val onlineDotSize = dimensionResource(R.dimen.character_sheet_online_dot_size)
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 12.dp),
+            .padding(
+                horizontal = dimensionResource(R.dimen.detail_row_horizontal_padding),
+                vertical = dimensionResource(R.dimen.detail_row_vertical_padding),
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CharacterSheetAvatar(
@@ -309,7 +303,11 @@ private fun CharacterSheetHeaderRow(sheet: CharacterSheet) {
                     modifier = Modifier.weight(1f, fill = false),
                 )
                 sheet.isOnline?.let { online ->
-                    Spacer(modifier = Modifier.width(CharacterSheetDisplayConfig.ONLINE_DOT_GAP_DP.dp))
+                    Spacer(
+                        modifier = Modifier.width(
+                            dimensionResource(R.dimen.character_sheet_online_dot_gap),
+                        ),
+                    )
                     Box(
                         modifier = Modifier
                             .size(onlineDotSize)
@@ -370,7 +368,11 @@ private fun CharacterSheetOrgLine(
                 contentDescription = null,
                 modifier = Modifier
                     .size(iconSize)
-                    .clip(RoundedCornerShape(2.dp)),
+                    .clip(
+                        RoundedCornerShape(
+                            dimensionResource(R.dimen.character_org_icon_corner),
+                        ),
+                    ),
                 contentScale = ContentScale.Crop,
             )
             Spacer(modifier = Modifier.width(dimensionResource(R.dimen.character_org_icon_gap)))
@@ -445,16 +447,21 @@ private fun CharacterSheetMedalRow(medal: CharacterMedal) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.Top,
+            .padding(
+                horizontal = dimensionResource(R.dimen.detail_row_horizontal_padding),
+                vertical = dimensionResource(R.dimen.detail_row_vertical_padding),
+            ),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier
+                .size(dimensionResource(R.dimen.character_sheet_row_icon_size))
+                .clip(CharacterSheetRoundedSquare.shape),
             painter = painterResource(R.drawable.ic_character_medal),
             contentDescription = null,
             tint = Color.Unspecified,
         )
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(dimensionResource(R.dimen.detail_row_icon_gap)))
         Column(modifier = Modifier.weight(1f)) {
             if (dateText.isNotEmpty()) {
                 Text(
@@ -488,27 +495,48 @@ private fun CharacterSheetLabeledValueRow(
     valueAnnotated: AnnotatedString? = null,
     labelHint: String = "",
     valueColor: Color = colorResource(R.color.hint_text),
+    valueAsTag: Boolean = false,
     iconFileName: String? = null,
     showDivider: Boolean,
 ) {
+    val hasInlineTag = valueAsTag && value.isNotEmpty()
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 12.dp),
+                .padding(
+                    horizontal = dimensionResource(R.dimen.detail_row_horizontal_padding),
+                    vertical = dimensionResource(R.dimen.detail_row_vertical_padding),
+                ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CharacterSheetLeadingIcon(
                 iconFileName = iconFileName,
                 fallbackRes = iconRes,
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(dimensionResource(R.dimen.detail_row_icon_gap)))
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = label,
-                    color = colorResource(R.color.text_primary),
-                    fontSize = 16.sp,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = label,
+                        color = colorResource(R.color.text_primary),
+                        fontSize = 16.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    if (hasInlineTag) {
+                        Spacer(
+                            modifier = Modifier.width(
+                                dimensionResource(R.dimen.character_sheet_status_tag_gap),
+                            ),
+                        )
+                        CharacterSheetStatusTag(
+                            text = value,
+                            backgroundColor = valueColor,
+                        )
+                    }
+                }
                 if (labelHint.isNotEmpty()) {
                     Text(
                         text = labelHint,
@@ -516,15 +544,46 @@ private fun CharacterSheetLabeledValueRow(
                         fontSize = 12.sp,
                     )
                 }
-            }
-            if (valueAnnotated != null) {
-                Text(text = valueAnnotated, fontSize = 14.sp)
-            } else if (value.isNotEmpty()) {
-                Text(text = value, color = valueColor, fontSize = 14.sp)
+                if (!valueAsTag) {
+                    if (valueAnnotated != null) {
+                        Text(text = valueAnnotated, fontSize = 14.sp)
+                    } else if (value.isNotEmpty()) {
+                        Text(text = value, color = valueColor, fontSize = 14.sp)
+                    }
+                }
             }
         }
         if (showDivider) ItemDivider()
     }
+}
+
+@Composable
+private fun CharacterSheetStatusTag(
+    text: String,
+    backgroundColor: Color,
+) {
+    Text(
+        text = text,
+        color = colorResource(R.color.white),
+        fontSize = dimensionResource(R.dimen.character_sheet_status_tag_text_size).value.sp,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier
+            .clip(
+                RoundedCornerShape(
+                    dimensionResource(R.dimen.character_sheet_status_tag_corner),
+                ),
+            )
+            .background(backgroundColor)
+            .padding(
+                horizontal = dimensionResource(
+                    R.dimen.character_sheet_status_tag_horizontal_padding,
+                ),
+                vertical = dimensionResource(
+                    R.dimen.character_sheet_status_tag_vertical_padding,
+                ),
+            ),
+    )
 }
 
 /**
@@ -538,22 +597,33 @@ private fun CharacterSheetLeadingIcon(
     iconManager: IconManager = koinInject(),
 ) {
     val iconFile = iconFileName?.let { iconManager.getIconFile(it) }
+    val shape = CharacterSheetRoundedSquare.shape
+    val size = dimensionResource(R.dimen.character_sheet_row_icon_size)
     if (iconFile != null) {
-        AsyncImage(
-            model = iconFile,
-            contentDescription = null,
+        Box(
             modifier = Modifier
-                .size(CharacterSheetDisplayConfig.TYPE_ICON_SIZE_DP.dp)
-                .clip(RoundedCornerShape(CharacterSheetDisplayConfig.TYPE_ICON_CORNER_DP.dp))
-                .background(colorResource(R.color.white))
-                .padding(CharacterSheetDisplayConfig.TYPE_ICON_PADDING_DP.dp),
-            contentScale = ContentScale.Fit,
-            placeholder = painterResource(fallbackRes),
-            error = painterResource(fallbackRes),
-        )
+                .size(size)
+                .clip(shape)
+                .background(colorResource(R.color.white)),
+            contentAlignment = Alignment.Center,
+        ) {
+            AsyncImage(
+                model = iconFile,
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(dimensionResource(R.dimen.character_sheet_row_icon_padding))
+                    .clip(shape),
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(fallbackRes),
+                error = painterResource(fallbackRes),
+            )
+        }
     } else {
         Icon(
-            modifier = Modifier.size(CharacterSheetDisplayConfig.TYPE_ICON_SIZE_DP.dp),
+            modifier = Modifier
+                .size(size)
+                .clip(shape),
             painter = painterResource(fallbackRes),
             contentDescription = null,
             tint = Color.Unspecified,

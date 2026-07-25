@@ -5,7 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,6 +20,15 @@ import androidx.compose.ui.unit.Dp
 import coil.compose.AsyncImage
 import com.marshall.pyerite.R
 
+/**
+ * Rounded-square clip shared by character portrait and sheet row icons.
+ * Percent of the shorter side keeps the same look at any size.
+ */
+internal object CharacterSheetRoundedSquare {
+    const val CORNER_PERCENT = 17
+    val shape = RoundedCornerShape(percent = CORNER_PERCENT)
+}
+
 @Composable
 fun CharacterSheetAvatar(
     portraitUrl: String?,
@@ -31,18 +40,19 @@ fun CharacterSheetAvatar(
 ) {
     val badgeSize = dimensionResource(R.dimen.character_badge_size)
     val badgeOffset = dimensionResource(R.dimen.character_badge_offset)
+    val shape = CharacterSheetRoundedSquare.shape
 
     Box(modifier = modifier.size(size)) {
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .clip(CircleShape)
+                .clip(shape)
                 .border(
                     width = dimensionResource(R.dimen.character_avatar_border_width),
                     color = colorResource(R.color.border),
-                    shape = CircleShape,
+                    shape = shape,
                 )
-                .background(colorResource(R.color.main_background), CircleShape),
+                .background(colorResource(R.color.main_background), shape),
             contentAlignment = Alignment.Center,
         ) {
             if (portraitUrl.isNullOrBlank()) {
@@ -93,15 +103,16 @@ private fun CharacterBadgeIcon(
     contentDescription: String,
     modifier: Modifier = Modifier,
 ) {
+    val shape = CharacterSheetRoundedSquare.shape
     Box(
         modifier = modifier
-            .clip(CircleShape)
+            .clip(shape)
             .border(
                 width = dimensionResource(R.dimen.character_avatar_border_width),
                 color = colorResource(R.color.border),
-                shape = CircleShape,
+                shape = shape,
             )
-            .background(colorResource(R.color.character_org_badge_background), CircleShape),
+            .background(colorResource(R.color.character_org_badge_background), shape),
         contentAlignment = Alignment.Center,
     ) {
         AsyncImage(
