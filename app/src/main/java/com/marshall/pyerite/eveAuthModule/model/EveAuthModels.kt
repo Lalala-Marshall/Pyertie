@@ -1,0 +1,118 @@
+package com.marshall.pyerite.eveAuthModule.model
+
+import com.marshall.pyerite.eveAuthModule.sso.EveSsoConfig
+import com.marshall.pyerite.infra.network.JsonScopeListSerializer
+import com.marshall.pyerite.infra.network.JsonStringOrArraySerializer
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+/** Persisted SSO token bundle — auth package only; never expose outside
+ *  [com.marshall.pyerite.eveAuthModule.token.EveTokenManager]. */
+
+@Serializable
+internal data class EveTokenSet(
+    val characterId: Long,
+    val characterName: String,
+    val accessToken: String,
+    val refreshToken: String,
+    val tokenType: String = EveSsoConfig.TOKEN_TYPE_BEARER,
+    val expiresAtEpochMs: Long,
+    val scopes: List<String> = emptyList(),
+) {
+    /**
+     * Parsed once per in-memory instance (not persisted — body property with no backing field
+     * for serialization). [copy] / reload from store creates a new instance and re-parses once.
+     */
+    val grantedScopes: Set<EveSsoScope> by lazy { EveSsoScope.parseGranted(scopes) }
+}
+
+/** Non-secret session identity for restore / UI wiring. */
+internal data class EveStoredSession(
+    val characterId: Long,
+    val characterName: String,
+)
+
+internal fun normalizeTokenType(raw: String?): String =
+    raw?.takeIf { it.isNotBlank() } ?: EveSsoConfig.TOKEN_TYPE_BEARER
+
+internal fun EveTokenSet.authorizationHeader(): String =
+    "${normalizeTokenType(tokenType)} $accessToken"
+
+internal fun EveTokenSet.toStoredSession(): EveStoredSession =
+    EveStoredSession(characterId = characterId, characterName = characterName)
+
+@Serializable
+internal data class EveSsoMetadataDto(
+    @SerialName("authorization_endpoint") val authorizationEndpoint: String,
+    @SerialName("token_endpoint") val tokenEndpoint: String,
+    @SerialName("jwks_uri") val jwksUri: String? = null,
+    @SerialName("revocation_endpoint") val revocationEndpoint: String? = null,
+)
+
+@Serializable
+internal data class EveJWTsDto(
+    val keys: List<EveJwkDto> = emptyList(),
+)
+
+@Serializable
+internal data class EveJwkDto(
+    val kty: String = "",
+    val kid: String = "",
+    val use: String = "",
+    val alg: String = "",
+    val n: String = "",
+    val e: String = "",
+)
+
+@Serializable
+internal data class EveSsoTokenDto(
+    @SerialName("access_token") val accessToken: String,
+    @SerialName("refresh_token") val refreshToken: String,
+    @SerialName("token_type") val tokenType: String = EveSsoConfig.TOKEN_TYPE_BEARER,
+    @SerialName("expires_in") val expiresInSeconds: Long =
+        EveSsoConfig.DEFAULT_ACCESS_TOKEN_EXPIRES_IN_SECONDS,
+    val scope: String = "",
+) {
+    fun toDomain(): EveSsoTokenResponse = EveSsoTokenResponse(
+        accessToken = accessToken,
+        refreshToken = refreshToken,
+        tokenType = normalizeTokenType(tokenType),
+        expiresInSeconds = expiresInSeconds,
+        scopes = scope.split(' ').filter { it.isNotBlank() },
+    )
+}
+
+internal data class EveSsoTokenResponse(
+    val accessToken: String,
+    val refreshToken: String,
+    val tokenType: String,
+    val expiresInSeconds: Long,
+    val scopes: List<String>,
+)
+
+@Serializable
+internal data class EveJwtPayloadDto(
+    val sub: String = "",
+    val name: String = "",
+    val exp: Long = 0L,
+    @Serializable(with = JsonScopeListSerializer::class)
+    val scp: List<String> = emptyList(),
+    @Serializable(with = JsonStringOrArraySerializer::class)
+    val aud: List<String> = emptyList(),
+    val iss: String = "",
+)
+
+internal data class EveJwtClaims(
+    val characterId: Long,
+    val characterName: String,
+    val expiresAtEpochMs: Long,
+    val scopes: List<String>,
+    val audience: List<String>,
+    val issuer: String,
+)
+
+@Serializable
+internal data class EveOAuthErrorDto(
+    val error: String? = null,
+    @SerialName("error_description") val errorDescription: String? = null,
+)

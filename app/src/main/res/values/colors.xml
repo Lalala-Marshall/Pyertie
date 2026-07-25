@@ -45,4 +45,7 @@
     <color name="character_skill_progress_shimmer">#FFFFFF</color>
     <color name="character_delete">#E53935</color>
     <color name="character_org_badge_background">#FFFFFF</color>
+    <color name="character_status_positive">#34A853</color>
+    <color name="character_status_online">#34A853</color>
+    <color name="character_status_offline">#E53935</color>
 </resources>

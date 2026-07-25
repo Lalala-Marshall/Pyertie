@@ -8,7 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.marshall.pyerite.R
-import com.marshall.pyerite.databaseHierarchyModule.DatabaseHierarchyPage
+import com.marshall.pyerite.databaseHierarchyModule.ui.DatabaseHierarchyPage
 import com.marshall.pyerite.databaseHierarchyModule.typeDetailPage.TypeDetailPage
 import com.marshall.pyerite.databaseHierarchyModule.skillLevelUnlockPage.SkillLevelUnlockPage
 import com.marshall.pyerite.databaseHierarchyModule.typeApplicableBlueprintsPage.TypeApplicableBlueprintsPage

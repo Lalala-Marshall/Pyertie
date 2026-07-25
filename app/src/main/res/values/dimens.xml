@@ -103,6 +103,7 @@
     <dimen name="character_badge_offset">2dp</dimen>
     <dimen name="character_avatar_border_width">1dp</dimen>
     <dimen name="character_org_icon_size">16dp</dimen>
+    <dimen name="character_org_icon_corner">2dp</dimen>
     <dimen name="character_org_icon_gap">6dp</dimen>
     <dimen name="character_org_line_spacing">2dp</dimen>
     <dimen name="character_org_text_size">13sp</dimen>
@@ -124,4 +125,15 @@
     <dimen name="character_skill_queue_icon_gap">4dp</dimen>
     <dimen name="character_skill_progress_height">6dp</dimen>
     <dimen name="character_skill_progress_corner_radius">3dp</dimen>
+
+    <!-- Character sheet -->
+    <dimen name="character_sheet_online_dot_size">8dp</dimen>
+    <dimen name="character_sheet_online_dot_gap">6dp</dimen>
+    <dimen name="character_sheet_row_icon_size">48dp</dimen>
+    <dimen name="character_sheet_row_icon_padding">2dp</dimen>
+    <dimen name="character_sheet_status_tag_corner">4dp</dimen>
+    <dimen name="character_sheet_status_tag_horizontal_padding">6dp</dimen>
+    <dimen name="character_sheet_status_tag_vertical_padding">2dp</dimen>
+    <dimen name="character_sheet_status_tag_gap">8dp</dimen>
+    <dimen name="character_sheet_status_tag_text_size">11sp</dimen>
 </resources>

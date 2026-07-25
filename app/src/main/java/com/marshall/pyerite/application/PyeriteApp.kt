@@ -1,15 +1,18 @@
 package com.marshall.pyerite.application
 
 import android.app.Application
-import com.marshall.pyerite.data.appModule
-import com.marshall.pyerite.characterModule.auth.authModule
-import com.marshall.pyerite.data.network.networkModule
-import com.marshall.pyerite.data.sde.BundledSdeUpdater
-import com.marshall.pyerite.data.sde.SdeUpdateController
-import com.marshall.pyerite.data.sde.SdeUpdateLog
-import com.marshall.pyerite.data.sde.sdeModule
-import com.marshall.pyerite.characterModule.viewModel.characterModule
-import com.marshall.pyerite.databaseHierarchyModule.viewModel.databaseHierarchyModule
+import com.marshall.pyerite.infra.appModule
+import com.marshall.pyerite.infra.network.networkModule
+import com.marshall.pyerite.sdeModule.update.BundledSdeUpdater
+import com.marshall.pyerite.sdeModule.update.SdeUpdateController
+import com.marshall.pyerite.sdeModule.update.SdeUpdateLog
+import com.marshall.pyerite.sdeModule.sdeModule
+import com.marshall.pyerite.characterSheetModule.characterSheetModule
+import com.marshall.pyerite.charactersListModule.charactersListModule
+import com.marshall.pyerite.databaseHierarchyModule.databaseHierarchyModule
+import com.marshall.pyerite.esiModule.esiModule
+import com.marshall.pyerite.eveAuthModule.eveAuthModule
+import com.marshall.pyerite.iconModule.iconModule
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -36,10 +39,13 @@ class PyeriteApp : Application() {
             modules(
                 appModule,
                 networkModule,
+                iconModule,
                 sdeModule,
-                authModule,
+                eveAuthModule,
+                esiModule,
                 databaseHierarchyModule,
-                characterModule,
+                charactersListModule,
+                characterSheetModule,
             )
         }
 

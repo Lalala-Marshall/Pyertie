@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.marshall.pyerite.R
-import com.marshall.pyerite.data.icons.IconManager
+import com.marshall.pyerite.iconModule.manager.IconManager
 import org.koin.compose.koinInject
 import java.io.File
 
