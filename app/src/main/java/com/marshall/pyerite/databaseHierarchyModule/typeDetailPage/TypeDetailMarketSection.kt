@@ -1,7 +1,6 @@
 package com.marshall.pyerite.databaseHierarchyModule.typeDetailPage
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -27,6 +25,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import com.marshall.pyerite.R
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
+import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
+import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
 import com.marshall.pyerite.ui.golbalComponents.ItemDivider
 
 /**
@@ -98,45 +98,23 @@ private fun MarketNavRow(
     label: String,
     onClick: () -> Unit,
 ) {
-    val iconSize = dimensionResource(R.dimen.detail_row_icon_size)
-    val iconGap = dimensionResource(R.dimen.detail_row_icon_gap)
-    val rowHorizontalPadding = dimensionResource(R.dimen.detail_row_horizontal_padding)
-    val rowVerticalPadding = dimensionResource(R.dimen.detail_row_vertical_padding)
-    val chevronSize = dimensionResource(R.dimen.detail_row_chevron_size)
-    val labelTextSize = dimensionResource(R.dimen.sub_menu_label_text_size).value.sp
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = rowHorizontalPadding, vertical = rowVerticalPadding),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+    BaseLazyColumnItem(
+        model = BaseLazyColumnItemModel(
+            showLeadingIcon = false,
+            itemName = label,
+            showChevron = true,
+            onClick = onClick,
+        ),
+        showDivider = false,
+        leadingContent = { iconSize ->
             Icon(
                 imageVector = Icons.Filled.Store,
                 contentDescription = null,
                 modifier = Modifier.size(iconSize),
                 tint = colorResource(R.color.text_primary),
             )
-            Spacer(modifier = Modifier.width(iconGap))
-            Text(
-                text = label,
-                modifier = Modifier.weight(1f),
-                color = colorResource(R.color.text_primary),
-                fontSize = labelTextSize,
-            )
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                modifier = Modifier.size(chevronSize),
-                tint = colorResource(R.color.hint_text),
-            )
-        }
-    }
+        },
+    )
 }
 
 @Composable

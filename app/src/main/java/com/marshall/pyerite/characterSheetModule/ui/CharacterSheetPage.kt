@@ -11,12 +11,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -27,34 +25,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
 import com.marshall.pyerite.R
-import com.marshall.pyerite.esiModule.model.EsiDateTimeConfig
-import com.marshall.pyerite.eveAuthModule.sso.EveSsoConfig
 import com.marshall.pyerite.characterSheetModule.model.CharacterMedal
 import com.marshall.pyerite.characterSheetModule.model.CharacterSheet
 import com.marshall.pyerite.characterSheetModule.model.CharacterSheetLocation
 import com.marshall.pyerite.characterSheetModule.viewModel.CharacterSheetViewModel
-import com.marshall.pyerite.iconModule.manager.IconManager
+import com.marshall.pyerite.esiModule.model.EsiDateTimeConfig
+import com.marshall.pyerite.eveAuthModule.sso.EveSsoConfig
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
-import com.marshall.pyerite.ui.golbalComponents.ItemDivider
+import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
+import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemHint
+import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
+import com.marshall.pyerite.ui.golbalComponents.CharacterAvatar
 import com.marshall.pyerite.ui.golbalComponents.PageTitle
+import com.marshall.pyerite.ui.golbalComponents.PyeriteIconShape
 import com.marshall.pyerite.ui.golbalComponents.PyeritePageScaffold
 import com.marshall.pyerite.ui.golbalComponents.PyeritePullToRefreshBox
 import com.marshall.pyerite.ui.golbalComponents.pyeritePullRefreshTopBarAction
@@ -63,7 +56,6 @@ import com.marshall.pyerite.ui.golbalComponents.rememberScrollTitleCollapsed
 import com.marshall.pyerite.util.DurationDisplayFormatter
 import com.marshall.pyerite.util.formatDurationDisplay
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -167,51 +159,201 @@ private fun CharacterSheetBasicInfoSection(
     detailsPending: Boolean,
     placeholder: String,
 ) {
+    val nonePlaceholder = stringResource(R.string.character_org_none_placeholder)
+    val avatarSize = dimensionResource(R.dimen.character_main_avatar_size)
+    val onlineDotSize = dimensionResource(R.dimen.character_sheet_online_dot_size)
+    val security = sheet.securityStatus
+
     BaseContainer(
         title = stringResource(R.string.character_sheet_basic_info),
         useSystemBarsPadding = false,
     ) {
         Column {
-            CharacterSheetHeaderRow(sheet = sheet)
-            ItemDivider()
-            CharacterSheetLabeledValueRow(
-                iconRes = R.drawable.ic_character_birthday,
-                label = stringResource(R.string.character_sheet_birthday),
-                value = sheet.birthdayEpochMs?.let { formatBirthdayValue(it) } ?: placeholder,
+            val isOnline = sheet.isOnline
+            BaseLazyColumnItem(
+                model = BaseLazyColumnItemModel(
+                    itemName = sheet.name,
+                    itemNameBold = true,
+                    itemHints = listOf(
+                        BaseLazyColumnItemHint(
+                            text = orgHintText(
+                                name = sheet.corporationName,
+                                nonePlaceholder = nonePlaceholder,
+                            ),
+                            color = colorResource(R.color.text_primary),
+                            iconUrl = sheet.corporationIconUrl,
+                        ),
+                        BaseLazyColumnItemHint(
+                            text = orgHintText(
+                                name = sheet.allianceName,
+                                nonePlaceholder = nonePlaceholder,
+                            ),
+                            color = colorResource(R.color.text_primary),
+                            iconUrl = sheet.allianceIconUrl,
+                        ),
+                    ),
+                    showChevron = false,
+                    onClick = null,
+                ),
                 showDivider = true,
-            )
-            val security = sheet.securityStatus
-            CharacterSheetLabeledValueRow(
-                iconRes = R.drawable.ic_character_security,
-                label = stringResource(R.string.character_sheet_security_status),
-                value = security?.let {
-                    String.format(
-                        Locale.US,
-                        CharacterSheetDisplayConfig.CHARACTER_SECURITY_FORMAT,
-                        it,
+                leadingContent = { _ ->
+                    CharacterAvatar(
+                        portraitUrl = sheet.portraitUrl,
+                        size = avatarSize,
+                        shape = PyeriteIconShape.shape,
                     )
-                } ?: placeholder,
-                valueColor = if (security != null) {
-                    characterSecurityColor(security)
-                } else {
-                    colorResource(R.color.hint_text)
                 },
+                titleLeadingContent = if (isOnline != null) {
+                    {
+                        Box(
+                            modifier = Modifier
+                                .size(onlineDotSize)
+                                .clip(CircleShape)
+                                .background(
+                                    colorResource(
+                                        if (isOnline) {
+                                            R.color.character_status_online
+                                        } else {
+                                            R.color.character_status_offline
+                                        },
+                                    ),
+                                ),
+                        )
+                    }
+                } else {
+                    null
+                },
+            )
+
+            BaseLazyColumnItem(
+                model = BaseLazyColumnItemModel(
+                    iconRes = R.drawable.ic_character_birthday,
+                    itemName = stringResource(R.string.character_sheet_birthday),
+                    itemHints = listOf(
+                        BaseLazyColumnItemHint(
+                            text = sheet.birthdayEpochMs?.let { formatBirthdayValue(it) }
+                                ?: placeholder,
+                        ),
+                    ),
+                    showChevron = false,
+                    onClick = null,
+                ),
                 showDivider = true,
             )
-            CharacterSheetLocationRow(
+
+            BaseLazyColumnItem(
+                model = BaseLazyColumnItemModel(
+                    iconRes = R.drawable.ic_character_security,
+                    itemName = stringResource(R.string.character_sheet_security_status),
+                    itemHints = listOf(
+                        BaseLazyColumnItemHint(
+                            text = security?.let {
+                                String.format(
+                                    Locale.US,
+                                    CharacterSheetDisplayConfig.CHARACTER_SECURITY_FORMAT,
+                                    it,
+                                )
+                            } ?: placeholder,
+                            color = if (security != null) {
+                                characterSecurityColor(security)
+                            } else {
+                                colorResource(R.color.hint_text)
+                            },
+                        ),
+                    ),
+                    showChevron = false,
+                    onClick = null,
+                ),
+                showDivider = true,
+            )
+
+            CharacterSheetLocationItem(
                 location = sheet.location,
                 placeholder = placeholder,
                 detailsPending = detailsPending,
             )
-            CharacterSheetLabeledValueRow(
-                iconRes = R.drawable.ic_character_ship_placeholder,
-                iconFileName = sheet.shipIconFilename.takeUnless { detailsPending },
-                label = stringResource(R.string.character_sheet_current_ship),
-                value = sheet.shipDisplayName?.takeIf { it.isNotBlank() } ?: placeholder,
+
+            BaseLazyColumnItem(
+                model = BaseLazyColumnItemModel(
+                    iconRes = R.drawable.ic_character_ship_placeholder,
+                    iconFileName = sheet.shipIconFilename.takeUnless { detailsPending },
+                    iconOnLightPlate = true,
+                    itemName = stringResource(R.string.character_sheet_current_ship),
+                    itemHints = listOf(
+                        BaseLazyColumnItemHint(
+                            text = sheet.shipDisplayName?.takeIf { it.isNotBlank() }
+                                ?: placeholder,
+                            color = colorResource(R.color.text_primary),
+                        ),
+                    ),
+                    showChevron = false,
+                    onClick = null,
+                ),
                 showDivider = false,
             )
         }
     }
+}
+
+@Composable
+private fun CharacterSheetLocationItem(
+    location: CharacterSheetLocation?,
+    placeholder: String,
+    detailsPending: Boolean,
+) {
+    if (location == null) {
+        BaseLazyColumnItem(
+            model = BaseLazyColumnItemModel(
+                iconRes = R.drawable.ic_character_location,
+                itemName = stringResource(R.string.character_sheet_current_location),
+                itemHints = listOf(BaseLazyColumnItemHint(text = placeholder)),
+                showChevron = false,
+                onClick = null,
+            ),
+            showDivider = true,
+        )
+        return
+    }
+
+    val securityColor = systemSecurityColor(location.systemSecurityStatus)
+    val placeCore = location.placeName?.takeIf { it.isNotBlank() }?.let { place ->
+        stringResource(
+            R.string.character_sheet_location_with_place,
+            location.systemName,
+            place,
+        )
+    } ?: location.systemName
+
+    BaseLazyColumnItem(
+        model = BaseLazyColumnItemModel(
+            iconRes = R.drawable.ic_character_location,
+            iconFileName = location.placeIconFilename.takeUnless { detailsPending },
+            iconOnLightPlate = true,
+            itemName = stringResource(R.string.character_sheet_current_location),
+            itemHints = listOf(
+                BaseLazyColumnItemHint(
+                    annotatedText = buildAnnotatedString {
+                        withStyle(SpanStyle(color = securityColor)) {
+                            append(
+                                String.format(
+                                    Locale.US,
+                                    CharacterSheetDisplayConfig.SYSTEM_SECURITY_FORMAT,
+                                    location.systemSecurityStatus,
+                                ),
+                            )
+                        }
+                        append(CharacterSheetDisplayConfig.LOCATION_SEGMENT_GAP)
+                        withStyle(SpanStyle(color = colorResource(R.color.text_primary))) {
+                            append(placeCore)
+                        }
+                    },
+                ),
+            ),
+            showChevron = false,
+            onClick = null,
+        ),
+        showDivider = true,
+    )
 }
 
 @Composable
@@ -251,325 +393,76 @@ private fun CharacterSheetTimersSection(
         title = stringResource(R.string.character_sheet_timers),
         useSystemBarsPadding = false,
     ) {
-        CharacterSheetLabeledValueRow(
-            iconRes = R.drawable.ic_character_fatigue,
-            label = stringResource(R.string.character_sheet_jump_fatigue),
-            labelHint = lastJumpHint,
-            value = fatigueText,
-            valueColor = fatigueColor,
-            valueAsTag = true,
+        BaseLazyColumnItem(
+            model = BaseLazyColumnItemModel(
+                iconRes = R.drawable.ic_character_fatigue,
+                itemName = stringResource(R.string.character_sheet_jump_fatigue),
+                itemHints = buildList {
+                    if (lastJumpHint.isNotEmpty()) {
+                        add(
+                            BaseLazyColumnItemHint(
+                                text = lastJumpHint,
+                                color = colorResource(R.color.text_caption),
+                            ),
+                        )
+                    }
+                },
+                showChevron = false,
+                onClick = null,
+            ),
             showDivider = false,
+            titleTrailingContent = {
+                if (fatigueText.isNotEmpty()) {
+                    CharacterSheetStatusTag(
+                        text = fatigueText,
+                        backgroundColor = fatigueColor,
+                    )
+                }
+            },
         )
     }
 }
 
 @Composable
 private fun CharacterSheetMedalsSection(medals: List<CharacterMedal>) {
+    val captionColor = colorResource(R.color.text_caption)
     BaseContainer(
         title = stringResource(R.string.character_sheet_medals),
         useSystemBarsPadding = false,
     ) {
         Column {
             medals.forEachIndexed { index, medal ->
-                CharacterSheetMedalRow(medal = medal)
-                if (index != medals.lastIndex) {
-                    ItemDivider()
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun CharacterSheetHeaderRow(sheet: CharacterSheet) {
-    val avatarSize = dimensionResource(R.dimen.character_main_avatar_size)
-    val nameSize = dimensionResource(R.dimen.character_main_name_text_size).value.sp
-    val orgTextSize = dimensionResource(R.dimen.character_org_text_size).value.sp
-    val orgLineHeight = dimensionResource(R.dimen.character_org_icon_size).value.sp
-    val onlineDotSize = dimensionResource(R.dimen.character_sheet_online_dot_size)
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = dimensionResource(R.dimen.detail_row_horizontal_padding),
-                vertical = dimensionResource(R.dimen.detail_row_vertical_padding),
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        CharacterSheetAvatar(
-            portraitUrl = sheet.portraitUrl,
-            size = avatarSize,
-        )
-        Spacer(modifier = Modifier.width(dimensionResource(R.dimen.character_main_avatar_gap)))
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .height(avatarSize),
-            verticalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = sheet.name,
-                    color = colorResource(R.color.text_primary),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = nameSize,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false),
-                )
-                sheet.isOnline?.let { online ->
-                    Spacer(
-                        modifier = Modifier.width(
-                            dimensionResource(R.dimen.character_sheet_online_dot_gap),
-                        ),
-                    )
-                    Box(
-                        modifier = Modifier
-                            .size(onlineDotSize)
-                            .clip(CircleShape)
-                            .background(
-                                colorResource(
-                                    if (online) {
-                                        R.color.character_status_online
-                                    } else {
-                                        R.color.character_status_offline
-                                    },
-                                ),
-                            ),
-                    )
-                }
-            }
-            CharacterSheetOrgLine(
-                iconUrl = sheet.corporationIconUrl,
-                label = sheet.corporationName,
-                textSize = orgTextSize,
-                lineHeight = orgLineHeight,
-            )
-            CharacterSheetOrgLine(
-                iconUrl = sheet.allianceIconUrl,
-                label = sheet.allianceName,
-                textSize = orgTextSize,
-                lineHeight = orgLineHeight,
-            )
-        }
-    }
-}
-
-@Composable
-private fun CharacterSheetOrgLine(
-    iconUrl: String?,
-    label: String?,
-    textSize: TextUnit,
-    lineHeight: TextUnit,
-) {
-    val hasLabel = !label.isNullOrBlank()
-    if (!hasLabel && iconUrl.isNullOrBlank()) {
-        Text(
-            text = stringResource(R.string.character_org_none_placeholder),
-            color = colorResource(R.color.hint_text),
-            fontSize = textSize,
-            lineHeight = lineHeight,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            style = compactTextStyle(lineHeight),
-        )
-        return
-    }
-    val iconSize = dimensionResource(R.dimen.character_org_icon_size)
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        if (!iconUrl.isNullOrBlank()) {
-            AsyncImage(
-                model = iconUrl,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(iconSize)
-                    .clip(
-                        RoundedCornerShape(
-                            dimensionResource(R.dimen.character_org_icon_corner),
-                        ),
+                val dateText = medal.dateEpochMs?.let { formatDisplayDate(it) }.orEmpty()
+                BaseLazyColumnItem(
+                    model = BaseLazyColumnItemModel(
+                        iconRes = R.drawable.ic_character_medal,
+                        itemName = medal.title,
+                        itemNameBold = true,
+                        itemHints = buildList {
+                            if (dateText.isNotEmpty()) {
+                                add(
+                                    BaseLazyColumnItemHint(
+                                        text = dateText,
+                                        color = captionColor,
+                                    ),
+                                )
+                            }
+                            if (medal.description.isNotBlank()) {
+                                add(
+                                    BaseLazyColumnItemHint(
+                                        text = medal.description,
+                                        color = captionColor,
+                                    ),
+                                )
+                            }
+                        },
+                        showChevron = false,
+                        onClick = null,
                     ),
-                contentScale = ContentScale.Crop,
-            )
-            Spacer(modifier = Modifier.width(dimensionResource(R.dimen.character_org_icon_gap)))
-        }
-        Text(
-            text = if (hasLabel) {
-                label
-            } else {
-                stringResource(R.string.character_org_name_placeholder)
-            },
-            color = colorResource(R.color.text_primary),
-            fontSize = textSize,
-            lineHeight = lineHeight,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            style = compactTextStyle(lineHeight),
-        )
-    }
-}
-
-@Composable
-private fun CharacterSheetLocationRow(
-    location: CharacterSheetLocation?,
-    placeholder: String,
-    detailsPending: Boolean,
-) {
-    if (location == null) {
-        CharacterSheetLabeledValueRow(
-            iconRes = R.drawable.ic_character_location,
-            label = stringResource(R.string.character_sheet_current_location),
-            value = placeholder,
-            showDivider = true,
-        )
-        return
-    }
-
-    val securityColor = systemSecurityColor(location.systemSecurityStatus)
-    val placeCore = location.placeName?.takeIf { it.isNotBlank() }?.let { place ->
-        stringResource(
-            R.string.character_sheet_location_with_place,
-            location.systemName,
-            place,
-        )
-    } ?: location.systemName
-
-    CharacterSheetLabeledValueRow(
-        iconRes = R.drawable.ic_character_location,
-        iconFileName = location.placeIconFilename.takeUnless { detailsPending },
-        label = stringResource(R.string.character_sheet_current_location),
-        valueAnnotated = buildAnnotatedString {
-            withStyle(SpanStyle(color = securityColor)) {
-                append(
-                    String.format(
-                        Locale.US,
-                        CharacterSheetDisplayConfig.SYSTEM_SECURITY_FORMAT,
-                        location.systemSecurityStatus,
-                    ),
-                )
-            }
-            append(CharacterSheetDisplayConfig.LOCATION_SEGMENT_GAP)
-            withStyle(SpanStyle(color = colorResource(R.color.text_primary))) {
-                append(placeCore)
-            }
-        },
-        showDivider = true,
-    )
-}
-
-@Composable
-private fun CharacterSheetMedalRow(medal: CharacterMedal) {
-    val dateText = medal.dateEpochMs?.let { formatDisplayDate(it) }.orEmpty()
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = dimensionResource(R.dimen.detail_row_horizontal_padding),
-                vertical = dimensionResource(R.dimen.detail_row_vertical_padding),
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            modifier = Modifier
-                .size(dimensionResource(R.dimen.character_sheet_row_icon_size))
-                .clip(CharacterSheetRoundedSquare.shape),
-            painter = painterResource(R.drawable.ic_character_medal),
-            contentDescription = null,
-            tint = Color.Unspecified,
-        )
-        Spacer(modifier = Modifier.width(dimensionResource(R.dimen.detail_row_icon_gap)))
-        Column(modifier = Modifier.weight(1f)) {
-            if (dateText.isNotEmpty()) {
-                Text(
-                    text = dateText,
-                    color = colorResource(R.color.text_caption),
-                    fontSize = 12.sp,
-                )
-            }
-            Text(
-                text = medal.title,
-                color = colorResource(R.color.text_primary),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-            )
-            if (medal.description.isNotBlank()) {
-                Text(
-                    text = medal.description,
-                    color = colorResource(R.color.text_caption),
-                    fontSize = 13.sp,
+                    showDivider = index != medals.lastIndex,
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun CharacterSheetLabeledValueRow(
-    iconRes: Int,
-    label: String,
-    value: String = "",
-    valueAnnotated: AnnotatedString? = null,
-    labelHint: String = "",
-    valueColor: Color = colorResource(R.color.hint_text),
-    valueAsTag: Boolean = false,
-    iconFileName: String? = null,
-    showDivider: Boolean,
-) {
-    val hasInlineTag = valueAsTag && value.isNotEmpty()
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = dimensionResource(R.dimen.detail_row_horizontal_padding),
-                    vertical = dimensionResource(R.dimen.detail_row_vertical_padding),
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CharacterSheetLeadingIcon(
-                iconFileName = iconFileName,
-                fallbackRes = iconRes,
-            )
-            Spacer(modifier = Modifier.width(dimensionResource(R.dimen.detail_row_icon_gap)))
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = label,
-                        color = colorResource(R.color.text_primary),
-                        fontSize = 16.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f, fill = false),
-                    )
-                    if (hasInlineTag) {
-                        Spacer(
-                            modifier = Modifier.width(
-                                dimensionResource(R.dimen.character_sheet_status_tag_gap),
-                            ),
-                        )
-                        CharacterSheetStatusTag(
-                            text = value,
-                            backgroundColor = valueColor,
-                        )
-                    }
-                }
-                if (labelHint.isNotEmpty()) {
-                    Text(
-                        text = labelHint,
-                        color = colorResource(R.color.text_caption),
-                        fontSize = 12.sp,
-                    )
-                }
-                if (!valueAsTag) {
-                    if (valueAnnotated != null) {
-                        Text(text = valueAnnotated, fontSize = 14.sp)
-                    } else if (value.isNotEmpty()) {
-                        Text(text = value, color = valueColor, fontSize = 14.sp)
-                    }
-                }
-            }
-        }
-        if (showDivider) ItemDivider()
     }
 }
 
@@ -602,50 +495,10 @@ private fun CharacterSheetStatusTag(
     )
 }
 
-/**
- * Loads a type icon from the local SDE icon pack ([IconManager]) by filename
- * resolved from a remote type id. Falls back to [fallbackRes] when missing.
- */
-@Composable
-private fun CharacterSheetLeadingIcon(
-    iconFileName: String?,
-    fallbackRes: Int,
-    iconManager: IconManager = koinInject(),
-) {
-    val iconFile = iconFileName?.let { iconManager.getIconFile(it) }
-    val shape = CharacterSheetRoundedSquare.shape
-    val size = dimensionResource(R.dimen.character_sheet_row_icon_size)
-    if (iconFile != null) {
-        Box(
-            modifier = Modifier
-                .size(size)
-                .clip(shape)
-                .background(colorResource(R.color.white)),
-            contentAlignment = Alignment.Center,
-        ) {
-            AsyncImage(
-                model = iconFile,
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(dimensionResource(R.dimen.character_sheet_row_icon_padding))
-                    .clip(shape),
-                contentScale = ContentScale.Crop,
-                placeholder = painterResource(fallbackRes),
-                error = painterResource(fallbackRes),
-            )
-        }
-    } else {
-        Icon(
-            modifier = Modifier
-                .size(size)
-                .clip(shape),
-            painter = painterResource(fallbackRes),
-            contentDescription = null,
-            tint = Color.Unspecified,
-        )
-    }
-}
+private fun orgHintText(
+    name: String?,
+    nonePlaceholder: String,
+): String = name?.takeIf { it.isNotBlank() } ?: nonePlaceholder
 
 @Composable
 private fun formatBirthdayValue(birthdayEpochMs: Long): String {
@@ -688,11 +541,3 @@ private fun formatEpoch(epochMs: Long, pattern: String): String {
         timeZone = TimeZone.getDefault()
     }.format(Date(epochMs))
 }
-
-private fun compactTextStyle(lineHeight: TextUnit): TextStyle = TextStyle(
-    lineHeight = lineHeight,
-    lineHeightStyle = LineHeightStyle(
-        alignment = LineHeightStyle.Alignment.Center,
-        trim = LineHeightStyle.Trim.Both,
-    ),
-)

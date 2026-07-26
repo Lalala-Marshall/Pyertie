@@ -4,16 +4,26 @@
     <dimen name="detail_row_icon_size">24dp</dimen>
     <!-- BaseLazyColumnItem leading icon (main / hierarchy lists) -->
     <dimen name="base_lazy_column_item_icon_size">32dp</dimen>
+    <dimen name="base_lazy_column_item_icon_plate_padding">2dp</dimen>
+    <!-- Hint-line leading adornment (corp logo / online dot column) -->
+    <dimen name="base_lazy_column_item_hint_icon_size">16dp</dimen>
+    <dimen name="base_lazy_column_item_hint_icon_gap">6dp</dimen>
     <dimen name="detail_row_icon_gap">8dp</dimen>
     <dimen name="detail_row_horizontal_padding">12dp</dimen>
-    <dimen name="detail_row_vertical_padding">12dp</dimen>
+    <!-- Title-only row (text vertical padding) -->
+    <dimen name="detail_row_vertical_padding_single_line">12dp</dimen>
+    <!-- Two or more text lines (text vertical padding) -->
+    <dimen name="detail_row_vertical_padding_multi_line">4dp</dimen>
+    <!-- Leading icon vertical padding -->
+    <dimen name="detail_row_icon_vertical_padding_single_line">8dp</dimen>
+    <dimen name="detail_row_icon_vertical_padding">4dp</dimen>
+    <dimen name="detail_row_vertical_padding">4dp</dimen>
     <dimen name="detail_row_chevron_size">20dp</dimen>
     <dimen name="detail_row_trailing_gap">4dp</dimen>
     <dimen name="detail_row_title_value_gap">24dp</dimen>
     <dimen name="detail_row_label_subtitle_spacing">2dp</dimen>
     <dimen name="detail_row_label_subtitle_text_size">12sp</dimen>
     <dimen name="detail_row_label_subtitle_line_height">16sp</dimen>
-    <dimen name="detail_divider_start_padding">12dp</dimen>
     <dimen name="detail_divider_thickness">0.5dp</dimen>
 
     <!-- Submenu row (nested under an expandable header) -->
@@ -105,7 +115,6 @@
     <dimen name="character_badge_offset">2dp</dimen>
     <dimen name="character_avatar_border_width">1dp</dimen>
     <dimen name="character_org_icon_size">16dp</dimen>
-    <dimen name="character_org_icon_corner">2dp</dimen>
     <dimen name="character_org_icon_gap">6dp</dimen>
     <dimen name="character_org_line_spacing">2dp</dimen>
     <dimen name="character_org_text_size">13sp</dimen>
@@ -131,8 +140,6 @@
     <!-- Character sheet -->
     <dimen name="character_sheet_online_dot_size">8dp</dimen>
     <dimen name="character_sheet_online_dot_gap">6dp</dimen>
-    <dimen name="character_sheet_row_icon_size">48dp</dimen>
-    <dimen name="character_sheet_row_icon_padding">2dp</dimen>
     <dimen name="character_sheet_status_tag_corner">4dp</dimen>
     <dimen name="character_sheet_status_tag_horizontal_padding">6dp</dimen>
     <dimen name="character_sheet_status_tag_vertical_padding">2dp</dimen>

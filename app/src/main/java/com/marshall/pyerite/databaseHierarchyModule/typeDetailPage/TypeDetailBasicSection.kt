@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
@@ -34,6 +35,7 @@ import com.marshall.pyerite.sdeModule.room.dogma.TypeTraitDetail
 import com.marshall.pyerite.databaseHierarchyModule.util.formatTraitBonusAnnotated
 import com.marshall.pyerite.databaseHierarchyModule.util.formatTypeDescriptionAnnotated
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
+import com.marshall.pyerite.ui.golbalComponents.PyeriteIconShape
 import org.koin.compose.koinInject
 
 private data class TraitBlocks(
@@ -85,7 +87,9 @@ fun TypeSummarySection(
         Column(modifier = Modifier.padding(cardPadding)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    modifier = Modifier.size(summaryIconSize),
+                    modifier = Modifier
+                        .size(summaryIconSize)
+                        .clip(PyeriteIconShape.shape),
                     painter = entity.iconFilename?.let {
                         rememberAsyncImagePainter(iconManager.getIconFile(it))
                     } ?: painterResource(R.drawable.ic_database),

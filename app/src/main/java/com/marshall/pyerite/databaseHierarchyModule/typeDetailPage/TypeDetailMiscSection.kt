@@ -1,28 +1,11 @@
 package com.marshall.pyerite.databaseHierarchyModule.typeDetailPage
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.sp
-import coil.compose.rememberAsyncImagePainter
 import com.marshall.pyerite.R
 import com.marshall.pyerite.sdeModule.room.dogma.TypeAttributeDetail
 import com.marshall.pyerite.sdeModule.room.type.TypeCompatibleGroupDetail
@@ -35,7 +18,8 @@ import com.marshall.pyerite.ui.golbalComponents.BaseContainer
 import com.marshall.pyerite.ui.golbalComponents.BaseDetailRow
 import com.marshall.pyerite.ui.golbalComponents.BaseDetailRowModel
 import com.marshall.pyerite.ui.golbalComponents.BaseDetailRowModel.Companion.formatMappedValue
-import com.marshall.pyerite.ui.golbalComponents.ItemDivider
+import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
+import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
 import kotlinx.coroutines.flow.flowOf
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -153,59 +137,17 @@ private fun TypeDetailMiscCompatibleGroupRow(
         iconManager.getIconFile(fileName) != null
     }
 
-    val iconSize = dimensionResource(R.dimen.detail_row_icon_size)
-    val iconGap = dimensionResource(R.dimen.detail_row_icon_gap)
-    val rowHorizontalPadding = dimensionResource(R.dimen.detail_row_horizontal_padding)
-    val rowVerticalPadding = dimensionResource(R.dimen.detail_row_vertical_padding)
-    val chevronSize = dimensionResource(R.dimen.detail_row_chevron_size)
-    val trailingGap = dimensionResource(R.dimen.detail_row_trailing_gap)
-    val labelTextSize = dimensionResource(R.dimen.sub_menu_label_text_size).value.sp
-    val valueTextSize = dimensionResource(R.dimen.sub_menu_value_text_size).value.sp
-
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = rowHorizontalPadding, vertical = rowVerticalPadding),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            val iconFile = iconFileName?.let { iconManager.getIconFile(it) }
-            if (iconFile != null) {
-                Icon(
-                    modifier = Modifier.size(iconSize),
-                    painter = rememberAsyncImagePainter(iconFile),
-                    contentDescription = null,
-                    tint = Color.Unspecified,
-                )
-
-                Spacer(modifier = Modifier.width(iconGap))
-            }
-
-            Text(
-                modifier = Modifier.weight(1f),
-                text = label,
-                color = colorResource(R.color.text_primary),
-                fontSize = labelTextSize,
-            )
-
-            Text(
-                text = groupDisplayName,
-                color = colorResource(R.color.hint_text),
-                fontSize = valueTextSize,
-            )
-
-            Spacer(modifier = Modifier.width(trailingGap))
-
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                modifier = Modifier.size(chevronSize),
-                tint = colorResource(R.color.hint_text),
-            )
-        }
-
-        if (showDivider) ItemDivider()
-    }
+    BaseLazyColumnItem(
+        model = BaseLazyColumnItemModel(
+            iconFileName = iconFileName,
+            showLeadingIcon = iconFileName != null,
+            itemName = label,
+            trailingValue = groupDisplayName,
+            showChevron = true,
+            onClick = null,
+        ),
+        showDivider = showDivider,
+    )
 }
 
 internal fun hasCompatibleGroupAttributes(attributes: List<TypeAttributeDetail>): Boolean =

@@ -31,11 +31,12 @@ import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.marshall.pyerite.R
 import com.marshall.pyerite.charactersListModule.model.CharacterSummary
+import com.marshall.pyerite.ui.golbalComponents.CharacterAvatar
+import com.marshall.pyerite.ui.golbalComponents.PyeriteIconShape
 
 @Composable
 fun MainPageCharacterCard(
@@ -215,7 +216,7 @@ private fun CharacterOrgIcon(iconUrl: String?) {
             contentDescription = null,
             modifier = Modifier
                 .size(iconSize)
-                .clip(RoundedCornerShape(2.dp)),
+                .clip(PyeriteIconShape.shape),
             contentScale = ContentScale.Crop,
         )
     }

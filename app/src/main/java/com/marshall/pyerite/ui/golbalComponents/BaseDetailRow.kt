@@ -1,98 +1,39 @@
 package com.marshall.pyerite.ui.golbalComponents
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import coil.compose.rememberAsyncImagePainter
 import com.marshall.pyerite.R
-import com.marshall.pyerite.iconModule.manager.IconManager
-import org.koin.compose.koinInject
 import java.io.File
 
+/**
+ * Label + trailing value row (no chevron). Thin wrapper over [BaseLazyColumnItem]
+ * so type-detail dogma sections share the same padding / divider rules.
+ */
 @Composable
 fun BaseDetailRow(
     model: BaseDetailRowModel,
     showDivider: Boolean,
     modifier: Modifier = Modifier,
-    iconManager: IconManager = koinInject()
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val shouldShowIcon = model.iconFileName != null ||
-                model.iconFile != null ||
-                model.iconRes != R.drawable.ic_database
-            if (shouldShowIcon) {
-                val resolvedFile = model.iconFile
-                    ?: model.iconFileName?.let { iconManager.getIconFile(it) }
-                val painter = when {
-                    resolvedFile != null -> rememberAsyncImagePainter(resolvedFile)
-                    else -> painterResource(model.iconRes)
-                }
-                val useLightPlate = model.iconOnLightPlate && resolvedFile != null
-                Icon(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .then(
-                            if (useLightPlate) {
-                                Modifier
-                                    .clip(RoundedCornerShape(DetailRowIconPlateCorner))
-                                    .background(colorResource(R.color.white))
-                                    .padding(DetailRowIconPlatePadding)
-                            } else {
-                                Modifier
-                            },
-                        ),
-                    painter = painter,
-                    contentDescription = null,
-                    tint = Color.Unspecified
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-            }
-
-            Text(
-                modifier = Modifier.weight(1f),
-                text = model.label,
-                color = colorResource(R.color.text_primary),
-            )
-
-            Text(
-                text = model.value,
-                color = colorResource(R.color.hint_text),
-                fontSize = 14.sp
-            )
-        }
-
-        if (showDivider) ItemDivider()
-    }
+    val showLeadingIcon = model.iconFileName != null ||
+        model.iconFile != null ||
+        model.iconRes != R.drawable.ic_database
+    BaseLazyColumnItem(
+        model = BaseLazyColumnItemModel(
+            iconRes = model.iconRes,
+            iconFile = model.iconFile,
+            iconFileName = model.iconFileName,
+            iconOnLightPlate = model.iconOnLightPlate,
+            showLeadingIcon = showLeadingIcon,
+            itemName = model.label,
+            trailingValue = model.value,
+            showChevron = false,
+            onClick = null,
+        ),
+        showDivider = showDivider,
+        modifier = modifier,
+    )
 }
-
-private val DetailRowIconPlateCorner = 4.dp
-private val DetailRowIconPlatePadding = 1.dp
 
 data class BaseDetailRowModel(
     val iconRes: Int = R.drawable.ic_database,
@@ -109,7 +50,6 @@ data class BaseDetailRowModel(
         fun formatMappedValue(rawValue: Double?, unitName: String?): String {
             val value = rawValue ?: 0.0
             if (unitName != null && unitName.contains("=")) {
-                // Handle "1=xxx 2=yyy 3=zzz" mapping
                 val mapping = unitName.split(Regex("\\s+"))
                     .mapNotNull { it.trim().split("=").takeIf { parts -> parts.size == 2 } }
                     .associate { it[0].trim() to it[1].trim() }

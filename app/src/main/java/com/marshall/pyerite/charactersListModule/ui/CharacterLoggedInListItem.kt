@@ -64,6 +64,7 @@ import com.marshall.pyerite.charactersListModule.model.LoggedInCharacter
 import com.marshall.pyerite.charactersListModule.model.SkillQueueDisplayConfig
 import com.marshall.pyerite.charactersListModule.model.SkillQueueProgress
 import com.marshall.pyerite.charactersListModule.model.SkillQueueTrainingState
+import com.marshall.pyerite.ui.golbalComponents.CharacterAvatar
 import com.marshall.pyerite.ui.golbalComponents.ItemDivider
 import com.marshall.pyerite.util.formatDurationDisplay
 import java.util.Locale
