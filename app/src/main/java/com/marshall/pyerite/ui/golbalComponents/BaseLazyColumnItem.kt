@@ -31,7 +31,7 @@ fun BaseLazyColumnItem(
     model: BaseLazyColumnItemModel,
     showDivider: Boolean,
 ) {
-    val iconSize = dimensionResource(R.dimen.detail_row_icon_size)
+    val iconSize = dimensionResource(R.dimen.base_lazy_column_item_icon_size)
     val iconGap = dimensionResource(R.dimen.detail_row_icon_gap)
     val rowHorizontalPadding = dimensionResource(R.dimen.detail_row_horizontal_padding)
     val rowVerticalPadding = dimensionResource(R.dimen.detail_row_vertical_padding)

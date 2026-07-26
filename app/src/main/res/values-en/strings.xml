@@ -7,6 +7,9 @@
     <string name="character">Character</string>
     <string name="character_sheet">Character Sheet</string>
     <string name="character_sheet_skill_points">%1$s SP</string>
+    <string name="character_clone_status">Clone Status</string>
+    <string name="character_clone_jump_now">Now</string>
+    <string name="character_clone_jump_hint">Next jump: %1$s</string>
     <string name="group">Group</string>
     <string name="type">Type</string>
     <string name="published">Published</string>

@@ -2,6 +2,8 @@
 <resources>
     <!-- Shared detail / list row layout -->
     <dimen name="detail_row_icon_size">24dp</dimen>
+    <!-- BaseLazyColumnItem leading icon (main / hierarchy lists) -->
+    <dimen name="base_lazy_column_item_icon_size">32dp</dimen>
     <dimen name="detail_row_icon_gap">8dp</dimen>
     <dimen name="detail_row_horizontal_padding">12dp</dimen>
     <dimen name="detail_row_vertical_padding">12dp</dimen>

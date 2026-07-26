@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
+import com.marshall.pyerite.characterClonesModule.ui.MainPageCloneStatusItem
+import com.marshall.pyerite.characterClonesModule.viewModel.CharacterClonesViewModel
 import com.marshall.pyerite.characterSheetModule.navHost.CharacterSheetRoute
 import com.marshall.pyerite.characterSheetModule.ui.MainPageCharacterSheetItem
 import com.marshall.pyerite.charactersListModule.navHost.CharacterRoute
@@ -53,22 +55,30 @@ fun MainPage(
     navController: NavController,
     sdeUpdateViewModel: SdeUpdateViewModel = koinViewModel(),
     characterViewModel: CharacterViewModel = koinViewModel(),
+    characterClonesViewModel: CharacterClonesViewModel = koinViewModel(),
 ) {
     val uiState by sdeUpdateViewModel.uiState.collectAsState()
     val currentCharacter by characterViewModel.currentCharacter.collectAsState()
     val loggedInCharacters by characterViewModel.loggedInCharacters.collectAsState()
     val isCharacterRefreshing by characterViewModel.isRefreshing.collectAsState()
+    val isClonesRefreshing by characterClonesViewModel.isRefreshing.collectAsState()
     val isUpdateCheckInFlight by sdeUpdateViewModel.isUpdateCheckInFlight.collectAsState()
-    val isRefreshing = isCharacterRefreshing || isUpdateCheckInFlight
+    val isRefreshing = isCharacterRefreshing || isClonesRefreshing || isUpdateCheckInFlight
     val refreshFailed by characterViewModel.refreshFailed.collectAsState()
     val listState = rememberLazyListState()
     val showCollapsedTitle = rememberLazyListTitleCollapsed(listState)
+    val nextCloneJumpEpochMs by characterClonesViewModel.nextCloneJumpEpochMs.collectAsState()
 
-    val onPullToRefresh = remember(characterViewModel, sdeUpdateViewModel) {
+    val onPullToRefresh = remember(characterViewModel, characterClonesViewModel, sdeUpdateViewModel) {
         {
             characterViewModel.refreshLoggedInCharacters()
+            characterClonesViewModel.refresh()
             sdeUpdateViewModel.refreshUpdateCheck()
         }
+    }
+
+    LaunchedEffect(currentCharacter?.characterId) {
+        characterClonesViewModel.setCharacterId(currentCharacter?.characterId)
     }
 
     val currentTotalSp = remember(currentCharacter?.characterId, loggedInCharacters) {
@@ -149,15 +159,23 @@ fun MainPage(
                 item(key = "character_section_header") {
                     MainPageSectionHeader(title = characterSectionTitle)
                 }
-                item(key = "character_sheet_entry") {
-                    MainPageCharacterSheetItem(
-                        skillPointsHint = characterSheetHint,
-                        onClick = {
-                            val characterId = currentCharacter?.characterId
-                                ?: return@MainPageCharacterSheetItem
-                            navController.navigate(CharacterSheetRoute.Sheet.create(characterId))
-                        },
-                    )
+                item(key = "character_section_entries") {
+                    MainPageSectionCard(
+                        bottomSpacing = dimensionResource(R.dimen.character_main_card_bottom_spacing),
+                    ) {
+                        MainPageCharacterSheetItem(
+                            skillPointsHint = characterSheetHint,
+                            showDivider = true,
+                            onClick = {
+                                val characterId = currentCharacter?.characterId
+                                    ?: return@MainPageCharacterSheetItem
+                                navController.navigate(CharacterSheetRoute.Sheet.create(characterId))
+                            },
+                        )
+                        MainPageCloneStatusItem(
+                            nextCloneJumpEpochMs = nextCloneJumpEpochMs,
+                        )
+                    }
                 }
                 item(key = "data_section_header") {
                     MainPageSectionHeader(title = dataSectionTitle)

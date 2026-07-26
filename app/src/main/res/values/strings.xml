@@ -8,6 +8,9 @@
     <string name="character">人物</string>
     <string name="character_sheet">人物表单</string>
     <string name="character_sheet_skill_points">%1$s SP</string>
+    <string name="character_clone_status">克隆体状态</string>
+    <string name="character_clone_jump_now">现在</string>
+    <string name="character_clone_jump_hint">下次跳跃: %1$s</string>
     <string name="group">集合</string>
     <string name="type">类型</string>
     <string name="published">已发布</string>

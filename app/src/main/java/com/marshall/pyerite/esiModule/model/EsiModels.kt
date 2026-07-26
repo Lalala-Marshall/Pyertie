@@ -22,6 +22,18 @@ internal data class EsiOrganizationDto(
 internal data class EsiCharacterSkillsDto(
     @SerialName("total_sp") val totalSp: Long = 0L,
     @SerialName("unallocated_sp") val unallocatedSp: Long = 0L,
+    val skills: List<EsiCharacterSkillDto> = emptyList(),
+)
+
+@Serializable
+internal data class EsiCharacterSkillDto(
+    @SerialName("skill_id") val skillId: Int,
+    @SerialName("active_skill_level") val activeSkillLevel: Int = 0,
+)
+
+@Serializable
+internal data class EsiCharacterClonesDto(
+    @SerialName("last_clone_jump_date") val lastCloneJumpDate: String? = null,
 )
 
 @Serializable
