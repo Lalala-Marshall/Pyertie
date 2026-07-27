@@ -15,6 +15,8 @@ import kotlinx.coroutines.launch
  * Shared by main-page clone hint and the clones detail page.
  * - Detail route: [NAV_ARG_CHARACTER_ID] from [SavedStateHandle]
  * - Main page: call [setCharacterId] when selection changes
+ *
+ * Shows disk/memory cache immediately (like character-sheet SP), then refreshes from ESI.
  */
 class CharacterClonesViewModel(
     savedStateHandle: SavedStateHandle,
@@ -31,8 +33,12 @@ class CharacterClonesViewModel(
 
     init {
         val characterId = routeCharacterId
-        if (characterId != null && !_uiState.value.detailsReady) {
-            load(characterId, forceRefresh = false)
+        if (characterId != null) {
+            // Cache already applied in [initialUiState]; always revalidate from ESI.
+            load(
+                characterId = characterId,
+                indicateLoading = !_uiState.value.detailsReady,
+            )
         }
     }
 
@@ -51,13 +57,17 @@ class CharacterClonesViewModel(
             characterId = characterId,
             cached = repository.cachedStatus(characterId),
         )
-        load(characterId, forceRefresh = false)
+        // Revalidate after painting cache; keep spinner off when cache already shown.
+        load(
+            characterId = characterId,
+            indicateLoading = !_uiState.value.detailsReady,
+        )
     }
 
     fun refresh() {
         val characterId = trackedCharacterId ?: return
         if (_uiState.value.isLoading) return
-        load(characterId, forceRefresh = true)
+        load(characterId, indicateLoading = true)
     }
 
     private fun initialUiState(): CharacterClonesUiState {
@@ -68,12 +78,21 @@ class CharacterClonesViewModel(
         )
     }
 
-    private fun load(characterId: Long, forceRefresh: Boolean) {
+    private fun load(
+        characterId: Long,
+        indicateLoading: Boolean,
+    ) {
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, loadFailed = false) }
+            val hadCachedDetails = _uiState.value.detailsReady
+            _uiState.update {
+                it.copy(
+                    isLoading = indicateLoading,
+                    loadFailed = false,
+                )
+            }
             val result = runCatching {
-                repository.loadStatus(characterId, forceRefresh = forceRefresh)
+                repository.loadStatus(characterId)
             }
             if (trackedCharacterId != characterId) return@launch
             _uiState.update { current ->
@@ -87,7 +106,10 @@ class CharacterClonesViewModel(
                         )
                     },
                     onFailure = {
-                        current.copy(isLoading = false, loadFailed = true)
+                        current.copy(
+                            isLoading = false,
+                            loadFailed = !hadCachedDetails,
+                        )
                     },
                 )
             }
@@ -103,7 +125,7 @@ data class CharacterClonesUiState(
     val status: CharacterCloneStatus,
     val isLoading: Boolean,
     val loadFailed: Boolean,
-    /** True after at least one successful clones ESI load (or cache hit). */
+    /** True after at least one successful clones ESI load (or disk/memory cache hit). */
     val detailsReady: Boolean,
 ) {
     companion object {
