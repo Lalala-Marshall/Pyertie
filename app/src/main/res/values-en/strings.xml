@@ -23,6 +23,7 @@
     <string name="character_clone_home_location">Home Station</string>
     <string name="character_clone_jump_clones">Jump Clones</string>
     <string name="character_clone_jump_clones_empty">No jump clones</string>
+    <string name="character_clone_location_summary">%1$d clones · %2$d implants</string>
     <string name="character_clone_unnamed">Unnamed Clone</string>
     <string name="character_clone_implants_count">Implants: %1$d</string>
     <string name="character_clone_load_failed">Failed to load</string>

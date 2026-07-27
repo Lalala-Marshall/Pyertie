@@ -26,7 +26,7 @@ interface MapDao {
 
     @Query(
         """
-        SELECT stationID, stationTypeID, stationName
+        SELECT stationID, stationTypeID, stationName, solarSystemID
         FROM stations
         WHERE stationID = :stationId
         LIMIT 1

@@ -5,7 +5,7 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.marshall.pyerite.characterClonesModule.model.ActiveImplantInfo
 import com.marshall.pyerite.characterClonesModule.model.CharacterCloneStatus
-import com.marshall.pyerite.characterClonesModule.model.JumpCloneInfo
+import com.marshall.pyerite.characterClonesModule.model.JumpCloneLocationGroup
 import com.marshall.pyerite.infra.network.PyeriteJson
 import kotlinx.serialization.Serializable
 
@@ -48,7 +48,7 @@ private data class CachedCharacterCloneStatus(
     val homeLocationName: String? = null,
     val homeLocationIconFilename: String? = null,
     val activeImplants: List<CachedActiveImplant> = emptyList(),
-    val jumpClones: List<CachedJumpClone> = emptyList(),
+    val jumpCloneLocations: List<CachedJumpCloneLocation> = emptyList(),
 ) {
     fun toModel(): CharacterCloneStatus = CharacterCloneStatus(
         characterId = characterId,
@@ -58,7 +58,7 @@ private data class CachedCharacterCloneStatus(
         homeLocationName = homeLocationName,
         homeLocationIconFilename = homeLocationIconFilename,
         activeImplants = activeImplants.map { it.toModel() },
-        jumpClones = jumpClones.map { it.toModel() },
+        jumpCloneLocations = jumpCloneLocations.map { it.toModel() },
     )
 
     companion object {
@@ -71,7 +71,7 @@ private data class CachedCharacterCloneStatus(
                 homeLocationName = status.homeLocationName,
                 homeLocationIconFilename = status.homeLocationIconFilename,
                 activeImplants = status.activeImplants.map(CachedActiveImplant::from),
-                jumpClones = status.jumpClones.map(CachedJumpClone::from),
+                jumpCloneLocations = status.jumpCloneLocations.map(CachedJumpCloneLocation::from),
             )
     }
 }
@@ -104,25 +104,37 @@ private data class CachedActiveImplant(
 }
 
 @Serializable
-private data class CachedJumpClone(
-    val jumpCloneId: Int,
-    val name: String? = null,
+private data class CachedJumpCloneLocation(
+    val locationId: Long,
+    val locationType: String,
     val locationName: String? = null,
+    val systemSecurityStatus: Double? = null,
+    val iconFilename: String? = null,
+    val cloneCount: Int = 0,
     val implantCount: Int = 0,
+    val jumpCloneIds: List<Int> = emptyList(),
 ) {
-    fun toModel(): JumpCloneInfo = JumpCloneInfo(
-        jumpCloneId = jumpCloneId,
-        name = name,
+    fun toModel(): JumpCloneLocationGroup = JumpCloneLocationGroup(
+        locationId = locationId,
+        locationType = locationType,
         locationName = locationName,
+        systemSecurityStatus = systemSecurityStatus,
+        iconFilename = iconFilename,
+        cloneCount = cloneCount,
         implantCount = implantCount,
+        jumpCloneIds = jumpCloneIds,
     )
 
     companion object {
-        fun from(clone: JumpCloneInfo): CachedJumpClone = CachedJumpClone(
-            jumpCloneId = clone.jumpCloneId,
-            name = clone.name,
-            locationName = clone.locationName,
-            implantCount = clone.implantCount,
+        fun from(group: JumpCloneLocationGroup): CachedJumpCloneLocation = CachedJumpCloneLocation(
+            locationId = group.locationId,
+            locationType = group.locationType,
+            locationName = group.locationName,
+            systemSecurityStatus = group.systemSecurityStatus,
+            iconFilename = group.iconFilename,
+            cloneCount = group.cloneCount,
+            implantCount = group.implantCount,
+            jumpCloneIds = group.jumpCloneIds,
         )
     }
 }

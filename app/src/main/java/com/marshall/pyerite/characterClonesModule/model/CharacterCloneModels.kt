@@ -58,7 +58,8 @@ data class CharacterCloneStatus(
     val homeLocationName: String? = null,
     val homeLocationIconFilename: String? = null,
     val activeImplants: List<ActiveImplantInfo> = emptyList(),
-    val jumpClones: List<JumpCloneInfo> = emptyList(),
+    /** Jump clones grouped by station / structure (or solar system). */
+    val jumpCloneLocations: List<JumpCloneLocationGroup> = emptyList(),
 ) {
     companion object {
         fun empty(characterId: Long): CharacterCloneStatus = CharacterCloneStatus(
@@ -76,9 +77,14 @@ data class ActiveImplantInfo(
     val iconFilename: String?,
 ) : LocalizableName
 
-data class JumpCloneInfo(
-    val jumpCloneId: Int,
-    val name: String?,
+/** One row per building (or system) that hosts one or more jump clones. */
+data class JumpCloneLocationGroup(
+    val locationId: Long,
+    val locationType: String,
     val locationName: String?,
+    val systemSecurityStatus: Double?,
+    val iconFilename: String?,
+    val cloneCount: Int,
     val implantCount: Int,
+    val jumpCloneIds: List<Int> = emptyList(),
 )

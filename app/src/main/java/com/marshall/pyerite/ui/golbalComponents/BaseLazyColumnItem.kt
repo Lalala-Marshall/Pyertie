@@ -57,7 +57,9 @@ data class BaseLazyColumnItemHint(
 /**
  * Shared list / detail row. Variants via flags:
  * - title-only vs hints (text vertical padding 12 / 4)
- * - icon vertical padding 8 / 4; icon size always fits the text block (adaptive)
+ * - icon vertical padding 8 / 4; icon size from content **line count**
+ *   (1 title + N hints), not measured wrap height
+ * - title / hint text wrap within the text column
  * - optional leading icon, trailing value, chevron (right or expanded-down)
  * - colors / bold / indent / custom leading & title slots
  */
@@ -79,6 +81,8 @@ data class BaseLazyColumnItemModel(
     /** Extra start indent before the icon (nested submenu). */
     val leadingIndent: Boolean = false,
     val itemName: String,
+    /** When set, drawn instead of [itemName] (e.g. mixed-color security + place name). */
+    val itemNameAnnotated: AnnotatedString? = null,
     val itemNameColor: Color? = null,
     val itemNameBold: Boolean = false,
     /** Prefer this over [itemHint] when multiple lines or custom colors are needed. */
@@ -131,8 +135,9 @@ fun BaseLazyColumnItem(
             R.dimen.detail_row_icon_vertical_padding_single_line
         },
     )
+    val contentLineCount = BaseLazyColumnItemLayout.TITLE_LINE_COUNT + hints.size
     val iconSize = model.iconSize
-        ?: baseLazyColumnItemAdaptiveIconSize(hintCount = hints.size)
+        ?: baseLazyColumnItemAdaptiveIconSize(contentLineCount = contentLineCount)
     val iconGap = dimensionResource(R.dimen.detail_row_icon_gap)
     val rowHorizontalPadding = dimensionResource(R.dimen.detail_row_horizontal_padding)
     val leadingIndentWidth = dimensionResource(R.dimen.sub_menu_leading_indent)
@@ -202,7 +207,7 @@ fun BaseLazyColumnItem(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(hintSpacing),
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(verticalAlignment = Alignment.Top) {
                         if (showHintLeadingColumn) {
                             Box(
                                 modifier = Modifier.size(hintIconSize),
@@ -212,27 +217,40 @@ fun BaseLazyColumnItem(
                             }
                             Spacer(modifier = Modifier.width(hintIconGap))
                         }
-                        Text(
-                            text = model.itemName,
-                            color = titleColor,
-                            fontWeight = if (model.itemNameBold) {
-                                FontWeight.Bold
-                            } else {
-                                FontWeight.Normal
-                            },
-                            fontSize = titleTextSize,
-                            lineHeight = titleLineHeight,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false),
-                        )
+                        val nameAnnotated = model.itemNameAnnotated
+                        if (nameAnnotated != null) {
+                            Text(
+                                text = nameAnnotated,
+                                fontWeight = if (model.itemNameBold) {
+                                    FontWeight.Bold
+                                } else {
+                                    FontWeight.Normal
+                                },
+                                fontSize = titleTextSize,
+                                lineHeight = titleLineHeight,
+                                modifier = Modifier.weight(1f),
+                            )
+                        } else {
+                            Text(
+                                text = model.itemName,
+                                color = titleColor,
+                                fontWeight = if (model.itemNameBold) {
+                                    FontWeight.Bold
+                                } else {
+                                    FontWeight.Normal
+                                },
+                                fontSize = titleTextSize,
+                                lineHeight = titleLineHeight,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
                         if (titleTrailingContent != null) {
                             Spacer(modifier = Modifier.width(trailingGap))
                             titleTrailingContent()
                         }
                     }
                     hints.forEach { hint ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(verticalAlignment = Alignment.Top) {
                             if (showHintLeadingColumn) {
                                 Box(
                                     modifier = Modifier.size(hintIconSize),
@@ -252,7 +270,7 @@ fun BaseLazyColumnItem(
                                     text = annotated,
                                     fontSize = hintTextSize,
                                     lineHeight = hintLineHeight,
-                                    modifier = Modifier.weight(1f, fill = false),
+                                    modifier = Modifier.weight(1f),
                                 )
                             } else {
                                 Text(
@@ -260,9 +278,7 @@ fun BaseLazyColumnItem(
                                     color = hint.color ?: defaultHintColor,
                                     fontSize = hintTextSize,
                                     lineHeight = hintLineHeight,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f, fill = false),
+                                    modifier = Modifier.weight(1f),
                                 )
                             }
                         }
@@ -410,12 +426,15 @@ private fun BaseLazyColumnItemModel.resolvedHints(): List<BaseLazyColumnItemHint
     }
 
 /**
- * Icon edge length so that (icon + vertical pads) matches the text block
- * (title [+ hints] + text vertical pads).
+ * Leading icon edge length from **logical** content line count
+ * ([BaseLazyColumnItemLayout.TITLE_LINE_COUNT] title + N hint slots).
+ * Wrapped visual lines do not change this size.
  */
 @Composable
-fun baseLazyColumnItemAdaptiveIconSize(hintCount: Int): Dp {
-    val hasSecondaryLine = hintCount > 0
+fun baseLazyColumnItemAdaptiveIconSize(contentLineCount: Int): Dp {
+    val lineCount = contentLineCount.coerceAtLeast(BaseLazyColumnItemLayout.TITLE_LINE_COUNT)
+    val hintLineCount = (lineCount - BaseLazyColumnItemLayout.TITLE_LINE_COUNT).coerceAtLeast(0)
+    val hasSecondaryLine = hintLineCount > 0
     val textVerticalPadding = dimensionResource(
         if (hasSecondaryLine) {
             R.dimen.detail_row_vertical_padding_multi_line
@@ -434,10 +453,15 @@ fun baseLazyColumnItemAdaptiveIconSize(hintCount: Int): Dp {
     val hintLineHeight = dimensionResource(R.dimen.detail_row_label_subtitle_line_height)
     val hintSpacing = dimensionResource(R.dimen.detail_row_label_subtitle_spacing)
     val textContentHeight = titleLineHeight +
-        hintLineHeight * hintCount +
-        hintSpacing * hintCount
+        hintLineHeight * hintLineCount +
+        hintSpacing * hintLineCount
     return (textContentHeight + textVerticalPadding * 2 - iconVerticalPadding * 2)
         .coerceAtLeast(0.dp)
+}
+
+/** Logical line slots used for adaptive leading-icon sizing (not wrap height). */
+object BaseLazyColumnItemLayout {
+    const val TITLE_LINE_COUNT = 1
 }
 
 /**

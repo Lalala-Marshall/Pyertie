@@ -24,6 +24,7 @@
     <string name="character_clone_home_location">母星空间站</string>
     <string name="character_clone_jump_clones">跳跃克隆体</string>
     <string name="character_clone_jump_clones_empty">暂无跳跃克隆体</string>
+    <string name="character_clone_location_summary">%1$d个克隆体·%2$d个植入体</string>
     <string name="character_clone_unnamed">未命名克隆体</string>
     <string name="character_clone_implants_count">植入体: %1$d</string>
     <string name="character_clone_load_failed">加载失败</string>

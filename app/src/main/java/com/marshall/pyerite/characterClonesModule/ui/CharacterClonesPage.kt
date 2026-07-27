@@ -11,13 +11,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.characterClonesModule.model.ActiveImplantInfo
 import com.marshall.pyerite.characterClonesModule.model.CharacterCloneStatus
+import com.marshall.pyerite.characterClonesModule.model.JumpCloneLocationGroup
 import com.marshall.pyerite.characterClonesModule.viewModel.CharacterClonesViewModel
 import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
 import com.marshall.pyerite.esiModule.model.EsiDateTimeConfig
@@ -39,6 +44,12 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+
+private object CharacterClonesDisplayConfig {
+    const val SYSTEM_SECURITY_FORMAT = "%.1f"
+    const val LOCATION_SEGMENT_GAP = " "
+    const val SECURITY_LOW_THRESHOLD = 0.5
+}
 
 @Composable
 internal fun CharacterClonesPage(
@@ -94,6 +105,13 @@ internal fun CharacterClonesPage(
                     onImplantClick = { typeId ->
                         navController.navigate(DatabaseRoute.TypeDetail.create(typeId))
                     },
+                )
+                Spacer(modifier = Modifier.height(sectionGap))
+                CharacterClonesJumpLocationsSection(
+                    locations = uiState.status.jumpCloneLocations,
+                    detailsPending = !uiState.detailsReady,
+                    placeholder = placeholder,
+                    onLocationClick = {},
                 )
             }
         }
@@ -229,6 +247,118 @@ private fun CharacterClonesActiveImplantsSection(
             }
         }
     }
+}
+
+@Composable
+private fun CharacterClonesJumpLocationsSection(
+    locations: List<JumpCloneLocationGroup>,
+    detailsPending: Boolean,
+    placeholder: String,
+    onLocationClick: (JumpCloneLocationGroup) -> Unit,
+) {
+    BaseContainer(
+        title = stringResource(R.string.character_clone_jump_clones),
+        useSystemBarsPadding = false,
+    ) {
+        when {
+            detailsPending -> {
+                BaseLazyColumnItem(
+                    model = BaseLazyColumnItemModel(
+                        showLeadingIcon = false,
+                        itemName = placeholder,
+                        showChevron = false,
+                        onClick = null,
+                    ),
+                    showDivider = false,
+                )
+            }
+            locations.isEmpty() -> {
+                BaseLazyColumnItem(
+                    model = BaseLazyColumnItemModel(
+                        showLeadingIcon = false,
+                        itemName = stringResource(R.string.character_clone_jump_clones_empty),
+                        showChevron = false,
+                        onClick = null,
+                    ),
+                    showDivider = false,
+                )
+            }
+            else -> {
+                Column {
+                    locations.forEachIndexed { index, location ->
+                        JumpCloneLocationRow(
+                            location = location,
+                            placeholder = placeholder,
+                            showDivider = index != locations.lastIndex,
+                            onClick = { onLocationClick(location) },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun JumpCloneLocationRow(
+    location: JumpCloneLocationGroup,
+    placeholder: String,
+    showDivider: Boolean,
+    onClick: () -> Unit,
+) {
+    val placeName = location.locationName?.takeIf { it.isNotBlank() } ?: placeholder
+    val security = location.systemSecurityStatus
+    val titleAnnotated = if (security != null) {
+        val securityColor = systemSecurityColor(security)
+        val primaryColor = colorResource(R.color.text_primary)
+        buildAnnotatedString {
+            withStyle(SpanStyle(color = securityColor)) {
+                append(
+                    String.format(
+                        Locale.US,
+                        CharacterClonesDisplayConfig.SYSTEM_SECURITY_FORMAT,
+                        security,
+                    ),
+                )
+            }
+            append(CharacterClonesDisplayConfig.LOCATION_SEGMENT_GAP)
+            withStyle(SpanStyle(color = primaryColor)) {
+                append(placeName)
+            }
+        }
+    } else {
+        null
+    }
+
+    BaseLazyColumnItem(
+        model = BaseLazyColumnItemModel(
+            iconRes = R.drawable.ic_character_station,
+            iconFileName = location.iconFilename,
+            iconOnLightPlate = true,
+            itemName = placeName,
+            itemNameAnnotated = titleAnnotated,
+            itemHints = listOf(
+                BaseLazyColumnItemHint(
+                    text = stringResource(
+                        R.string.character_clone_location_summary,
+                        location.cloneCount,
+                        location.implantCount,
+                    ),
+                ),
+            ),
+            showChevron = true,
+            onClick = onClick,
+        ),
+        showDivider = showDivider,
+    )
+}
+
+@Composable
+private fun systemSecurityColor(security: Double): Color = when {
+    security <= 0.0 -> colorResource(R.color.character_security_negative)
+    security < CharacterClonesDisplayConfig.SECURITY_LOW_THRESHOLD ->
+        colorResource(R.color.character_security_low)
+    else -> colorResource(R.color.character_security_high)
 }
 
 /** EVE time is UTC — display without converting to the device timezone. */

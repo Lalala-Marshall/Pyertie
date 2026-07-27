@@ -4,7 +4,7 @@ import com.marshall.pyerite.characterClonesModule.model.ActiveImplantInfo
 import com.marshall.pyerite.characterClonesModule.model.CharacterCloneStatus
 import com.marshall.pyerite.characterClonesModule.model.CloneLocationTypeApi
 import com.marshall.pyerite.characterClonesModule.model.JumpCloneConfig
-import com.marshall.pyerite.characterClonesModule.model.JumpCloneInfo
+import com.marshall.pyerite.characterClonesModule.model.JumpCloneLocationGroup
 import com.marshall.pyerite.esiModule.api.EsiCharacterApi
 import com.marshall.pyerite.esiModule.api.EsiUniverseApi
 import com.marshall.pyerite.esiModule.data.EsiPublicDataSource
@@ -22,7 +22,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 
 /**
- * Loads jump-clone status, home station, active implants, and jump-clone list.
+ * Loads jump-clone status, home station, active implants, and jump-clone locations.
  */
 internal class CharacterClonesLoader(
     private val tokenManager: EveTokenManager,
@@ -71,9 +71,7 @@ internal class CharacterClonesLoader(
             val activeImplants = implantsDeferred.await().orEmpty().map { typeId ->
                 resolveActiveImplant(typeId)
             }
-            val jumpClones = clones.jumpClones.map { clone ->
-                mapJumpClone(characterId, clone)
-            }
+            val jumpCloneLocations = groupJumpClonesByLocation(characterId, clones.jumpClones)
 
             CharacterCloneStatus(
                 characterId = characterId,
@@ -83,7 +81,7 @@ internal class CharacterClonesLoader(
                 homeLocationName = homeLocation?.name,
                 homeLocationIconFilename = homeLocation?.iconFilename,
                 activeImplants = activeImplants,
-                jumpClones = jumpClones,
+                jumpCloneLocations = jumpCloneLocations,
             )
         }
     }
@@ -126,21 +124,34 @@ internal class CharacterClonesLoader(
         )
     }
 
-    private suspend fun mapJumpClone(
+    private suspend fun groupJumpClonesByLocation(
         characterId: Long,
-        dto: EsiJumpCloneDto,
-    ): JumpCloneInfo = JumpCloneInfo(
-        jumpCloneId = dto.jumpCloneId,
-        name = dto.name?.takeIf { it.isNotBlank() },
-        locationName = resolveLocationName(
-            characterId = characterId,
-            location = EsiCloneLocationDto(
-                locationId = dto.locationId,
-                locationType = dto.locationType,
-            ),
-        ),
-        implantCount = dto.implants.size,
-    )
+        clones: List<EsiJumpCloneDto>,
+    ): List<JumpCloneLocationGroup> {
+        if (clones.isEmpty()) return emptyList()
+        return clones
+            .groupBy { CloneLocationKey(it.locationType, it.locationId) }
+            .map { (key, group) ->
+                val place = resolvePlace(
+                    characterId = characterId,
+                    location = EsiCloneLocationDto(
+                        locationId = key.locationId,
+                        locationType = key.locationType,
+                    ),
+                )
+                JumpCloneLocationGroup(
+                    locationId = key.locationId,
+                    locationType = key.locationType,
+                    locationName = place.name,
+                    systemSecurityStatus = place.systemSecurityStatus,
+                    iconFilename = place.typeId?.let { resolveTypeIconFilename(it) },
+                    cloneCount = group.size,
+                    implantCount = group.sumOf { it.implants.size },
+                    jumpCloneIds = group.map { it.jumpCloneId },
+                )
+            }
+            .sortedByDescending { it.systemSecurityStatus ?: Double.NEGATIVE_INFINITY }
+    }
 
     private suspend fun resolveHomeLocation(
         characterId: Long,
@@ -153,22 +164,14 @@ internal class CharacterClonesLoader(
         )
     }
 
-    private suspend fun resolveLocationName(
-        characterId: Long,
-        location: EsiCloneLocationDto,
-    ): String? = resolvePlace(characterId, location).name
-
     private suspend fun resolvePlace(
         characterId: Long,
         location: EsiCloneLocationDto,
     ): ResolvedPlace = when (location.locationType) {
         CloneLocationTypeApi.STATION -> resolveStation(location.locationId)
         CloneLocationTypeApi.STRUCTURE -> resolveStructure(characterId, location.locationId)
-        CloneLocationTypeApi.SOLAR_SYSTEM -> ResolvedPlace(
-            name = resolveSolarSystemName(location.locationId),
-            typeId = null,
-        )
-        else -> ResolvedPlace(name = null, typeId = null)
+        CloneLocationTypeApi.SOLAR_SYSTEM -> resolveSolarSystemPlace(location.locationId)
+        else -> ResolvedPlace(name = null, typeId = null, systemSecurityStatus = null)
     }
 
     private suspend fun resolveStation(stationId: Long): ResolvedPlace {
@@ -176,15 +179,18 @@ internal class CharacterClonesLoader(
             roomProvider.getDatabase().mapDao().getStation(stationId)
         }.getOrNull()
         if (fromSde != null) {
+            val solarSystemId = fromSde.solarSystemId?.toLong()
             return ResolvedPlace(
                 name = fromSde.name?.takeIf { it.isNotBlank() },
                 typeId = fromSde.typeId,
+                systemSecurityStatus = resolveSystemSecurity(solarSystemId),
             )
         }
         val fromEsi = publicEsi.fetchStation(stationId)
         return ResolvedPlace(
             name = fromEsi?.name?.takeIf { it.isNotBlank() },
             typeId = fromEsi?.typeId,
+            systemSecurityStatus = resolveSystemSecurity(fromEsi?.systemId),
         )
     }
 
@@ -197,21 +203,37 @@ internal class CharacterClonesLoader(
         return ResolvedPlace(
             name = structure?.name?.takeIf { it.isNotBlank() },
             typeId = structure?.typeId,
+            systemSecurityStatus = resolveSystemSecurity(structure?.solarSystemId),
         )
     }
 
-    private suspend fun resolveSolarSystemName(solarSystemId: Long): String? {
+    private suspend fun resolveSolarSystemPlace(solarSystemId: Long): ResolvedPlace {
         val row = runCatching {
             roomProvider.getDatabase().mapDao().getSolarSystemLocation(solarSystemId)
         }.getOrNull()
-        val fromSde = localizedName(
+        val name = localizedName(
             zh = row?.systemZhName,
             en = row?.systemEnName,
             fallback = row?.systemName,
             language = localeController.contentLanguage,
         ).takeIf { it.isNotBlank() }
-        if (fromSde != null) return fromSde
-        return publicEsi.fetchSolarSystemName(solarSystemId)?.takeIf { it.isNotBlank() }
+            ?: publicEsi.fetchSolarSystemName(solarSystemId)?.takeIf { it.isNotBlank() }
+        val security = row?.securityStatus
+            ?: publicEsi.fetchSolarSystemSecurity(solarSystemId)
+        return ResolvedPlace(
+            name = name,
+            typeId = null,
+            systemSecurityStatus = security,
+        )
+    }
+
+    private suspend fun resolveSystemSecurity(solarSystemId: Long?): Double? {
+        solarSystemId ?: return null
+        val row = runCatching {
+            roomProvider.getDatabase().mapDao().getSolarSystemLocation(solarSystemId)
+        }.getOrNull()
+        return row?.securityStatus
+            ?: publicEsi.fetchSolarSystemSecurity(solarSystemId)
     }
 
     private suspend fun resolveTypeIconFilename(typeId: Int): String? {
@@ -232,9 +254,15 @@ internal class CharacterClonesLoader(
             ?: 0
     }
 
+    private data class CloneLocationKey(
+        val locationType: String,
+        val locationId: Long,
+    )
+
     private data class ResolvedPlace(
         val name: String?,
         val typeId: Int?,
+        val systemSecurityStatus: Double?,
     )
 
     private data class ResolvedHomeLocation(
