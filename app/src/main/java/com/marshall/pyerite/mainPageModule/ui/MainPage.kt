@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
+import com.marshall.pyerite.characterClonesModule.navHost.CharacterClonesRoute
 import com.marshall.pyerite.characterClonesModule.ui.MainPageCloneStatusItem
 import com.marshall.pyerite.characterClonesModule.viewModel.CharacterClonesViewModel
 import com.marshall.pyerite.characterSheetModule.navHost.CharacterSheetRoute
@@ -61,13 +62,13 @@ fun MainPage(
     val currentCharacter by characterViewModel.currentCharacter.collectAsState()
     val loggedInCharacters by characterViewModel.loggedInCharacters.collectAsState()
     val isCharacterRefreshing by characterViewModel.isRefreshing.collectAsState()
-    val isClonesRefreshing by characterClonesViewModel.isRefreshing.collectAsState()
+    val clonesUiState by characterClonesViewModel.uiState.collectAsState()
     val isUpdateCheckInFlight by sdeUpdateViewModel.isUpdateCheckInFlight.collectAsState()
-    val isRefreshing = isCharacterRefreshing || isClonesRefreshing || isUpdateCheckInFlight
+    val isRefreshing = isCharacterRefreshing || clonesUiState.isLoading || isUpdateCheckInFlight
     val refreshFailed by characterViewModel.refreshFailed.collectAsState()
     val listState = rememberLazyListState()
     val showCollapsedTitle = rememberLazyListTitleCollapsed(listState)
-    val nextCloneJumpEpochMs by characterClonesViewModel.nextCloneJumpEpochMs.collectAsState()
+    val nextCloneJumpEpochMs = clonesUiState.status.nextCloneJumpEpochMs
 
     val onPullToRefresh = remember(characterViewModel, characterClonesViewModel, sdeUpdateViewModel) {
         {
@@ -174,6 +175,13 @@ fun MainPage(
                         )
                         MainPageCloneStatusItem(
                             nextCloneJumpEpochMs = nextCloneJumpEpochMs,
+                            onClick = {
+                                val characterId = currentCharacter?.characterId
+                                    ?: return@MainPageCloneStatusItem
+                                navController.navigate(
+                                    CharacterClonesRoute.Status.create(characterId),
+                                )
+                            },
                         )
                     }
                 }

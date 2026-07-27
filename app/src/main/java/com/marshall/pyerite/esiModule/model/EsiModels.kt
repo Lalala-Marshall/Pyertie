@@ -33,7 +33,25 @@ internal data class EsiCharacterSkillDto(
 
 @Serializable
 internal data class EsiCharacterClonesDto(
+    @SerialName("home_location") val homeLocation: EsiCloneLocationDto? = null,
+    @SerialName("jump_clones") val jumpClones: List<EsiJumpCloneDto> = emptyList(),
     @SerialName("last_clone_jump_date") val lastCloneJumpDate: String? = null,
+    @SerialName("last_station_change_date") val lastStationChangeDate: String? = null,
+)
+
+@Serializable
+internal data class EsiCloneLocationDto(
+    @SerialName("location_id") val locationId: Long,
+    @SerialName("location_type") val locationType: String,
+)
+
+@Serializable
+internal data class EsiJumpCloneDto(
+    @SerialName("jump_clone_id") val jumpCloneId: Int,
+    @SerialName("location_id") val locationId: Long,
+    @SerialName("location_type") val locationType: String,
+    val implants: List<Int> = emptyList(),
+    val name: String? = null,
 )
 
 @Serializable

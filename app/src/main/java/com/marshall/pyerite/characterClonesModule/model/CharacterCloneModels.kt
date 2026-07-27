@@ -37,11 +37,37 @@ internal object JumpCloneConfig {
     }
 }
 
+/** ESI `location_type` wire values for clones / home station. */
+internal object CloneLocationTypeApi {
+    const val STATION = "station"
+    const val STRUCTURE = "structure"
+    const val SOLAR_SYSTEM = "solar_system"
+}
+
 /**
- * Clone jump availability for the selected character.
+ * Clone jump availability and home / jump-clone details for a character.
  * [nextCloneJumpEpochMs] `null` = unknown; `<= now` = available now.
  */
 data class CharacterCloneStatus(
     val characterId: Long,
     val nextCloneJumpEpochMs: Long?,
+    val lastCloneJumpEpochMs: Long? = null,
+    val lastStationChangeEpochMs: Long? = null,
+    val homeLocationName: String? = null,
+    val homeLocationIconFilename: String? = null,
+    val jumpClones: List<JumpCloneInfo> = emptyList(),
+) {
+    companion object {
+        fun empty(characterId: Long): CharacterCloneStatus = CharacterCloneStatus(
+            characterId = characterId,
+            nextCloneJumpEpochMs = null,
+        )
+    }
+}
+
+data class JumpCloneInfo(
+    val jumpCloneId: Int,
+    val name: String?,
+    val locationName: String?,
+    val implantCount: Int,
 )
