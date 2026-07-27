@@ -116,4 +116,5 @@ data class StationLocationRow(
     @ColumnInfo(name = "stationID") val stationId: Long,
     @ColumnInfo(name = "stationTypeID") val typeId: Int?,
     @ColumnInfo(name = "stationName") val name: String?,
+    @ColumnInfo(name = "solarSystemID") val solarSystemId: Int? = null,
 )

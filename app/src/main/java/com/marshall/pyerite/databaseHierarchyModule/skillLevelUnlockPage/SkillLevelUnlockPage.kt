@@ -48,6 +48,7 @@ import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
 import com.marshall.pyerite.ui.golbalComponents.PageTitle
+import com.marshall.pyerite.ui.golbalComponents.PyeriteIconShape
 import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -152,7 +153,9 @@ private fun SkillUnlockPageTitle(level: Int) {
         text = stringResource(R.string.skill_level, level),
         leadingContent = {
             Icon(
-                modifier = Modifier.size(titleIconSize),
+                modifier = Modifier
+                    .size(titleIconSize)
+                    .clip(PyeriteIconShape.shape),
                 painter = painterResource(certificateLevelDrawable(level)),
                 contentDescription = null,
                 tint = Color.Unspecified,

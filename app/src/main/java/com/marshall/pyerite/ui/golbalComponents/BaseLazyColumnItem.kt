@@ -1,120 +1,489 @@
 package com.marshall.pyerite.ui.golbalComponents
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.marshall.pyerite.R
+import com.marshall.pyerite.iconModule.manager.IconManager
+import org.koin.compose.koinInject
 import java.io.File
+
+/**
+ * Secondary line under the title. Add multiple entries for multi-line hints.
+ * Prefer [text]; use [annotatedText] when a single line needs mixed colors.
+ * Optional [iconUrl] / [iconRes] draw a leading adornment aligned with the
+ * title-row leading slot on [BaseLazyColumnItem].
+ */
+data class BaseLazyColumnItemHint(
+    val text: String = "",
+    val annotatedText: AnnotatedString? = null,
+    val color: Color? = null,
+    val iconUrl: String? = null,
+    val iconRes: Int? = null,
+)
+
+/**
+ * Shared list / detail row. Variants via flags:
+ * - title-only vs hints (text vertical padding 12 / 4)
+ * - icon vertical padding 8 / 4; icon size from content **line count**
+ *   (1 title + N hints), not measured wrap height
+ * - title / hint text wrap within the text column
+ * - optional leading icon, trailing value, chevron (right or expanded-down)
+ * - colors / bold / indent / custom leading & title slots
+ */
+data class BaseLazyColumnItemModel(
+    val iconRes: Int = R.drawable.ic_database,
+    val iconFile: File? = null,
+    /** Remote image URL (portrait / corp logo). Ignored when [iconFile] is set. */
+    val iconUrl: String? = null,
+    /** SDE icon pack filename; resolved via [IconManager] when [iconFile] is null. */
+    val iconFileName: String? = null,
+    /** Override default [R.dimen.base_lazy_column_item_icon_size]. */
+    val iconSize: Dp? = null,
+    /** Tint for [iconRes] painter (ignored for file / url images). */
+    val iconTint: Color? = null,
+    /** Light plate behind dark SDE type icons (night-mode contrast). */
+    val iconOnLightPlate: Boolean = false,
+    /** When false, no leading icon column (value-only / indented submenu labels). */
+    val showLeadingIcon: Boolean = true,
+    /** Extra start indent before the icon (nested submenu). */
+    val leadingIndent: Boolean = false,
+    val itemName: String,
+    /** When set, drawn instead of [itemName] (e.g. mixed-color security + place name). */
+    val itemNameAnnotated: AnnotatedString? = null,
+    val itemNameColor: Color? = null,
+    val itemNameBold: Boolean = false,
+    /** Prefer this over [itemHint] when multiple lines or custom colors are needed. */
+    val itemHints: List<BaseLazyColumnItemHint> = emptyList(),
+    /** Single hint shorthand; used only when [itemHints] is empty. */
+    val itemHint: String = "",
+    /** Right-side value before the chevron (e.g. "等级 3", dogma units). */
+    val trailingValue: String = "",
+    val trailingValueColor: Color? = null,
+    val showChevron: Boolean = true,
+    /** When [showChevron] and true, shows down-chevron (expandable header). */
+    val chevronExpanded: Boolean = false,
+    /** Null disables click (no ripple). */
+    val onClick: (() -> Unit)? = {},
+)
 
 @Composable
 fun BaseLazyColumnItem(
     model: BaseLazyColumnItemModel,
     showDivider: Boolean,
+    modifier: Modifier = Modifier,
+    /**
+     * Replaces the default leading icon (e.g. character avatar, vector Store icon).
+     * Receives the same adaptive icon size as the default leading icon; clipped to
+     * [PyeriteIconShape] so callers need not apply corner radius themselves.
+     */
+    leadingContent: (@Composable (iconSize: Dp) -> Unit)? = null,
+    /**
+     * Leading adornment on the title row (e.g. online dot), vertically aligned with
+     * hint-line icons in a shared fixed-width column.
+     */
+    titleLeadingContent: (@Composable () -> Unit)? = null,
+    /** Trailing content on the title row (e.g. status tag next to the name). */
+    titleTrailingContent: (@Composable () -> Unit)? = null,
+    iconManager: IconManager = koinInject(),
 ) {
-    val iconSize = dimensionResource(R.dimen.detail_row_icon_size)
+    val hints = model.resolvedHints()
+    val hasSecondaryLine = hints.isNotEmpty()
+    val textVerticalPadding = dimensionResource(
+        if (hasSecondaryLine) {
+            R.dimen.detail_row_vertical_padding_multi_line
+        } else {
+            R.dimen.detail_row_vertical_padding_single_line
+        },
+    )
+    val iconVerticalPadding = dimensionResource(
+        if (hasSecondaryLine) {
+            R.dimen.detail_row_icon_vertical_padding
+        } else {
+            R.dimen.detail_row_icon_vertical_padding_single_line
+        },
+    )
+    val contentLineCount = BaseLazyColumnItemLayout.TITLE_LINE_COUNT + hints.size
+    val iconSize = model.iconSize
+        ?: baseLazyColumnItemAdaptiveIconSize(contentLineCount = contentLineCount)
     val iconGap = dimensionResource(R.dimen.detail_row_icon_gap)
     val rowHorizontalPadding = dimensionResource(R.dimen.detail_row_horizontal_padding)
-    val rowVerticalPadding = dimensionResource(R.dimen.detail_row_vertical_padding)
+    val leadingIndentWidth = dimensionResource(R.dimen.sub_menu_leading_indent)
+    val titleValueGap = dimensionResource(R.dimen.detail_row_title_value_gap)
+    val trailingGap = dimensionResource(R.dimen.detail_row_trailing_gap)
     val chevronSize = dimensionResource(R.dimen.detail_row_chevron_size)
+    val titleTextSize = dimensionResource(R.dimen.sub_menu_label_text_size).value.sp
+    val titleLineHeight = dimensionResource(R.dimen.sub_menu_label_line_height).value.sp
+    val valueTextSize = dimensionResource(R.dimen.sub_menu_value_text_size).value.sp
     val hintTextSize = dimensionResource(R.dimen.detail_row_label_subtitle_text_size).value.sp
     val hintLineHeight = dimensionResource(R.dimen.detail_row_label_subtitle_line_height).value.sp
     val hintSpacing = dimensionResource(R.dimen.detail_row_label_subtitle_spacing)
+    val hintIconSize = dimensionResource(R.dimen.base_lazy_column_item_hint_icon_size)
+    val hintIconGap = dimensionResource(R.dimen.base_lazy_column_item_hint_icon_gap)
+    val titleColor = model.itemNameColor ?: colorResource(R.color.text_primary)
+    val defaultHintColor = colorResource(R.color.hint_text)
+    val trailingColor = model.trailingValueColor ?: defaultHintColor
+    val showHintLeadingColumn = titleLeadingContent != null ||
+        hints.any { !it.iconUrl.isNullOrBlank() || it.iconRes != null }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { model.onClick() }
+    val rowModifier = modifier
+        .fillMaxWidth()
+        .then(
+            if (model.onClick != null) {
+                Modifier.clickable(onClick = model.onClick)
+            } else {
+                Modifier
+            },
+        )
+        .padding(horizontal = rowHorizontalPadding)
+
+    Row(
+        modifier = rowModifier,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
+        if (model.leadingIndent) {
+            Spacer(modifier = Modifier.width(leadingIndentWidth))
+        }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = rowHorizontalPadding, vertical = rowVerticalPadding),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                modifier = Modifier.size(iconSize),
-                painter = model.iconFile?.let { file ->
-                    rememberAsyncImagePainter(file)
-                } ?: painterResource(model.iconRes),
-                contentDescription = null,
-                tint = Color.Unspecified
-            )
-
+        if (leadingContent != null) {
+            Box(
+                modifier = Modifier
+                    .padding(vertical = iconVerticalPadding)
+                    .clip(PyeriteIconShape.shape),
+            ) {
+                leadingContent(iconSize)
+            }
             Spacer(modifier = Modifier.width(iconGap))
+        } else if (model.showLeadingIcon) {
+            BaseLazyColumnItemLeadingIcon(
+                model = model,
+                iconSize = iconSize,
+                iconVerticalPadding = iconVerticalPadding,
+                iconManager = iconManager,
+            )
+            Spacer(modifier = Modifier.width(iconGap))
+        }
 
-            if (model.itemHint.isNotEmpty()) {
+        Column(modifier = Modifier.weight(1f)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = textVerticalPadding),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(hintSpacing),
                 ) {
+                    Row(verticalAlignment = Alignment.Top) {
+                        if (showHintLeadingColumn) {
+                            Box(
+                                modifier = Modifier.size(hintIconSize),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                titleLeadingContent?.invoke()
+                            }
+                            Spacer(modifier = Modifier.width(hintIconGap))
+                        }
+                        val nameAnnotated = model.itemNameAnnotated
+                        if (nameAnnotated != null) {
+                            Text(
+                                text = nameAnnotated,
+                                fontWeight = if (model.itemNameBold) {
+                                    FontWeight.Bold
+                                } else {
+                                    FontWeight.Normal
+                                },
+                                fontSize = titleTextSize,
+                                lineHeight = titleLineHeight,
+                                modifier = Modifier.weight(1f),
+                            )
+                        } else {
+                            Text(
+                                text = model.itemName,
+                                color = titleColor,
+                                fontWeight = if (model.itemNameBold) {
+                                    FontWeight.Bold
+                                } else {
+                                    FontWeight.Normal
+                                },
+                                fontSize = titleTextSize,
+                                lineHeight = titleLineHeight,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        if (titleTrailingContent != null) {
+                            Spacer(modifier = Modifier.width(trailingGap))
+                            titleTrailingContent()
+                        }
+                    }
+                    hints.forEach { hint ->
+                        Row(verticalAlignment = Alignment.Top) {
+                            if (showHintLeadingColumn) {
+                                Box(
+                                    modifier = Modifier.size(hintIconSize),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    BaseLazyColumnItemHintIcon(
+                                        iconUrl = hint.iconUrl,
+                                        iconRes = hint.iconRes,
+                                        size = hintIconSize,
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(hintIconGap))
+                            }
+                            val annotated = hint.annotatedText
+                            if (annotated != null) {
+                                Text(
+                                    text = annotated,
+                                    fontSize = hintTextSize,
+                                    lineHeight = hintLineHeight,
+                                    modifier = Modifier.weight(1f),
+                                )
+                            } else {
+                                Text(
+                                    text = hint.text,
+                                    color = hint.color ?: defaultHintColor,
+                                    fontSize = hintTextSize,
+                                    lineHeight = hintLineHeight,
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                        }
+                    }
+                }
+
+                if (model.trailingValue.isNotEmpty()) {
+                    Spacer(modifier = Modifier.width(titleValueGap))
                     Text(
-                        text = model.itemName,
-                        color = colorResource(R.color.text_primary),
-                    )
-                    Text(
-                        text = model.itemHint,
-                        color = colorResource(R.color.hint_text),
-                        fontSize = hintTextSize,
-                        lineHeight = hintLineHeight,
+                        text = model.trailingValue,
+                        color = trailingColor,
+                        fontSize = valueTextSize,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
-            } else {
-                Text(
-                    modifier = Modifier.weight(1f),
-                    text = model.itemName,
-                    color = colorResource(R.color.text_primary),
-                )
+
+                if (model.showChevron) {
+                    Spacer(modifier = Modifier.width(trailingGap))
+                    Icon(
+                        modifier = Modifier.size(chevronSize),
+                        imageVector = if (model.chevronExpanded) {
+                            Icons.Filled.KeyboardArrowDown
+                        } else {
+                            Icons.AutoMirrored.Filled.KeyboardArrowRight
+                        },
+                        contentDescription = null,
+                        tint = if (model.chevronExpanded) {
+                            colorResource(R.color.text_primary)
+                        } else {
+                            colorResource(R.color.hint_text)
+                        },
+                    )
+                }
             }
 
-            Icon(
-                modifier = Modifier.size(chevronSize),
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = colorResource(R.color.hint_text),
-            )
+            if (showDivider) {
+                HorizontalDivider(
+                    thickness = dimensionResource(R.dimen.detail_divider_thickness),
+                    color = colorResource(R.color.border),
+                )
+            }
         }
-
-        if (showDivider) ItemDivider()
     }
 }
 
 @Composable
-fun ItemDivider() {
-    HorizontalDivider(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = dimensionResource(R.dimen.detail_divider_start_padding)),
-        thickness = dimensionResource(R.dimen.detail_divider_thickness),
-        color = colorResource(R.color.border),
-    )
+private fun BaseLazyColumnItemHintIcon(
+    iconUrl: String?,
+    iconRes: Int?,
+    size: Dp,
+) {
+    val shape = PyeriteIconShape.shape
+    when {
+        !iconUrl.isNullOrBlank() -> {
+            AsyncImage(
+                model = iconUrl,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(size)
+                    .clip(shape),
+                contentScale = ContentScale.Crop,
+            )
+        }
+        iconRes != null -> {
+            Icon(
+                modifier = Modifier
+                    .size(size)
+                    .clip(shape),
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                tint = Color.Unspecified,
+            )
+        }
+    }
 }
 
-data class BaseLazyColumnItemModel(
-    val iconRes: Int = R.drawable.ic_database,
-    val iconFile: File? = null,
-    val itemName: String,
-    /** Secondary line under [itemName] (e.g. skill-point summary). */
-    val itemHint: String = "",
-    val onClick: () -> Unit,
-)
+@Composable
+private fun BaseLazyColumnItemLeadingIcon(
+    model: BaseLazyColumnItemModel,
+    iconSize: Dp,
+    iconVerticalPadding: Dp,
+    iconManager: IconManager,
+) {
+    val resolvedFile = model.iconFile
+        ?: model.iconFileName?.let { iconManager.getIconFile(it) }
+    val shape = PyeriteIconShape.shape
+    val iconModifier = Modifier
+        .padding(vertical = iconVerticalPadding)
+        .size(iconSize)
+        .clip(shape)
+    val painterTint = model.iconTint ?: Color.Unspecified
+
+    when {
+        resolvedFile != null && model.iconOnLightPlate -> {
+            Box(
+                modifier = iconModifier.background(colorResource(R.color.white)),
+                contentAlignment = Alignment.Center,
+            ) {
+                AsyncImage(
+                    model = resolvedFile,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(dimensionResource(R.dimen.base_lazy_column_item_icon_plate_padding))
+                        .clip(shape),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(model.iconRes),
+                    error = painterResource(model.iconRes),
+                )
+            }
+        }
+        resolvedFile != null -> {
+            Icon(
+                modifier = iconModifier,
+                painter = rememberAsyncImagePainter(resolvedFile),
+                contentDescription = null,
+                tint = Color.Unspecified,
+            )
+        }
+        !model.iconUrl.isNullOrBlank() -> {
+            AsyncImage(
+                model = model.iconUrl,
+                contentDescription = null,
+                modifier = iconModifier,
+                contentScale = ContentScale.Crop,
+            )
+        }
+        else -> {
+            Icon(
+                modifier = iconModifier,
+                painter = painterResource(model.iconRes),
+                contentDescription = null,
+                tint = painterTint,
+            )
+        }
+    }
+}
+
+private fun BaseLazyColumnItemModel.resolvedHints(): List<BaseLazyColumnItemHint> =
+    when {
+        itemHints.isNotEmpty() -> itemHints
+        itemHint.isNotEmpty() -> listOf(BaseLazyColumnItemHint(text = itemHint))
+        else -> emptyList()
+    }
+
+/**
+ * Leading icon edge length from **logical** content line count
+ * ([BaseLazyColumnItemLayout.TITLE_LINE_COUNT] title + N hint slots).
+ * Wrapped visual lines do not change this size.
+ */
+@Composable
+fun baseLazyColumnItemAdaptiveIconSize(contentLineCount: Int): Dp {
+    val lineCount = contentLineCount.coerceAtLeast(BaseLazyColumnItemLayout.TITLE_LINE_COUNT)
+    val hintLineCount = (lineCount - BaseLazyColumnItemLayout.TITLE_LINE_COUNT).coerceAtLeast(0)
+    val hasSecondaryLine = hintLineCount > 0
+    val textVerticalPadding = dimensionResource(
+        if (hasSecondaryLine) {
+            R.dimen.detail_row_vertical_padding_multi_line
+        } else {
+            R.dimen.detail_row_vertical_padding_single_line
+        },
+    )
+    val iconVerticalPadding = dimensionResource(
+        if (hasSecondaryLine) {
+            R.dimen.detail_row_icon_vertical_padding
+        } else {
+            R.dimen.detail_row_icon_vertical_padding_single_line
+        },
+    )
+    val titleLineHeight = dimensionResource(R.dimen.sub_menu_label_line_height)
+    val hintLineHeight = dimensionResource(R.dimen.detail_row_label_subtitle_line_height)
+    val hintSpacing = dimensionResource(R.dimen.detail_row_label_subtitle_spacing)
+    val textContentHeight = titleLineHeight +
+        hintLineHeight * hintLineCount +
+        hintSpacing * hintLineCount
+    return (textContentHeight + textVerticalPadding * 2 - iconVerticalPadding * 2)
+        .coerceAtLeast(0.dp)
+}
+
+/** Logical line slots used for adaptive leading-icon sizing (not wrap height). */
+object BaseLazyColumnItemLayout {
+    const val TITLE_LINE_COUNT = 1
+}
+
+/**
+ * Divider that starts to the right of the leading icon column (not a hardcoded inset).
+ * [leadingIconSize] should match the row’s icon size so the line lines up with text.
+ */
+@Composable
+fun ItemDivider(
+    leadingIconSize: Dp = dimensionResource(R.dimen.base_lazy_column_item_icon_size),
+) {
+    val horizontalPadding = dimensionResource(R.dimen.detail_row_horizontal_padding)
+    val iconGap = dimensionResource(R.dimen.detail_row_icon_gap)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = horizontalPadding),
+    ) {
+        Spacer(modifier = Modifier.width(leadingIconSize + iconGap))
+        HorizontalDivider(
+            modifier = Modifier.weight(1f),
+            thickness = dimensionResource(R.dimen.detail_divider_thickness),
+            color = colorResource(R.color.border),
+        )
+    }
+}

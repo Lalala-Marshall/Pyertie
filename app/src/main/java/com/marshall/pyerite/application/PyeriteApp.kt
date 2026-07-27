@@ -7,6 +7,7 @@ import com.marshall.pyerite.sdeModule.update.BundledSdeUpdater
 import com.marshall.pyerite.sdeModule.update.SdeUpdateController
 import com.marshall.pyerite.sdeModule.update.SdeUpdateLog
 import com.marshall.pyerite.sdeModule.sdeModule
+import com.marshall.pyerite.characterClonesModule.characterClonesModule
 import com.marshall.pyerite.characterSheetModule.characterSheetModule
 import com.marshall.pyerite.charactersListModule.charactersListModule
 import com.marshall.pyerite.databaseHierarchyModule.databaseHierarchyModule
@@ -46,6 +47,7 @@ class PyeriteApp : Application() {
                 databaseHierarchyModule,
                 charactersListModule,
                 characterSheetModule,
+                characterClonesModule,
             )
         }
 

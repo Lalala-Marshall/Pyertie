@@ -1,4 +1,4 @@
-package com.marshall.pyerite.charactersListModule.ui
+package com.marshall.pyerite.ui.golbalComponents
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
@@ -28,6 +29,8 @@ fun CharacterAvatar(
     corporationIconUrl: String? = null,
     allianceIconUrl: String? = null,
     showBadges: Boolean = false,
+    /** Home / character list stay circular; character sheet uses [PyeriteIconShape]. */
+    shape: Shape = CircleShape,
 ) {
     val badgeSize = dimensionResource(R.dimen.character_badge_size)
     val badgeOffset = dimensionResource(R.dimen.character_badge_offset)
@@ -36,13 +39,13 @@ fun CharacterAvatar(
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .clip(CircleShape)
+                .clip(shape)
                 .border(
                     width = dimensionResource(R.dimen.character_avatar_border_width),
                     color = colorResource(R.color.border),
-                    shape = CircleShape,
+                    shape = shape,
                 )
-                .background(colorResource(R.color.main_background), CircleShape),
+                .background(colorResource(R.color.main_background), shape),
             contentAlignment = Alignment.Center,
         ) {
             if (portraitUrl.isNullOrBlank()) {
@@ -67,6 +70,7 @@ fun CharacterAvatar(
                 CharacterBadgeIcon(
                     iconUrl = corporationIconUrl,
                     contentDescription = stringResource(R.string.character_corp_icon),
+                    shape = shape,
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .offset(x = -badgeOffset, y = badgeOffset)
@@ -77,6 +81,7 @@ fun CharacterAvatar(
                 CharacterBadgeIcon(
                     iconUrl = allianceIconUrl,
                     contentDescription = stringResource(R.string.character_alliance_icon),
+                    shape = shape,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .offset(x = badgeOffset, y = badgeOffset)
@@ -91,17 +96,18 @@ fun CharacterAvatar(
 private fun CharacterBadgeIcon(
     iconUrl: String,
     contentDescription: String,
+    shape: Shape,
     modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier
-            .clip(CircleShape)
+            .clip(shape)
             .border(
                 width = dimensionResource(R.dimen.character_avatar_border_width),
                 color = colorResource(R.color.border),
-                shape = CircleShape,
+                shape = shape,
             )
-            .background(colorResource(R.color.character_org_badge_background), CircleShape),
+            .background(colorResource(R.color.character_org_badge_background), shape),
         contentAlignment = Alignment.Center,
     ) {
         AsyncImage(

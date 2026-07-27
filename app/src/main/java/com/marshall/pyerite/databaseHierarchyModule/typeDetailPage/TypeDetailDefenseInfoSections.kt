@@ -32,6 +32,7 @@ import com.marshall.pyerite.ui.golbalComponents.BaseDetailRow
 import com.marshall.pyerite.ui.golbalComponents.BaseDetailRowModel
 import com.marshall.pyerite.ui.golbalComponents.BaseDetailRowModel.Companion.formatMappedValue
 import com.marshall.pyerite.ui.golbalComponents.ItemDivider
+import com.marshall.pyerite.ui.golbalComponents.PyeriteIconShape
 import org.koin.compose.koinInject
 import kotlin.math.roundToInt
 
@@ -224,7 +225,9 @@ private fun ResistanceBar(
                 Icon(
                     painter = rememberAsyncImagePainter(iconManager.getIconFile(iconFileName)),
                     contentDescription = null,
-                    modifier = Modifier.size(statIconSize),
+                    modifier = Modifier
+                        .size(statIconSize)
+                        .clip(PyeriteIconShape.shape),
                     tint = Color.Unspecified,
                 )
             }

@@ -1,5 +1,6 @@
 package com.marshall.pyerite.esiModule.api
 
+import com.marshall.pyerite.esiModule.model.EsiCharacterClonesDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterFatigueDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterLocationDto
@@ -63,6 +64,20 @@ internal interface EsiCharacterApi {
         @Path("character_id") characterId: Long,
         @Header("Authorization") authorization: String,
     ): EsiCharacterFatigueDto
+
+    @Headers("Accept: application/json")
+    @GET("characters/{character_id}/clones")
+    suspend fun fetchClones(
+        @Path("character_id") characterId: Long,
+        @Header("Authorization") authorization: String,
+    ): EsiCharacterClonesDto
+
+    @Headers("Accept: application/json")
+    @GET("characters/{character_id}/implants")
+    suspend fun fetchImplants(
+        @Path("character_id") characterId: Long,
+        @Header("Authorization") authorization: String,
+    ): List<Int>
 
     @Headers("Accept: application/json")
     @GET("characters/{character_id}/medals")
