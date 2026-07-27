@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marshall.pyerite.characterClonesModule.model.CharacterCloneStatus
+import com.marshall.pyerite.characterClonesModule.model.JumpCloneLocationGroup
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,11 +13,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * Shared by main-page clone hint and the clones detail page.
- * - Detail route: [NAV_ARG_CHARACTER_ID] from [SavedStateHandle]
+ * Shared by main-page clone hint, clones status page, and location detail page.
+ * - Status / location route: [NAV_ARG_CHARACTER_ID] (+ location args) from [SavedStateHandle]
  * - Main page: call [setCharacterId] when selection changes
  *
- * Shows disk/memory cache immediately (like character-sheet SP), then refreshes from ESI.
+ * Shows disk/memory cache immediately (like character-sheet SP), then refreshes from ESI
+ * on the status / main paths. Location detail only loads when the group is missing.
  */
 class CharacterClonesViewModel(
     savedStateHandle: SavedStateHandle,
@@ -24,6 +26,10 @@ class CharacterClonesViewModel(
 ) : ViewModel() {
 
     private val routeCharacterId: Long? = savedStateHandle[NAV_ARG_CHARACTER_ID]
+    private val routeLocationId: Long? = savedStateHandle[NAV_ARG_LOCATION_ID]
+    private val routeLocationType: String? = savedStateHandle[NAV_ARG_LOCATION_TYPE]
+    private val isLocationRoute: Boolean =
+        routeLocationId != null && routeLocationType != null
 
     private val _uiState = MutableStateFlow(initialUiState())
     val uiState: StateFlow<CharacterClonesUiState> = _uiState.asStateFlow()
@@ -34,11 +40,14 @@ class CharacterClonesViewModel(
     init {
         val characterId = routeCharacterId
         if (characterId != null) {
-            // Cache already applied in [initialUiState]; always revalidate from ESI.
-            load(
-                characterId = characterId,
-                indicateLoading = !_uiState.value.detailsReady,
-            )
+            val locationMissing = isLocationRoute && _uiState.value.selectedLocation == null
+            val shouldLoad = !isLocationRoute || locationMissing
+            if (shouldLoad) {
+                load(
+                    characterId = characterId,
+                    indicateLoading = !_uiState.value.detailsReady,
+                )
+            }
         }
     }
 
@@ -56,6 +65,8 @@ class CharacterClonesViewModel(
         _uiState.value = CharacterClonesUiState.fromCache(
             characterId = characterId,
             cached = repository.cachedStatus(characterId),
+            selectedLocationId = null,
+            selectedLocationType = null,
         )
         // Revalidate after painting cache; keep spinner off when cache already shown.
         load(
@@ -75,6 +86,8 @@ class CharacterClonesViewModel(
         return CharacterClonesUiState.fromCache(
             characterId = characterId,
             cached = repository.cachedStatus(characterId),
+            selectedLocationId = routeLocationId,
+            selectedLocationType = routeLocationType,
         )
     }
 
@@ -118,6 +131,8 @@ class CharacterClonesViewModel(
 
     companion object {
         const val NAV_ARG_CHARACTER_ID = "characterId"
+        const val NAV_ARG_LOCATION_ID = "locationId"
+        const val NAV_ARG_LOCATION_TYPE = "locationType"
     }
 }
 
@@ -127,7 +142,18 @@ data class CharacterClonesUiState(
     val loadFailed: Boolean,
     /** True after at least one successful clones ESI load (or disk/memory cache hit). */
     val detailsReady: Boolean,
+    val selectedLocationId: Long? = null,
+    val selectedLocationType: String? = null,
 ) {
+    val selectedLocation: JumpCloneLocationGroup?
+        get() {
+            val locationId = selectedLocationId ?: return null
+            val locationType = selectedLocationType ?: return null
+            return status.jumpCloneLocations.firstOrNull {
+                it.locationId == locationId && it.locationType == locationType
+            }
+        }
+
     companion object {
         fun empty(): CharacterClonesUiState = CharacterClonesUiState(
             status = CharacterCloneStatus.empty(characterId = 0L),
@@ -139,12 +165,16 @@ data class CharacterClonesUiState(
         fun fromCache(
             characterId: Long,
             cached: CharacterCloneStatus?,
+            selectedLocationId: Long? = null,
+            selectedLocationType: String? = null,
         ): CharacterClonesUiState = if (cached != null) {
             CharacterClonesUiState(
                 status = cached,
                 isLoading = false,
                 loadFailed = false,
                 detailsReady = true,
+                selectedLocationId = selectedLocationId,
+                selectedLocationType = selectedLocationType,
             )
         } else {
             CharacterClonesUiState(
@@ -152,6 +182,8 @@ data class CharacterClonesUiState(
                 isLoading = true,
                 loadFailed = false,
                 detailsReady = false,
+                selectedLocationId = selectedLocationId,
+                selectedLocationType = selectedLocationType,
             )
         }
     }

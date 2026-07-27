@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.marshall.pyerite.characterClonesModule.model.ActiveImplantInfo
 import com.marshall.pyerite.characterClonesModule.model.CharacterCloneStatus
+import com.marshall.pyerite.characterClonesModule.model.JumpCloneAtLocation
 import com.marshall.pyerite.characterClonesModule.model.JumpCloneLocationGroup
 import com.marshall.pyerite.infra.network.PyeriteJson
 import kotlinx.serialization.Serializable
@@ -110,9 +111,7 @@ private data class CachedJumpCloneLocation(
     val locationName: String? = null,
     val systemSecurityStatus: Double? = null,
     val iconFilename: String? = null,
-    val cloneCount: Int = 0,
-    val implantCount: Int = 0,
-    val jumpCloneIds: List<Int> = emptyList(),
+    val clones: List<CachedJumpCloneAtLocation> = emptyList(),
 ) {
     fun toModel(): JumpCloneLocationGroup = JumpCloneLocationGroup(
         locationId = locationId,
@@ -120,9 +119,7 @@ private data class CachedJumpCloneLocation(
         locationName = locationName,
         systemSecurityStatus = systemSecurityStatus,
         iconFilename = iconFilename,
-        cloneCount = cloneCount,
-        implantCount = implantCount,
-        jumpCloneIds = jumpCloneIds,
+        clones = clones.map { it.toModel() },
     )
 
     companion object {
@@ -132,9 +129,28 @@ private data class CachedJumpCloneLocation(
             locationName = group.locationName,
             systemSecurityStatus = group.systemSecurityStatus,
             iconFilename = group.iconFilename,
-            cloneCount = group.cloneCount,
-            implantCount = group.implantCount,
-            jumpCloneIds = group.jumpCloneIds,
+            clones = group.clones.map(CachedJumpCloneAtLocation::from),
+        )
+    }
+}
+
+@Serializable
+private data class CachedJumpCloneAtLocation(
+    val jumpCloneId: Int,
+    val name: String? = null,
+    val implants: List<CachedActiveImplant> = emptyList(),
+) {
+    fun toModel(): JumpCloneAtLocation = JumpCloneAtLocation(
+        jumpCloneId = jumpCloneId,
+        name = name,
+        implants = implants.map { it.toModel() },
+    )
+
+    companion object {
+        fun from(clone: JumpCloneAtLocation): CachedJumpCloneAtLocation = CachedJumpCloneAtLocation(
+            jumpCloneId = clone.jumpCloneId,
+            name = clone.name,
+            implants = clone.implants.map(CachedActiveImplant::from),
         )
     }
 }

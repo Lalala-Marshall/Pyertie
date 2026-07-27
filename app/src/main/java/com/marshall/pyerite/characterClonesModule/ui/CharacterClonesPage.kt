@@ -23,6 +23,7 @@ import com.marshall.pyerite.R
 import com.marshall.pyerite.characterClonesModule.model.ActiveImplantInfo
 import com.marshall.pyerite.characterClonesModule.model.CharacterCloneStatus
 import com.marshall.pyerite.characterClonesModule.model.JumpCloneLocationGroup
+import com.marshall.pyerite.characterClonesModule.navHost.CharacterClonesRoute
 import com.marshall.pyerite.characterClonesModule.viewModel.CharacterClonesViewModel
 import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
 import com.marshall.pyerite.esiModule.model.EsiDateTimeConfig
@@ -111,7 +112,15 @@ internal fun CharacterClonesPage(
                     locations = uiState.status.jumpCloneLocations,
                     detailsPending = !uiState.detailsReady,
                     placeholder = placeholder,
-                    onLocationClick = {},
+                    onLocationClick = { location ->
+                        navController.navigate(
+                            CharacterClonesRoute.Location.create(
+                                characterId = uiState.status.characterId,
+                                locationType = location.locationType,
+                                locationId = location.locationId,
+                            ),
+                        )
+                    },
                 )
             }
         }

@@ -4,6 +4,7 @@ import com.marshall.pyerite.characterClonesModule.model.ActiveImplantInfo
 import com.marshall.pyerite.characterClonesModule.model.CharacterCloneStatus
 import com.marshall.pyerite.characterClonesModule.model.CloneLocationTypeApi
 import com.marshall.pyerite.characterClonesModule.model.JumpCloneConfig
+import com.marshall.pyerite.characterClonesModule.model.JumpCloneAtLocation
 import com.marshall.pyerite.characterClonesModule.model.JumpCloneLocationGroup
 import com.marshall.pyerite.esiModule.api.EsiCharacterApi
 import com.marshall.pyerite.esiModule.api.EsiUniverseApi
@@ -145,9 +146,17 @@ internal class CharacterClonesLoader(
                     locationName = place.name,
                     systemSecurityStatus = place.systemSecurityStatus,
                     iconFilename = place.typeId?.let { resolveTypeIconFilename(it) },
-                    cloneCount = group.size,
-                    implantCount = group.sumOf { it.implants.size },
-                    jumpCloneIds = group.map { it.jumpCloneId },
+                    clones = group
+                        .sortedBy { it.jumpCloneId }
+                        .map { clone ->
+                            JumpCloneAtLocation(
+                                jumpCloneId = clone.jumpCloneId,
+                                name = clone.name?.takeIf { it.isNotBlank() },
+                                implants = clone.implants.map { typeId ->
+                                    resolveActiveImplant(typeId)
+                                },
+                            )
+                        },
                 )
             }
             .sortedByDescending { it.systemSecurityStatus ?: Double.NEGATIVE_INFINITY }

@@ -84,7 +84,15 @@ data class JumpCloneLocationGroup(
     val locationName: String?,
     val systemSecurityStatus: Double?,
     val iconFilename: String?,
-    val cloneCount: Int,
-    val implantCount: Int,
-    val jumpCloneIds: List<Int> = emptyList(),
+    val clones: List<JumpCloneAtLocation> = emptyList(),
+) {
+    val cloneCount: Int get() = clones.size
+    val implantCount: Int get() = clones.sumOf { it.implants.size }
+}
+
+/** A single jump clone bay at a location, with its fitted implants. */
+data class JumpCloneAtLocation(
+    val jumpCloneId: Int,
+    val name: String? = null,
+    val implants: List<ActiveImplantInfo> = emptyList(),
 )
