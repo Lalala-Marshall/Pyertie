@@ -1,5 +1,6 @@
 package com.marshall.pyerite.characterClonesModule.data
 
+import com.marshall.pyerite.characterClonesModule.model.ActiveImplantInfo
 import com.marshall.pyerite.characterClonesModule.model.CharacterCloneStatus
 import com.marshall.pyerite.characterClonesModule.model.CloneLocationTypeApi
 import com.marshall.pyerite.characterClonesModule.model.JumpCloneConfig
@@ -21,7 +22,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 
 /**
- * Loads jump-clone cooldown, home location, and jump-clone list.
+ * Loads jump-clone status, home station, active implants, and jump-clone list.
  */
 internal class CharacterClonesLoader(
     private val tokenManager: EveTokenManager,
@@ -37,6 +38,13 @@ internal class CharacterClonesLoader(
                 runCatching {
                     tokenManager.executeWithAuthRetry(characterId) { auth ->
                         characterApi.fetchClones(characterId, auth)
+                    }
+                }.getOrNull()
+            }
+            val implantsDeferred = async {
+                runCatching {
+                    tokenManager.executeWithAuthRetry(characterId) { auth ->
+                        characterApi.fetchImplants(characterId, auth)
                     }
                 }.getOrNull()
             }
@@ -60,6 +68,9 @@ internal class CharacterClonesLoader(
             val homeLocation = clones.homeLocation?.let { location ->
                 resolveHomeLocation(characterId, location)
             }
+            val activeImplants = implantsDeferred.await().orEmpty().map { typeId ->
+                resolveActiveImplant(typeId)
+            }
             val jumpClones = clones.jumpClones.map { clone ->
                 mapJumpClone(characterId, clone)
             }
@@ -71,9 +82,48 @@ internal class CharacterClonesLoader(
                 lastStationChangeEpochMs = lastStationChangeEpochMs,
                 homeLocationName = homeLocation?.name,
                 homeLocationIconFilename = homeLocation?.iconFilename,
+                activeImplants = activeImplants,
                 jumpClones = jumpClones,
             )
         }
+    }
+
+    private suspend fun resolveActiveImplant(typeId: Int): ActiveImplantInfo {
+        val dao = runCatching { roomProvider.getDatabase().sdeTypeDao() }.getOrNull()
+        val displayRow = dao?.let { runCatching { it.getTypeDisplayName(typeId) }.getOrNull() }
+        val entity = if (displayRow == null) {
+            dao?.let { runCatching { it.getTypeById(typeId) }.getOrNull() }
+        } else {
+            null
+        }
+        val iconFilename = resolveTypeIconFilename(typeId)
+            ?: entity?.iconFilename?.takeIf { it.isNotBlank() }
+        if (displayRow != null) {
+            return ActiveImplantInfo(
+                typeId = typeId,
+                name = displayRow.name,
+                zhName = displayRow.zhName,
+                enName = displayRow.enName,
+                iconFilename = iconFilename,
+            )
+        }
+        if (entity != null) {
+            return ActiveImplantInfo(
+                typeId = typeId,
+                name = entity.name,
+                zhName = entity.zhName,
+                enName = entity.enName,
+                iconFilename = iconFilename,
+            )
+        }
+        val fromEsi = publicEsi.fetchTypeName(typeId)?.takeIf { it.isNotBlank() }
+        return ActiveImplantInfo(
+            typeId = typeId,
+            name = fromEsi,
+            zhName = null,
+            enName = fromEsi,
+            iconFilename = iconFilename,
+        )
     }
 
     private suspend fun mapJumpClone(

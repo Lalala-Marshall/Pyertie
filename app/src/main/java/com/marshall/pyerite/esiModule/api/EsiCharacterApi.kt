@@ -73,6 +73,13 @@ internal interface EsiCharacterApi {
     ): EsiCharacterClonesDto
 
     @Headers("Accept: application/json")
+    @GET("characters/{character_id}/implants")
+    suspend fun fetchImplants(
+        @Path("character_id") characterId: Long,
+        @Header("Authorization") authorization: String,
+    ): List<Int>
+
+    @Headers("Accept: application/json")
     @GET("characters/{character_id}/medals")
     suspend fun fetchMedals(
         @Path("character_id") characterId: Long,

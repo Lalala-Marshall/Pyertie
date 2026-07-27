@@ -14,6 +14,8 @@
     <string name="character_clone_base_location">Base Location</string>
     <string name="character_clone_last_clone_jump">Last Clone Jump</string>
     <string name="character_clone_last_station_change">Last Station Change</string>
+    <string name="character_clone_active_implants_section">Active Implants</string>
+    <string name="character_clone_no_implants">No implants</string>
     <string name="character_clone_timers">Timers</string>
     <string name="character_clone_next_jump">Next Jump</string>
     <string name="character_clone_last_jump">Last jump: %1$s</string>

@@ -16,9 +16,13 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
+import com.marshall.pyerite.characterClonesModule.model.ActiveImplantInfo
 import com.marshall.pyerite.characterClonesModule.model.CharacterCloneStatus
 import com.marshall.pyerite.characterClonesModule.viewModel.CharacterClonesViewModel
+import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
 import com.marshall.pyerite.esiModule.model.EsiDateTimeConfig
+import com.marshall.pyerite.localization.LocaleController
+import com.marshall.pyerite.localization.displayName
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemHint
@@ -30,6 +34,7 @@ import com.marshall.pyerite.ui.golbalComponents.pyeritePullRefreshTopBarAction
 import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
 import com.marshall.pyerite.ui.golbalComponents.rememberScrollTitleCollapsed
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -80,6 +85,15 @@ internal fun CharacterClonesPage(
                     status = uiState.status,
                     detailsPending = !uiState.detailsReady,
                     placeholder = placeholder,
+                )
+                Spacer(modifier = Modifier.height(sectionGap))
+                CharacterClonesActiveImplantsSection(
+                    implants = uiState.status.activeImplants,
+                    detailsPending = !uiState.detailsReady,
+                    placeholder = placeholder,
+                    onImplantClick = { typeId ->
+                        navController.navigate(DatabaseRoute.TypeDetail.create(typeId))
+                    },
                 )
             }
         }
@@ -158,6 +172,62 @@ private fun CharacterClonesHomeStationSection(
             ),
             showDivider = false,
         )
+    }
+}
+
+@Composable
+private fun CharacterClonesActiveImplantsSection(
+    implants: List<ActiveImplantInfo>,
+    detailsPending: Boolean,
+    placeholder: String,
+    onImplantClick: (typeId: Int) -> Unit,
+    localeController: LocaleController = koinInject(),
+) {
+    BaseContainer(
+        title = stringResource(R.string.character_clone_active_implants_section),
+        useSystemBarsPadding = false,
+    ) {
+        when {
+            detailsPending -> {
+                BaseLazyColumnItem(
+                    model = BaseLazyColumnItemModel(
+                        showLeadingIcon = false,
+                        itemName = placeholder,
+                        showChevron = false,
+                        onClick = null,
+                    ),
+                    showDivider = false,
+                )
+            }
+            implants.isEmpty() -> {
+                BaseLazyColumnItem(
+                    model = BaseLazyColumnItemModel(
+                        showLeadingIcon = false,
+                        itemName = stringResource(R.string.character_clone_no_implants),
+                        showChevron = false,
+                        onClick = null,
+                    ),
+                    showDivider = false,
+                )
+            }
+            else -> {
+                Column {
+                    implants.forEachIndexed { index, implant ->
+                        BaseLazyColumnItem(
+                            model = BaseLazyColumnItemModel(
+                                iconRes = R.drawable.ic_database,
+                                iconFileName = implant.iconFilename,
+                                iconOnLightPlate = true,
+                                itemName = implant.displayName(localeController),
+                                showChevron = true,
+                                onClick = { onImplantClick(implant.typeId) },
+                            ),
+                            showDivider = index != implants.lastIndex,
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

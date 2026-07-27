@@ -1,5 +1,7 @@
 package com.marshall.pyerite.characterClonesModule.model
 
+import com.marshall.pyerite.localization.LocalizableName
+
 /**
  * Jump-clone cooldown: base 24h, −1h per active level of Infomorph Synchronizing.
  */
@@ -55,6 +57,7 @@ data class CharacterCloneStatus(
     val lastStationChangeEpochMs: Long? = null,
     val homeLocationName: String? = null,
     val homeLocationIconFilename: String? = null,
+    val activeImplants: List<ActiveImplantInfo> = emptyList(),
     val jumpClones: List<JumpCloneInfo> = emptyList(),
 ) {
     companion object {
@@ -64,6 +67,14 @@ data class CharacterCloneStatus(
         )
     }
 }
+
+data class ActiveImplantInfo(
+    val typeId: Int,
+    override val name: String?,
+    override val zhName: String?,
+    override val enName: String?,
+    val iconFilename: String?,
+) : LocalizableName
 
 data class JumpCloneInfo(
     val jumpCloneId: Int,
