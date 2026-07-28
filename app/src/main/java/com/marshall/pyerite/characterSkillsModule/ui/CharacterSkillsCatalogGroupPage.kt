@@ -1,20 +1,35 @@
 package com.marshall.pyerite.characterSkillsModule.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogFilter
@@ -24,13 +39,12 @@ import com.marshall.pyerite.characterSkillsModule.viewModel.CharacterSkillsViewM
 import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
 import com.marshall.pyerite.localization.LocaleController
 import com.marshall.pyerite.localization.displayName
-import com.marshall.pyerite.ui.golbalComponents.BaseContainer
 import com.marshall.pyerite.ui.golbalComponents.PageTitle
 import com.marshall.pyerite.ui.golbalComponents.PyeritePageScaffold
 import com.marshall.pyerite.ui.golbalComponents.PyeritePullToRefreshBox
 import com.marshall.pyerite.ui.golbalComponents.pyeritePullRefreshTopBarAction
+import com.marshall.pyerite.ui.golbalComponents.rememberLazyListTitleCollapsed
 import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
-import com.marshall.pyerite.ui.golbalComponents.rememberScrollTitleCollapsed
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
@@ -41,13 +55,13 @@ internal fun CharacterSkillsCatalogGroupPage(
     localeController: LocaleController = koinInject(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val scrollState = rememberScrollState()
+    val listState = rememberLazyListState()
     val groupId = viewModel.routeCatalogGroupId
     val filter = viewModel.routeCatalogFilter
     val sectionGap = dimensionResource(R.dimen.type_detail_section_gap)
     val bottomPadding = dimensionResource(R.dimen.type_detail_bottom_padding)
     val onBack = navController.rememberNavigateUpAction()
-    val showCollapsedTitle = rememberScrollTitleCollapsed(scrollState)
+    val showCollapsedTitle = rememberLazyListTitleCollapsed(listState)
     val endActions = listOfNotNull(
         pyeritePullRefreshTopBarAction(
             isRefreshing = uiState.isLoading,
@@ -65,6 +79,8 @@ internal fun CharacterSkillsCatalogGroupPage(
     }
     val pageTitle = group?.displayName(localeController).orEmpty()
     val queuedTargets = uiState.status.queuedTargetLevelsBySkillId
+    val activeTrainingSkillId = uiState.status.activeTrainingSkillId
+    val activeTrainingLevel = uiState.status.activeTrainingLevel
     val (queuedSkills, otherSkills) = remember(group, filter, queuedTargets) {
         splitCatalogGroupSkills(
             group = group,
@@ -73,6 +89,7 @@ internal fun CharacterSkillsCatalogGroupPage(
         )
     }
     val otherSectionTitle = catalogFilterSectionTitle(filter)
+    val queueSectionTitle = stringResource(R.string.character_skills_catalog_section_in_queue)
 
     PyeritePageScaffold(
         title = pageTitle,
@@ -86,38 +103,44 @@ internal fun CharacterSkillsCatalogGroupPage(
                 .fillMaxSize()
                 .padding(topBarPadding),
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(bottom = bottomPadding),
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = bottomPadding),
             ) {
                 if (pageTitle.isNotEmpty()) {
-                    PageTitle(text = pageTitle)
-                    Spacer(modifier = Modifier.height(sectionGap))
+                    item(key = "page_title") {
+                        PageTitle(text = pageTitle)
+                        Spacer(modifier = Modifier.height(sectionGap))
+                    }
                 }
                 if (queuedSkills.isNotEmpty()) {
-                    CatalogGroupSkillSection(
-                        title = stringResource(R.string.character_skills_catalog_section_in_queue),
+                    catalogGroupSkillSection(
+                        sectionKey = "queue",
+                        title = queueSectionTitle,
+                        addTopGap = false,
                         skills = queuedSkills,
                         queuedTargetLevelsBySkillId = queuedTargets,
                         localeController = localeController,
                         highlightQueueTargets = true,
+                        activeTrainingSkillId = activeTrainingSkillId,
+                        activeTrainingLevel = activeTrainingLevel,
                         onSkillClick = { typeId ->
                             navController.navigate(DatabaseRoute.TypeDetail.create(typeId))
                         },
                     )
-                    if (otherSkills.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(sectionGap))
-                    }
                 }
                 if (otherSkills.isNotEmpty()) {
-                    CatalogGroupSkillSection(
+                    catalogGroupSkillSection(
+                        sectionKey = "other",
                         title = otherSectionTitle,
+                        addTopGap = queuedSkills.isNotEmpty(),
                         skills = otherSkills,
                         queuedTargetLevelsBySkillId = queuedTargets,
                         localeController = localeController,
                         highlightQueueTargets = false,
+                        activeTrainingSkillId = activeTrainingSkillId,
+                        activeTrainingLevel = activeTrainingLevel,
                         onSkillClick = { typeId ->
                             navController.navigate(DatabaseRoute.TypeDetail.create(typeId))
                         },
@@ -140,31 +163,119 @@ private fun catalogFilterSectionTitle(filter: SkillCatalogFilter): String? =
             stringResource(R.string.character_skills_catalog_filter_trainable)
     }
 
-@Composable
-private fun CatalogGroupSkillSection(
+private fun LazyListScope.catalogGroupSkillSection(
+    sectionKey: String,
     title: String?,
+    addTopGap: Boolean,
     skills: List<SkillCatalogSkill>,
     queuedTargetLevelsBySkillId: Map<Int, Int>,
     localeController: LocaleController,
     highlightQueueTargets: Boolean,
+    activeTrainingSkillId: Int?,
+    activeTrainingLevel: Int?,
     onSkillClick: (Int) -> Unit,
 ) {
-    BaseContainer(
-        title = title,
-        useSystemBarsPadding = false,
-    ) {
-        Column {
-            skills.forEachIndexed { index, skill ->
-                SkillCatalogSkillRow(
-                    skill = skill,
-                    queuedTargetLevel = queuedTargetLevelsBySkillId[skill.typeId],
-                    localeController = localeController,
-                    highlightQueueTarget = highlightQueueTargets,
-                    showDivider = index != skills.lastIndex,
-                    onClick = { onSkillClick(skill.typeId) },
-                )
-            }
+    if (title != null) {
+        item(key = "$sectionKey:header") {
+            CatalogGroupSectionHeader(title = title, addTopGap = addTopGap)
         }
+    } else if (addTopGap) {
+        item(key = "$sectionKey:gap") {
+            Spacer(
+                modifier = Modifier.height(
+                    dimensionResource(R.dimen.type_detail_section_gap),
+                ),
+            )
+        }
+    }
+    itemsIndexed(
+        items = skills,
+        key = { _, skill -> "$sectionKey:${skill.typeId}" },
+    ) { index, skill ->
+        CatalogGroupSkillListItem(
+            skill = skill,
+            queuedTargetLevel = queuedTargetLevelsBySkillId[skill.typeId],
+            localeController = localeController,
+            highlightQueueTarget = highlightQueueTargets,
+            showDivider = index != skills.lastIndex,
+            indexInSection = index,
+            sectionItemCount = skills.size,
+            activeTrainingSkillId = activeTrainingSkillId,
+            activeTrainingLevel = activeTrainingLevel,
+            onClick = { onSkillClick(skill.typeId) },
+        )
+    }
+}
+
+@Composable
+private fun CatalogGroupSectionHeader(
+    title: String,
+    addTopGap: Boolean,
+) {
+    val sectionHeaderTextSize = dimensionResource(R.dimen.list_section_header_text_size).value.sp
+    Text(
+        text = title,
+        fontSize = sectionHeaderTextSize,
+        fontWeight = FontWeight.Black,
+        color = colorResource(R.color.text_primary),
+        modifier = Modifier.padding(
+            start = dimensionResource(R.dimen.type_detail_page_title_start_padding),
+            bottom = dimensionResource(R.dimen.list_section_header_bottom_padding),
+            top = if (addTopGap) {
+                dimensionResource(R.dimen.type_detail_section_gap)
+            } else {
+                0.dp
+            },
+        ),
+    )
+}
+
+@Composable
+private fun CatalogGroupSkillListItem(
+    skill: SkillCatalogSkill,
+    queuedTargetLevel: Int?,
+    localeController: LocaleController,
+    highlightQueueTarget: Boolean,
+    showDivider: Boolean,
+    indexInSection: Int,
+    sectionItemCount: Int,
+    activeTrainingSkillId: Int?,
+    activeTrainingLevel: Int?,
+    onClick: () -> Unit,
+) {
+    val cardCornerRadius = dimensionResource(R.dimen.detail_card_corner_radius)
+    val shape = catalogSectionItemShape(indexInSection, sectionItemCount, cardCornerRadius)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = dimensionResource(R.dimen.detail_card_horizontal_padding))
+            .clip(shape)
+            .background(colorResource(R.color.second_background), shape),
+    ) {
+        SkillCatalogSkillRow(
+            skill = skill,
+            queuedTargetLevel = queuedTargetLevel,
+            localeController = localeController,
+            highlightQueueTarget = highlightQueueTarget,
+            showDivider = showDivider,
+            onClick = onClick,
+            activeTrainingSkillId = activeTrainingSkillId,
+            activeTrainingLevel = activeTrainingLevel,
+        )
+    }
+}
+
+private fun catalogSectionItemShape(
+    indexInSection: Int,
+    sectionItemCount: Int,
+    corner: Dp,
+): Shape {
+    return when {
+        sectionItemCount == 1 -> RoundedCornerShape(corner)
+        indexInSection == 0 -> RoundedCornerShape(topStart = corner, topEnd = corner)
+        indexInSection == sectionItemCount - 1 ->
+            RoundedCornerShape(bottomStart = corner, bottomEnd = corner)
+        else -> RectangleShape
     }
 }
 

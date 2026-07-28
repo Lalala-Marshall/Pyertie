@@ -73,6 +73,7 @@
     <string name="region_market">Region market</string>
     <string name="structure_value">Structure value</string>
     <string name="skill_level">Level %1$d</string>
+    <string name="skill_level_short">Lv %1$d</string>
 
     <!-- Dogma Categories -->
     <string name="category_fitting">Fitting</string>

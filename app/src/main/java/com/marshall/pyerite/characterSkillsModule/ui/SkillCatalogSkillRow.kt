@@ -1,7 +1,6 @@
 package com.marshall.pyerite.characterSkillsModule.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import com.marshall.pyerite.R
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogSkill
@@ -20,8 +19,9 @@ internal fun SkillCatalogSkillRow(
     highlightQueueTarget: Boolean,
     showDivider: Boolean,
     onClick: () -> Unit,
+    activeTrainingSkillId: Int? = null,
+    activeTrainingLevel: Int? = null,
 ) {
-    val queueTextColor = colorResource(R.color.character_skills_catalog_queue_text)
     val trainedSpText = NumberDisplayFormatter.format(
         skill.trainedSp,
         NumberDisplayFormatter.Style.COMPACT,
@@ -30,11 +30,17 @@ internal fun SkillCatalogSkillRow(
         skill.maxSp,
         NumberDisplayFormatter.Style.COMPACT,
     )
-    val trailingLevel = when {
-        highlightQueueTarget && queuedTargetLevel != null -> queuedTargetLevel
-        skill.isInjected -> skill.trainedLevel
-        else -> null
+    val inQueue = highlightQueueTarget && queuedTargetLevel != null
+    val showAsInjected = skill.isInjected || inQueue
+    val blinkingLevel = if (
+        activeTrainingSkillId == skill.typeId &&
+        activeTrainingLevel != null
+    ) {
+        activeTrainingLevel
+    } else {
+        null
     }
+
     BaseLazyColumnItem(
         model = BaseLazyColumnItemModel(
             iconFileName = skill.iconFilename,
@@ -49,17 +55,17 @@ internal fun SkillCatalogSkillRow(
                     ),
                 ),
             ),
-            trailingValue = trailingLevel?.let {
-                stringResource(R.string.skill_level, it)
-            }.orEmpty(),
-            trailingValueColor = if (highlightQueueTarget && queuedTargetLevel != null) {
-                queueTextColor
-            } else {
-                null
-            },
             showChevron = true,
             onClick = onClick,
         ),
         showDivider = showDivider,
+        trailingContent = {
+            SkillCatalogLevelTrailing(
+                isInjected = showAsInjected,
+                level = skill.trainedLevel,
+                queuedTargetLevel = if (inQueue) queuedTargetLevel else null,
+                blinkingLevel = blinkingLevel,
+            )
+        },
     )
 }

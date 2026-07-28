@@ -74,6 +74,7 @@
     <string name="region_market">星域市场</string>
     <string name="structure_value">结构值</string>
     <string name="skill_level">等级 %1$d</string>
+    <string name="skill_level_short">%1$d级</string>
 
     <!-- Dogma Categories -->
     <string name="category_fitting">装配</string>

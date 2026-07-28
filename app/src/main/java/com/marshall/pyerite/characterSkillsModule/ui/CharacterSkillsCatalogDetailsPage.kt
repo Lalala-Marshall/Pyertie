@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -59,7 +60,6 @@ import com.marshall.pyerite.ui.golbalComponents.search.SearchNoResultsItem
 import com.marshall.pyerite.ui.golbalComponents.search.matchesSearchQuery
 import com.marshall.pyerite.localization.LocaleController
 import com.marshall.pyerite.localization.displayName
-import com.marshall.pyerite.ui.golbalComponents.BaseContainer
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemHint
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
@@ -174,6 +174,8 @@ internal fun CharacterSkillsCatalogDetailsPage(
                     CatalogSearchEntryContent(
                         entry = entry,
                         queuedTargetLevelsBySkillId = queuedTargets,
+                        activeTrainingSkillId = uiState.status.activeTrainingSkillId,
+                        activeTrainingLevel = uiState.status.activeTrainingLevel,
                         localeController = localeController,
                         onSkillClick = { typeId ->
                             navController.navigate(DatabaseRoute.TypeDetail.create(typeId))
@@ -181,34 +183,35 @@ internal fun CharacterSkillsCatalogDetailsPage(
                     )
                 }
             } else {
-                item(key = "catalog_groups") {
-                    BaseContainer(
-                        title = null,
-                        useSystemBarsPadding = false,
-                    ) {
-                        SkillCatalogFilterRow(
-                            selected = uiState.catalogFilter,
-                            onSelect = viewModel::setCatalogFilter,
-                        )
-                        visibleGroups.forEachIndexed { index, group ->
-                            SkillCatalogGroupRow(
-                                group = group,
-                                filter = uiState.catalogFilter,
-                                queuedTargetLevelsBySkillId = queuedTargets,
-                                localeController = localeController,
-                                showDivider = index != visibleGroups.lastIndex,
-                                onClick = {
-                                    navController.navigate(
-                                        CharacterSkillsRoute.CatalogGroup.create(
-                                            characterId = uiState.status.characterId,
-                                            groupId = group.groupId,
-                                            filter = uiState.catalogFilter,
-                                        ),
-                                    )
-                                },
+                item(key = "catalog_filter") {
+                    CatalogFilterCard(
+                        selected = uiState.catalogFilter,
+                        onSelect = viewModel::setCatalogFilter,
+                        hasGroupsBelow = visibleGroups.isNotEmpty(),
+                    )
+                }
+                itemsIndexed(
+                    items = visibleGroups,
+                    key = { _, group -> "catalog_group:${group.groupId}" },
+                ) { index, group ->
+                    CatalogGroupListItem(
+                        group = group,
+                        filter = uiState.catalogFilter,
+                        queuedTargetLevelsBySkillId = queuedTargets,
+                        localeController = localeController,
+                        showDivider = index != visibleGroups.lastIndex,
+                        indexInSection = index,
+                        sectionItemCount = visibleGroups.size,
+                        onClick = {
+                            navController.navigate(
+                                CharacterSkillsRoute.CatalogGroup.create(
+                                    characterId = uiState.status.characterId,
+                                    groupId = group.groupId,
+                                    filter = uiState.catalogFilter,
+                                ),
                             )
-                        }
-                    }
+                        },
+                    )
                 }
                 item(key = "page:bottom_padding") {
                     Spacer(
@@ -226,6 +229,8 @@ internal fun CharacterSkillsCatalogDetailsPage(
 private fun CatalogSearchEntryContent(
     entry: CatalogListEntry,
     queuedTargetLevelsBySkillId: Map<Int, Int>,
+    activeTrainingSkillId: Int?,
+    activeTrainingLevel: Int?,
     localeController: LocaleController,
     onSkillClick: (Int) -> Unit,
 ) {
@@ -257,6 +262,8 @@ private fun CatalogSearchEntryContent(
                 showDivider = entry.showDivider,
                 indexInSection = entry.indexInSection,
                 sectionItemCount = entry.sectionItemCount,
+                activeTrainingSkillId = activeTrainingSkillId,
+                activeTrainingLevel = activeTrainingLevel,
                 onClick = { onSkillClick(entry.skill.typeId) },
             )
         }
@@ -274,6 +281,8 @@ private fun CatalogSearchSkillSectionItem(
     showDivider: Boolean,
     indexInSection: Int,
     sectionItemCount: Int,
+    activeTrainingSkillId: Int?,
+    activeTrainingLevel: Int?,
     onClick: () -> Unit,
 ) {
     val cardCornerRadius = dimensionResource(R.dimen.detail_card_corner_radius)
@@ -292,6 +301,8 @@ private fun CatalogSearchSkillSectionItem(
             highlightQueueTarget = queuedTargetLevel != null,
             showDivider = showDivider,
             onClick = onClick,
+            activeTrainingSkillId = activeTrainingSkillId,
+            activeTrainingLevel = activeTrainingLevel,
         )
     }
 }
@@ -349,6 +360,80 @@ private fun buildCatalogSearchEntries(
         }
 
     add(CatalogListEntry.BottomPadding)
+}
+
+@Composable
+private fun CatalogFilterCard(
+    selected: SkillCatalogFilter,
+    onSelect: (SkillCatalogFilter) -> Unit,
+    hasGroupsBelow: Boolean,
+) {
+    val corner = dimensionResource(R.dimen.detail_card_corner_radius)
+    val shape = if (hasGroupsBelow) {
+        RoundedCornerShape(topStart = corner, topEnd = corner)
+    } else {
+        RoundedCornerShape(corner)
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = dimensionResource(R.dimen.detail_card_horizontal_padding))
+            .clip(shape)
+            .background(colorResource(R.color.second_background), shape),
+    ) {
+        SkillCatalogFilterRow(
+            selected = selected,
+            onSelect = onSelect,
+        )
+    }
+}
+
+@Composable
+private fun CatalogGroupListItem(
+    group: SkillCatalogGroup,
+    filter: SkillCatalogFilter,
+    queuedTargetLevelsBySkillId: Map<Int, Int>,
+    localeController: LocaleController,
+    showDivider: Boolean,
+    indexInSection: Int,
+    sectionItemCount: Int,
+    onClick: () -> Unit,
+) {
+    val corner = dimensionResource(R.dimen.detail_card_corner_radius)
+    val shape = catalogGroupsItemShape(
+        indexInSection = indexInSection,
+        sectionItemCount = sectionItemCount,
+        corner = corner,
+    )
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = dimensionResource(R.dimen.detail_card_horizontal_padding))
+            .clip(shape)
+            .background(colorResource(R.color.second_background), shape),
+    ) {
+        SkillCatalogGroupRow(
+            group = group,
+            filter = filter,
+            queuedTargetLevelsBySkillId = queuedTargetLevelsBySkillId,
+            localeController = localeController,
+            showDivider = showDivider,
+            onClick = onClick,
+        )
+    }
+}
+
+/** Groups sit under the filter card — never round the top edge. */
+private fun catalogGroupsItemShape(
+    indexInSection: Int,
+    sectionItemCount: Int,
+    corner: Dp,
+): Shape {
+    return when {
+        sectionItemCount == 1 || indexInSection == sectionItemCount - 1 ->
+            RoundedCornerShape(bottomStart = corner, bottomEnd = corner)
+        else -> RectangleShape
+    }
 }
 
 @Composable
@@ -538,7 +623,6 @@ private fun SkillCatalogGroupRow(
                         contentDescription = null,
                         tint = colorResource(R.color.character_status_positive),
                         modifier = Modifier
-                            .padding(start = 6.dp)
                             .size(16.dp)
                             .clip(CircleShape)
                             .background(colorResource(R.color.character_status_positive).copy(alpha = 0.15f))

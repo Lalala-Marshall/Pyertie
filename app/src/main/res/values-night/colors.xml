@@ -40,6 +40,7 @@
     <color name="character_skills_catalog_filter_selected">#2A2A2A</color>
     <color name="character_skills_catalog_queue_text">#40C4FF</color>
     <color name="character_skills_catalog_queue_background">#0A3A55</color>
+    <color name="skill_level_queue_segment">#8A8A8A</color>
     <color name="character_delete">#EF5350</color>
     <color name="character_org_badge_background">#000000</color>
     <color name="character_status_positive">#34A853</color>

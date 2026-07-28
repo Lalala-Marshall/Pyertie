@@ -68,6 +68,8 @@ private data class CachedCharacterSkillQueueStatus(
     val pausedSkillCount: Int = 0,
     val pausedRemainingSeconds: Long? = null,
     val queuedSkillTargets: List<CachedQueuedSkillTarget> = emptyList(),
+    val activeTrainingSkillId: Int? = null,
+    val activeTrainingLevel: Int? = null,
 ) {
     fun toModel(): CharacterSkillQueueStatus = CharacterSkillQueueStatus(
         characterId = characterId,
@@ -77,6 +79,8 @@ private data class CachedCharacterSkillQueueStatus(
         pausedSkillCount = pausedSkillCount,
         pausedRemainingSeconds = pausedRemainingSeconds,
         queuedTargetLevelsBySkillId = queuedSkillTargets.associate { it.skillId to it.targetLevel },
+        activeTrainingSkillId = activeTrainingSkillId,
+        activeTrainingLevel = activeTrainingLevel,
     )
 
     companion object {
@@ -90,6 +94,8 @@ private data class CachedCharacterSkillQueueStatus(
                 queuedSkillTargets = status.queuedTargetLevelsBySkillId.map { (skillId, level) ->
                     CachedQueuedSkillTarget(skillId = skillId, targetLevel = level)
                 },
+                activeTrainingSkillId = status.activeTrainingSkillId,
+                activeTrainingLevel = status.activeTrainingLevel,
             )
     }
 }

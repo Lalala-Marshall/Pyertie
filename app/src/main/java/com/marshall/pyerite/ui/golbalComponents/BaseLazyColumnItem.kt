@@ -117,6 +117,10 @@ fun BaseLazyColumnItem(
     titleLeadingContent: (@Composable () -> Unit)? = null,
     /** Trailing content on the title row (e.g. status tag next to the name). */
     titleTrailingContent: (@Composable () -> Unit)? = null,
+    /**
+     * Custom trailing slot before the chevron. When set, replaces [BaseLazyColumnItemModel.trailingValue].
+     */
+    trailingContent: (@Composable () -> Unit)? = null,
     iconManager: IconManager = koinInject(),
 ) {
     val hints = model.resolvedHints()
@@ -207,7 +211,7 @@ fun BaseLazyColumnItem(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(hintSpacing),
                 ) {
-                    Row(verticalAlignment = Alignment.Top) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         if (showHintLeadingColumn) {
                             Box(
                                 modifier = Modifier.size(hintIconSize),
@@ -228,7 +232,7 @@ fun BaseLazyColumnItem(
                                 },
                                 fontSize = titleTextSize,
                                 lineHeight = titleLineHeight,
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.weight(1f, fill = false),
                             )
                         } else {
                             Text(
@@ -241,7 +245,7 @@ fun BaseLazyColumnItem(
                                 },
                                 fontSize = titleTextSize,
                                 lineHeight = titleLineHeight,
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.weight(1f, fill = false),
                             )
                         }
                         if (titleTrailingContent != null) {
@@ -285,7 +289,10 @@ fun BaseLazyColumnItem(
                     }
                 }
 
-                if (model.trailingValue.isNotEmpty()) {
+                if (trailingContent != null) {
+                    Spacer(modifier = Modifier.width(titleValueGap))
+                    trailingContent()
+                } else if (model.trailingValue.isNotEmpty()) {
                     Spacer(modifier = Modifier.width(titleValueGap))
                     Text(
                         text = model.trailingValue,

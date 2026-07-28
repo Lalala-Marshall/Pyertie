@@ -112,12 +112,15 @@ internal class CharacterSkillsLoader(
         val finishTimes = ordered.mapNotNull { entry ->
             entry.finishDate?.let { parseEsiDateMillis(it) }
         }
+        val head = ordered.firstOrNull()
         return if (finishTimes.isNotEmpty()) {
             CharacterSkillQueueStatus(
                 characterId = characterId,
                 state = CharacterSkillQueueState.TRAINING,
                 trainingFinishAtEpochMs = finishTimes,
                 queuedTargetLevelsBySkillId = queuedTargetLevelsBySkillId,
+                activeTrainingSkillId = head?.skillId,
+                activeTrainingLevel = head?.finishedLevel,
             )
         } else {
             CharacterSkillQueueStatus(

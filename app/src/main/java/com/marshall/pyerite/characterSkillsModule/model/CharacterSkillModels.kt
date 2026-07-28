@@ -43,6 +43,12 @@ data class CharacterSkillQueueStatus(
      * Example: L1 done, queueing L2/L3/L4 → map value is 4.
      */
     val queuedTargetLevelsBySkillId: Map<Int, Int> = emptyMap(),
+    /**
+     * Head of the ESI skill queue while [state] is [CharacterSkillQueueState.TRAINING]:
+     * skill type id + `finished_level` currently being trained. Null when idle / paused.
+     */
+    val activeTrainingSkillId: Int? = null,
+    val activeTrainingLevel: Int? = null,
 ) {
     companion object {
         fun empty(characterId: Long): CharacterSkillQueueStatus = CharacterSkillQueueStatus(
@@ -101,6 +107,11 @@ internal object SkillCatalogConfig {
     const val SP_LEVEL_BASE = 32.0
     const val PROGRESS_MIN = 0f
     const val PROGRESS_MAX = 1f
+
+    /** Queue training-segment blink (gray cell). */
+    const val QUEUE_LEVEL_BLINK_PERIOD_MS = 1_100
+    const val QUEUE_LEVEL_BLINK_ALPHA_MIN = 0.2f
+    const val QUEUE_LEVEL_BLINK_ALPHA_MAX = 1f
 
     /**
      * Total SP required to reach [level] (EVE formula is already cumulative):

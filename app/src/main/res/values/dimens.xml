@@ -142,6 +142,14 @@
     <dimen name="character_skills_catalog_filter_bar_horizontal_padding">4dp</dimen>
     <dimen name="character_skills_catalog_filter_item_vertical_padding">6dp</dimen>
     <dimen name="character_skills_catalog_filter_item_horizontal_padding">8dp</dimen>
+    <dimen name="skill_level_segments_width">56dp</dimen>
+    <dimen name="skill_level_segments_height">10dp</dimen>
+    <dimen name="skill_level_segments_border">1dp</dimen>
+    <dimen name="skill_level_segments_inset">2dp</dimen>
+    <dimen name="skill_level_segments_gap">2dp</dimen>
+    <dimen name="skill_level_segments_outer_corner">1dp</dimen>
+    <dimen name="skill_level_segments_inner_corner">0.5dp</dimen>
+    <dimen name="skill_level_segments_label_gap">6dp</dimen>
 
     <!-- Character sheet -->
     <dimen name="character_sheet_online_dot_size">8dp</dimen>
