@@ -174,6 +174,7 @@ data class SkillCatalogSkill(
      * (skillbook injected / absorbed onto the character).
      */
     val isInjected: Boolean,
+    val iconFilename: String? = null,
 ) : LocalizableName {
     val isCompleted: Boolean
         get() = isInjected && trainedLevel >= SkillCatalogConfig.MAX_SKILL_LEVEL

@@ -161,7 +161,8 @@ interface SkillDao {
             t.name AS name,
             t.zh_name AS zhName,
             t.en_name AS enName,
-            ta.value AS skillTimeConstant
+            ta.value AS skillTimeConstant,
+            t.icon_filename AS iconFilename
         FROM types t
         INNER JOIN typeAttributes ta ON ta.type_id = t.type_id
         INNER JOIN dogmaAttributes da

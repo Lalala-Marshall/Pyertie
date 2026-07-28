@@ -13,4 +13,5 @@ data class SkillCatalogTypeRow(
     override val zhName: String?,
     override val enName: String?,
     val skillTimeConstant: Double,
+    val iconFilename: String?,
 ) : LocalizableName

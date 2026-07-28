@@ -1,5 +1,7 @@
 package com.marshall.pyerite.characterSkillsModule.navHost
 
+import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogFilter
+
 sealed class CharacterSkillsRoute(val route: String) {
 
     object Queue : CharacterSkillsRoute("character/skills/{characterId}") {
@@ -12,5 +14,15 @@ sealed class CharacterSkillsRoute(val route: String) {
 
     object CatalogDetails : CharacterSkillsRoute("character/skills/{characterId}/catalog") {
         fun create(characterId: Long) = "character/skills/$characterId/catalog"
+    }
+
+    object CatalogGroup : CharacterSkillsRoute(
+        "character/skills/{characterId}/catalog/{groupId}/{filter}",
+    ) {
+        fun create(
+            characterId: Long,
+            groupId: Int,
+            filter: SkillCatalogFilter,
+        ) = "character/skills/$characterId/catalog/$groupId/${filter.name}"
     }
 }

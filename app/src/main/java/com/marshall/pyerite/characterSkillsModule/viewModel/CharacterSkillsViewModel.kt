@@ -17,8 +17,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * Shared by main-page skills hint, skills page, attributes page, and catalog details.
+ * Shared by main-page skills hint, skills page, attributes, catalog details, and catalog group.
  * - Detail routes: [NAV_ARG_CHARACTER_ID] from [SavedStateHandle]
+ * - Catalog group: also [NAV_ARG_GROUP_ID] + [NAV_ARG_CATALOG_FILTER]
  * - Main page: call [setCharacterId] when selection changes
  */
 class CharacterSkillsViewModel(
@@ -27,6 +28,15 @@ class CharacterSkillsViewModel(
 ) : ViewModel() {
 
     private val routeCharacterId: Long? = savedStateHandle[NAV_ARG_CHARACTER_ID]
+
+    /** Set on the catalog-group route; null on other skill routes. */
+    val routeCatalogGroupId: Int? = savedStateHandle[NAV_ARG_GROUP_ID]
+
+    /** Filter snapshot from the catalog-group route nav args. */
+    val routeCatalogFilter: SkillCatalogFilter =
+        savedStateHandle.get<String>(NAV_ARG_CATALOG_FILTER)
+            ?.let { runCatching { SkillCatalogFilter.valueOf(it) }.getOrNull() }
+            ?: SkillCatalogFilter.ALL
 
     private val _uiState = MutableStateFlow(initialUiState())
     val uiState: StateFlow<CharacterSkillsUiState> = _uiState.asStateFlow()
@@ -108,8 +118,21 @@ class CharacterSkillsViewModel(
         _uiState.update { it.copy(catalogFilter = filter) }
     }
 
+    fun setCatalogSearchActive(active: Boolean) {
+        _uiState.update { it.copy(catalogSearchActive = active) }
+    }
+
     fun setCatalogSearchQuery(query: String) {
         _uiState.update { it.copy(catalogSearchQuery = query) }
+    }
+
+    fun cancelCatalogSearch() {
+        _uiState.update {
+            it.copy(
+                catalogSearchActive = false,
+                catalogSearchQuery = "",
+            )
+        }
     }
 
     private fun initialUiState(): CharacterSkillsUiState {
@@ -238,6 +261,8 @@ class CharacterSkillsViewModel(
 
     companion object {
         const val NAV_ARG_CHARACTER_ID = "characterId"
+        const val NAV_ARG_GROUP_ID = "groupId"
+        const val NAV_ARG_CATALOG_FILTER = "filter"
     }
 }
 
@@ -254,6 +279,7 @@ data class CharacterSkillsUiState(
     val catalogReady: Boolean = false,
     val catalogFilter: SkillCatalogFilter = SkillCatalogFilter.ALL,
     val catalogSearchQuery: String = "",
+    val catalogSearchActive: Boolean = false,
 ) {
     companion object {
         fun empty(): CharacterSkillsUiState = CharacterSkillsUiState(

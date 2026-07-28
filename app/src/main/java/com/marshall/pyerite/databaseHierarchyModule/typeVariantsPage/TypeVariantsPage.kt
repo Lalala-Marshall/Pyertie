@@ -36,9 +36,9 @@ import com.marshall.pyerite.localization.displayName
 import com.marshall.pyerite.databaseHierarchyModule.navHost.rememberDatabaseRootBackStackEntry
 import com.marshall.pyerite.sdeModule.room.catalog.MetaGroupEntity
 import com.marshall.pyerite.sdeModule.room.type.TypeEntity
-import com.marshall.pyerite.databaseHierarchyModule.search.DatabaseListSearchHost
-import com.marshall.pyerite.databaseHierarchyModule.search.SearchNoResultsItem
-import com.marshall.pyerite.databaseHierarchyModule.search.matchingSearch
+import com.marshall.pyerite.ui.golbalComponents.search.PyeriteListSearchHost
+import com.marshall.pyerite.ui.golbalComponents.search.SearchNoResultsItem
+import com.marshall.pyerite.ui.golbalComponents.search.matchingSearch
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
@@ -113,9 +113,11 @@ fun TypeVariantsPage(
     val pageTitle = stringResource(R.string.type_detail_variants_section)
     val onBack = navController.rememberNavigateUpAction()
 
-    DatabaseListSearchHost(
-        pageKey = pageKey,
-        viewModel = viewModel,
+    PyeriteListSearchHost(
+        searchState = searchState,
+        onActivateSearch = { viewModel.setSearchActive(pageKey, true) },
+        onQueryChange = { viewModel.setSearchQuery(pageKey, it) },
+        onCancelSearch = { viewModel.cancelSearch(pageKey) },
         listState = listState,
         navTitle = pageTitle,
         modifier = Modifier.fillMaxSize(),

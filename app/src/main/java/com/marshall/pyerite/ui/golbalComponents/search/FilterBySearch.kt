@@ -1,4 +1,4 @@
-package com.marshall.pyerite.databaseHierarchyModule.search
+package com.marshall.pyerite.ui.golbalComponents.search
 
 import com.marshall.pyerite.localization.LocaleController
 import com.marshall.pyerite.localization.LocalizableName

@@ -2,10 +2,9 @@ package com.marshall.pyerite.characterSkillsModule.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -14,16 +13,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,43 +29,65 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogConfig
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogFilter
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogGroup
+import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogSkill
 import com.marshall.pyerite.characterSkillsModule.model.SkillGroupIcons
+import com.marshall.pyerite.characterSkillsModule.navHost.CharacterSkillsRoute
 import com.marshall.pyerite.characterSkillsModule.viewModel.CharacterSkillsViewModel
+import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
+import com.marshall.pyerite.ui.golbalComponents.search.ListSearchState
+import com.marshall.pyerite.ui.golbalComponents.search.PyeriteListSearchHost
+import com.marshall.pyerite.ui.golbalComponents.search.SearchNoResultsItem
+import com.marshall.pyerite.ui.golbalComponents.search.matchesSearchQuery
 import com.marshall.pyerite.localization.LocaleController
-import com.marshall.pyerite.localization.LocalizableName
 import com.marshall.pyerite.localization.displayName
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemHint
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
 import com.marshall.pyerite.ui.golbalComponents.PageTitle
-import com.marshall.pyerite.ui.golbalComponents.PyeritePageScaffold
 import com.marshall.pyerite.ui.golbalComponents.PyeritePullToRefreshBox
 import com.marshall.pyerite.ui.golbalComponents.pyeritePullRefreshTopBarAction
-import com.marshall.pyerite.ui.golbalComponents.rememberLazyListTitleCollapsed
 import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
 import com.marshall.pyerite.util.NumberDisplayFormatter
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+
+private sealed class CatalogListEntry(val key: String) {
+    data class SectionHeader(
+        val groupId: Int,
+        val title: String,
+        val addTopGap: Boolean,
+    ) : CatalogListEntry("header:$groupId")
+
+    data class SkillItem(
+        val groupId: Int,
+        val skill: SkillCatalogSkill,
+        val showDivider: Boolean,
+        val indexInSection: Int,
+        val sectionItemCount: Int,
+    ) : CatalogListEntry("skill:$groupId:${skill.typeId}")
+
+    data object BottomPadding : CatalogListEntry("page:bottom_padding")
+}
 
 @Composable
 internal fun CharacterSkillsCatalogDetailsPage(
@@ -82,7 +99,6 @@ internal fun CharacterSkillsCatalogDetailsPage(
     val listState = rememberLazyListState()
     val pageTitle = stringResource(R.string.character_skills_catalog_details)
     val onBack = navController.rememberNavigateUpAction()
-    val showCollapsedTitle = rememberLazyListTitleCollapsed(listState)
     val endActions = listOfNotNull(
         pyeritePullRefreshTopBarAction(
             isRefreshing = uiState.isLoading,
@@ -90,61 +106,82 @@ internal fun CharacterSkillsCatalogDetailsPage(
             onRefresh = viewModel::refreshCatalog,
         ),
     )
+    val searchState = ListSearchState(
+        isActive = uiState.catalogSearchActive,
+        query = uiState.catalogSearchQuery,
+    )
 
     LaunchedEffect(Unit) {
         viewModel.ensureCatalogLoaded()
     }
 
+    val queuedTargets = uiState.status.queuedTargetLevelsBySkillId
     val visibleGroups = remember(
         uiState.catalogGroups,
         uiState.catalogFilter,
+        queuedTargets,
+    ) {
+        uiState.catalogGroups.filter { group ->
+            group.matchesFilter(uiState.catalogFilter, queuedTargets)
+        }
+    }
+    val searchEntries = remember(
+        uiState.catalogGroups,
+        uiState.catalogFilter,
         uiState.catalogSearchQuery,
-        uiState.status.queuedTargetLevelsBySkillId,
+        queuedTargets,
         localeController.contentLanguage,
     ) {
-        val queuedTargets = uiState.status.queuedTargetLevelsBySkillId
-        uiState.catalogGroups
-            .filter { group -> group.matchesFilter(uiState.catalogFilter, queuedTargets) }
-            .filter { group ->
-                val query = uiState.catalogSearchQuery
-                if (query.isBlank()) return@filter true
-                group.matchesCatalogQuery(query, localeController) ||
-                    group.skills.any { skill ->
-                        skill.matchesCatalogQuery(query, localeController)
-                    }
-            }
+        buildCatalogSearchEntries(
+            groups = uiState.catalogGroups,
+            filter = uiState.catalogFilter,
+            query = uiState.catalogSearchQuery,
+            queuedTargetLevelsBySkillId = queuedTargets,
+            localeController = localeController,
+        )
     }
+    val hasSearchItems = searchEntries.any { it is CatalogListEntry.SkillItem }
+    val isSearchMode = uiState.catalogSearchQuery.isNotBlank()
 
-    PyeritePageScaffold(
-        title = pageTitle,
-        showCollapsedTitle = showCollapsedTitle,
-        onBack = onBack,
-        endActions = endActions,
-    ) { topBarPadding ->
-        PyeritePullToRefreshBox(
-            onRefresh = viewModel::refreshCatalog,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(topBarPadding),
-        ) {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    bottom = dimensionResource(R.dimen.type_detail_bottom_padding),
-                ),
-            ) {
-                item(key = "page_title") {
-                    PageTitle(text = pageTitle)
+    PyeritePullToRefreshBox(
+        onRefresh = viewModel::refreshCatalog,
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        PyeriteListSearchHost(
+            searchState = searchState,
+            onActivateSearch = { viewModel.setCatalogSearchActive(true) },
+            onQueryChange = viewModel::setCatalogSearchQuery,
+            onCancelSearch = viewModel::cancelCatalogSearch,
+            listState = listState,
+            navTitle = pageTitle,
+            modifier = Modifier.fillMaxSize(),
+            onBack = onBack,
+            endActions = endActions,
+            title = {
+                PageTitle(text = pageTitle)
+            },
+        ) { query ->
+            if (query.isNotBlank() && !hasSearchItems) {
+                item(key = "search_no_results") {
+                    SearchNoResultsItem()
                 }
-                item(key = "search") {
-                    SkillCatalogSearchField(
-                        query = uiState.catalogSearchQuery,
-                        onQueryChange = viewModel::setCatalogSearchQuery,
-                        onClearQuery = { viewModel.setCatalogSearchQuery("") },
+            }
+            if (isSearchMode) {
+                items(
+                    items = searchEntries,
+                    key = { entry -> entry.key },
+                ) { entry ->
+                    CatalogSearchEntryContent(
+                        entry = entry,
+                        queuedTargetLevelsBySkillId = queuedTargets,
+                        localeController = localeController,
+                        onSkillClick = { typeId ->
+                            navController.navigate(DatabaseRoute.TypeDetail.create(typeId))
+                        },
                     )
                 }
-                item(key = "catalog_content") {
+            } else {
+                item(key = "catalog_groups") {
                     BaseContainer(
                         title = null,
                         useSystemBarsPadding = false,
@@ -157,14 +194,28 @@ internal fun CharacterSkillsCatalogDetailsPage(
                             SkillCatalogGroupRow(
                                 group = group,
                                 filter = uiState.catalogFilter,
-                                queuedTargetLevelsBySkillId =
-                                    uiState.status.queuedTargetLevelsBySkillId,
+                                queuedTargetLevelsBySkillId = queuedTargets,
                                 localeController = localeController,
                                 showDivider = index != visibleGroups.lastIndex,
-                                onClick = {},
+                                onClick = {
+                                    navController.navigate(
+                                        CharacterSkillsRoute.CatalogGroup.create(
+                                            characterId = uiState.status.characterId,
+                                            groupId = group.groupId,
+                                            filter = uiState.catalogFilter,
+                                        ),
+                                    )
+                                },
                             )
                         }
                     }
+                }
+                item(key = "page:bottom_padding") {
+                    Spacer(
+                        modifier = Modifier.height(
+                            dimensionResource(R.dimen.type_detail_bottom_padding),
+                        ),
+                    )
                 }
             }
         }
@@ -172,82 +223,132 @@ internal fun CharacterSkillsCatalogDetailsPage(
 }
 
 @Composable
-private fun SkillCatalogSearchField(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    onClearQuery: () -> Unit,
+private fun CatalogSearchEntryContent(
+    entry: CatalogListEntry,
+    queuedTargetLevelsBySkillId: Map<Int, Int>,
+    localeController: LocaleController,
+    onSkillClick: (Int) -> Unit,
 ) {
-    val barHeight = dimensionResource(R.dimen.search_bar_height)
-    val horizontalPadding = dimensionResource(R.dimen.detail_card_horizontal_padding)
-    val verticalPadding = dimensionResource(R.dimen.search_bar_vertical_padding)
-    val corner = barHeight / 2
-    val textColor = colorResource(R.color.text_primary)
-    val hintColor = colorResource(R.color.hint_text)
+    val sectionHeaderTextSize = dimensionResource(R.dimen.list_section_header_text_size).value.sp
+    val titleStartPadding = dimensionResource(R.dimen.type_detail_page_title_start_padding)
+    val sectionHeaderBottomPadding = dimensionResource(R.dimen.list_section_header_bottom_padding)
+    val sectionGap = dimensionResource(R.dimen.type_detail_section_gap)
+    val bottomPadding = dimensionResource(R.dimen.type_detail_bottom_padding)
 
-    BasicTextField(
-        value = query,
-        onValueChange = onQueryChange,
+    when (entry) {
+        is CatalogListEntry.SectionHeader -> {
+            Text(
+                text = entry.title,
+                fontSize = sectionHeaderTextSize,
+                fontWeight = FontWeight.Black,
+                color = colorResource(R.color.text_primary),
+                modifier = Modifier.padding(
+                    start = titleStartPadding,
+                    bottom = sectionHeaderBottomPadding,
+                    top = if (entry.addTopGap) sectionGap else 0.dp,
+                ),
+            )
+        }
+        is CatalogListEntry.SkillItem -> {
+            CatalogSearchSkillSectionItem(
+                skill = entry.skill,
+                queuedTargetLevel = queuedTargetLevelsBySkillId[entry.skill.typeId],
+                localeController = localeController,
+                showDivider = entry.showDivider,
+                indexInSection = entry.indexInSection,
+                sectionItemCount = entry.sectionItemCount,
+                onClick = { onSkillClick(entry.skill.typeId) },
+            )
+        }
+        CatalogListEntry.BottomPadding -> {
+            Spacer(modifier = Modifier.height(bottomPadding))
+        }
+    }
+}
+
+@Composable
+private fun CatalogSearchSkillSectionItem(
+    skill: SkillCatalogSkill,
+    queuedTargetLevel: Int?,
+    localeController: LocaleController,
+    showDivider: Boolean,
+    indexInSection: Int,
+    sectionItemCount: Int,
+    onClick: () -> Unit,
+) {
+    val cardCornerRadius = dimensionResource(R.dimen.detail_card_corner_radius)
+    val shape = sectionItemShape(indexInSection, sectionItemCount, cardCornerRadius)
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = horizontalPadding, vertical = verticalPadding)
-            .height(barHeight)
-            .clip(RoundedCornerShape(corner))
-            .background(colorResource(R.color.search_field_idle_background)),
-        textStyle = TextStyle(color = textColor, fontSize = 16.sp),
-        singleLine = true,
-        cursorBrush = SolidColor(textColor),
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-        decorationBox = { innerTextField ->
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(start = 12.dp, end = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = null,
-                    tint = hintColor,
-                    modifier = Modifier.size(20.dp),
+            .padding(horizontal = dimensionResource(R.dimen.detail_card_horizontal_padding))
+            .clip(shape)
+            .background(colorResource(R.color.second_background), shape),
+    ) {
+        SkillCatalogSkillRow(
+            skill = skill,
+            queuedTargetLevel = queuedTargetLevel,
+            localeController = localeController,
+            highlightQueueTarget = queuedTargetLevel != null,
+            showDivider = showDivider,
+            onClick = onClick,
+        )
+    }
+}
+
+private fun sectionItemShape(indexInSection: Int, sectionItemCount: Int, corner: Dp): Shape {
+    return when {
+        sectionItemCount == 1 -> RoundedCornerShape(corner)
+        indexInSection == 0 -> RoundedCornerShape(topStart = corner, topEnd = corner)
+        indexInSection == sectionItemCount - 1 ->
+            RoundedCornerShape(bottomStart = corner, bottomEnd = corner)
+        else -> RectangleShape
+    }
+}
+
+private fun buildCatalogSearchEntries(
+    groups: List<SkillCatalogGroup>,
+    filter: SkillCatalogFilter,
+    query: String,
+    queuedTargetLevelsBySkillId: Map<Int, Int>,
+    localeController: LocaleController,
+): List<CatalogListEntry> = buildList {
+    if (query.isBlank()) {
+        add(CatalogListEntry.BottomPadding)
+        return@buildList
+    }
+
+    var addTopGap = false
+    groups
+        .sortedBy { it.groupId }
+        .forEach { group ->
+            val skills = group.skillsMatching(filter, queuedTargetLevelsBySkillId)
+                .filter { it.matchesSearchQuery(query, localeController) }
+                .sortedBy { it.typeId }
+            if (skills.isEmpty()) return@forEach
+
+            add(
+                CatalogListEntry.SectionHeader(
+                    groupId = group.groupId,
+                    title = group.displayName(localeController),
+                    addTopGap = addTopGap,
+                ),
+            )
+            skills.forEachIndexed { index, skill ->
+                add(
+                    CatalogListEntry.SkillItem(
+                        groupId = group.groupId,
+                        skill = skill,
+                        showDivider = index != skills.lastIndex,
+                        indexInSection = index,
+                        sectionItemCount = skills.size,
+                    ),
                 )
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 8.dp),
-                    contentAlignment = Alignment.CenterStart,
-                ) {
-                    if (query.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.character_skills_catalog_search_hint),
-                            color = hintColor,
-                            fontSize = 16.sp,
-                        )
-                    }
-                    innerTextField()
-                }
-                if (query.isNotEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .size(28.dp)
-                            .clip(CircleShape)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = onClearQuery,
-                            ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = stringResource(R.string.search_clear),
-                            tint = hintColor,
-                            modifier = Modifier.size(18.dp),
-                        )
-                    }
-                }
             }
-        },
-    )
+            addTopGap = true
+        }
+
+    add(CatalogListEntry.BottomPadding)
 }
 
 @Composable
@@ -453,15 +554,3 @@ private fun SkillCatalogGroupRow(
 
 private fun formatCatalogSp(sp: Long): String =
     NumberDisplayFormatter.format(sp, NumberDisplayFormatter.Style.FULL)
-
-private fun LocalizableName.matchesCatalogQuery(
-    query: String,
-    localeController: LocaleController,
-): Boolean {
-    val trimmed = query.trim()
-    if (trimmed.isEmpty()) return true
-    return displayName(localeController).contains(trimmed, ignoreCase = true) ||
-        zhName?.contains(trimmed, ignoreCase = true) == true ||
-        enName?.contains(trimmed, ignoreCase = true) == true ||
-        name?.contains(trimmed, ignoreCase = true) == true
-}

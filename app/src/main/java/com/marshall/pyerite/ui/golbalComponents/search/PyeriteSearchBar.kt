@@ -1,4 +1,4 @@
-package com.marshall.pyerite.databaseHierarchyModule.search
+package com.marshall.pyerite.ui.golbalComponents.search
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -53,7 +53,7 @@ fun rememberSearchRowHeight(): Dp {
 
 /** Idle search row in the list sticky header; tap to activate search. */
 @Composable
-fun DatabaseSearchIdleBar(
+fun PyeriteSearchIdleBar(
     onActivate: () -> Unit,
     modifier: Modifier = Modifier,
     transparentContainer: Boolean = false,
@@ -62,7 +62,7 @@ fun DatabaseSearchIdleBar(
         modifier = modifier,
         transparentBackground = transparentContainer,
     ) {
-        DatabaseSearchIdleField(
+        PyeriteSearchIdleField(
             onActivate = onActivate,
             modifier = Modifier
                 .fillMaxWidth()
@@ -73,7 +73,7 @@ fun DatabaseSearchIdleBar(
 
 /** Active search row for the pinned top header; tap scrim elsewhere to dismiss when query is blank. */
 @Composable
-fun DatabaseSearchActiveBar(
+fun PyeriteSearchActiveBar(
     query: String,
     onQueryChange: (String) -> Unit,
     onClearQuery: () -> Unit,
@@ -83,7 +83,7 @@ fun DatabaseSearchActiveBar(
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
         SearchRowContainer(transparentBackground = transparentContainer) {
-            DatabaseSearchActiveField(
+            PyeriteSearchActiveField(
                 query = query,
                 onQueryChange = onQueryChange,
                 onClearQuery = onClearQuery,
@@ -97,9 +97,8 @@ fun DatabaseSearchActiveBar(
     }
 }
 
-/** Active search field in overlay; no row background so scrim shows in side padding. */
 @Composable
-fun DatabaseSearchActiveField(
+private fun PyeriteSearchActiveField(
     query: String,
     onQueryChange: (String) -> Unit,
     onClearQuery: () -> Unit,
@@ -111,7 +110,7 @@ fun DatabaseSearchActiveField(
     val horizontalPadding = dimensionResource(R.dimen.detail_card_horizontal_padding)
     val verticalPadding = dimensionResource(R.dimen.search_bar_vertical_padding)
 
-    DatabaseSearchTextField(
+    PyeriteSearchTextField(
         query = query,
         onQueryChange = onQueryChange,
         onClearQuery = onClearQuery,
@@ -149,7 +148,7 @@ private fun SearchRowContainer(
 }
 
 @Composable
-private fun DatabaseSearchIdleField(
+private fun PyeriteSearchIdleField(
     onActivate: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -187,7 +186,7 @@ private fun DatabaseSearchIdleField(
 }
 
 @Composable
-private fun DatabaseSearchTextField(
+private fun PyeriteSearchTextField(
     query: String,
     onQueryChange: (String) -> Unit,
     onClearQuery: () -> Unit,

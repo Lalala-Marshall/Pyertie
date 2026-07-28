@@ -16,7 +16,6 @@
     <string name="character_skills_catalog_section">技能目录</string>
     <string name="character_skills_attributes">属性点</string>
     <string name="character_skills_catalog_details">技能目录详情</string>
-    <string name="character_skills_catalog_search_hint">输入搜索内容…</string>
     <string name="character_skills_catalog_filter_all">全部</string>
     <string name="character_skills_catalog_filter_completed">已完成</string>
     <string name="character_skills_catalog_filter_untrained">未吸收</string>
@@ -26,6 +25,8 @@
     <string name="character_skills_catalog_group_hint_untrained">%1$d 个未吸收 - %2$s SP</string>
     <string name="character_skills_catalog_group_hint_trainable">%1$d 个可训练 - %2$s SP</string>
     <string name="character_skills_catalog_group_hint_in_queue">- 队列中%1$d个</string>
+    <string name="character_skills_catalog_section_in_queue">队列中</string>
+    <string name="character_skills_catalog_skill_sp_hint">%1$s / %2$s SP</string>
     <string name="character_skills_base_attributes_section">基础属性</string>
     <string name="character_skills_remap_section">属性重映射</string>
     <string name="character_skills_attr_perception">感知</string>

@@ -15,7 +15,6 @@
     <string name="character_skills_catalog_section">Skill Catalog</string>
     <string name="character_skills_attributes">Attributes</string>
     <string name="character_skills_catalog_details">Skill Catalog Details</string>
-    <string name="character_skills_catalog_search_hint">Enter search text…</string>
     <string name="character_skills_catalog_filter_all">All</string>
     <string name="character_skills_catalog_filter_completed">Completed</string>
     <string name="character_skills_catalog_filter_untrained">Untrained</string>
@@ -25,6 +24,8 @@
     <string name="character_skills_catalog_group_hint_untrained">%1$d untrained - %2$s SP</string>
     <string name="character_skills_catalog_group_hint_trainable">%1$d trainable - %2$s SP</string>
     <string name="character_skills_catalog_group_hint_in_queue">- %1$d in queue</string>
+    <string name="character_skills_catalog_section_in_queue">In Queue</string>
+    <string name="character_skills_catalog_skill_sp_hint">%1$s / %2$s SP</string>
     <string name="character_skills_base_attributes_section">Base Attributes</string>
     <string name="character_skills_remap_section">Neural Remap</string>
     <string name="character_skills_attr_perception">Perception</string>

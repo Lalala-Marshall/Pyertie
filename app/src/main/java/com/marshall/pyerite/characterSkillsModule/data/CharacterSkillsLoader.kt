@@ -82,6 +82,7 @@ internal class CharacterSkillsLoader(
                             trainedLevel = trainedLevelByTypeId[type.typeId] ?: 0,
                             skillTimeConstant = type.skillTimeConstant,
                             isInjected = injected,
+                            iconFilename = type.iconFilename,
                         )
                     }
                     SkillCatalogGroup(
