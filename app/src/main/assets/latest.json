@@ -1,43 +1,43 @@
 {
-  "build_number": "3444265",
-  "release_date": "2026-07-23T11:06:22Z",
-  "completion_time": "2026-07-23T12:59:36.069716",
-  "icon_version": 31,
-  "icon_sha256": "73a6eca0fb4713fe32846ffefb2f018e23120fd146d00927c697cd4c7a723750",
-  "sde_sha256": "fcd20abb92256c788c6b6fb1321d51cd1281782640f4f58ccbf0e8b6876f912d",
+  "build_number": "3448696",
+  "release_date": "2026-07-28T11:07:17Z",
+  "completion_time": "2026-07-28T13:10:22.815210",
+  "icon_version": 32,
+  "icon_sha256": "1b3eb8b5d8f4017678117ceb8904777270881e732529246e8382eb2871e0d2d0",
+  "sde_sha256": "224055d63869915afac591487abb56b86069fccd9eb151413228a3c0420b7a43",
   "patch_number": 0,
   "extra_db": {
     "de": {
       "file": "sde_db_de.zip",
-      "sha256": "e388a611b81b15919b04714d339e206dbd1c323b53bd69d90267e4a89eb7e38c"
+      "sha256": "f50ecc3238bb7ef510732e220ee6c2f4529cfaae14803a30f71fbdfd31d99eec"
     },
     "es": {
       "file": "sde_db_es.zip",
-      "sha256": "bee047a626b2b6acffb53ee3b691ce183034a36e575e4c85ff7f4a240d4d8cd7"
+      "sha256": "1e9dd8320392ef08f72c2bce932284da7f410a9f1f57f5cb498ae0b62b4192e8"
     },
     "fr": {
       "file": "sde_db_fr.zip",
-      "sha256": "5a7b0d8779547d584dc9a22bc4afa9eb55637b6541a3abb5d19354aee0f5e66c"
+      "sha256": "8e04e7a5c16465afb4db7b83def138f3ea8d28a836937a6b7b63539785c75f6c"
     },
     "ja": {
       "file": "sde_db_ja.zip",
-      "sha256": "e736437fc3ec700a246754819ebf34a7a44bb9bae55ff23c68b9c42bedbe13e9"
+      "sha256": "bfa2cca6cf1074ec039e331e0148d6bdb363683a69cf2d9b76b45f95563ebfe6"
     },
     "ko": {
       "file": "sde_db_ko.zip",
-      "sha256": "bbed34e1234751685db14912f7d38f84bb5fae7aaa202c5ac8b7f669344565e3"
+      "sha256": "a8e0360cf84e75668598fa3aae32deb7ae9ec89c82910d3439256fe9f4376db0"
     },
     "ru": {
       "file": "sde_db_ru.zip",
-      "sha256": "0afa502ab14d555c83ee5a2791d7f1fac9c75130ef423d688f91c59a2f6725b5"
+      "sha256": "4e2ed9fa6b86b6ff7b9a87c51963eedbb340c4ca74062f4ebb53ba690cc9ec79"
     }
   },
-  "tag_name": "sde-build-3444265",
-  "assets_base_url": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3444265/",
+  "tag_name": "sde-build-3448696",
+  "assets_base_url": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3448696/",
   "assets": {
-    "latest.json": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3444265/latest.json",
-    "item_db_zh.sqlite": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3444265/item_db_zh.sqlite",
-    "item_db_en.sqlite": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3444265/item_db_en.sqlite",
-    "icons.zip": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3444265/icons.zip"
+    "latest.json": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3448696/latest.json",
+    "item_db_zh.sqlite": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3448696/item_db_zh.sqlite",
+    "item_db_en.sqlite": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3448696/item_db_en.sqlite",
+    "icons.zip": "https://github.com/Lalala-Marshall/Pyertie/releases/download/sde-build-3448696/icons.zip"
   }
 }
