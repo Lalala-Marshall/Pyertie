@@ -74,6 +74,7 @@ internal fun CharacterSkillsPage(
                             CharacterSkillsRoute.Attributes.create(uiState.status.characterId),
                         )
                     },
+                    onCatalogDetailsClick = {},
                 )
             }
         }
@@ -83,6 +84,7 @@ internal fun CharacterSkillsPage(
 @Composable
 private fun CharacterSkillsCatalogSection(
     onAttributesClick: () -> Unit,
+    onCatalogDetailsClick: () -> Unit,
 ) {
     BaseContainer(
         title = stringResource(R.string.character_skills_catalog_section),
@@ -93,6 +95,14 @@ private fun CharacterSkillsCatalogSection(
                 iconRes = R.drawable.ic_character_attributes,
                 itemName = stringResource(R.string.character_skills_attributes),
                 onClick = onAttributesClick,
+            ),
+            showDivider = true,
+        )
+        BaseLazyColumnItem(
+            model = BaseLazyColumnItemModel(
+                iconRes = R.drawable.ic_character_skills,
+                itemName = stringResource(R.string.character_skills_catalog_details),
+                onClick = onCatalogDetailsClick,
             ),
             showDivider = false,
         )

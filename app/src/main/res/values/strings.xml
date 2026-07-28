@@ -15,6 +15,7 @@
     <string name="character_skills_hint_training">训练中：%1$d个技能（%2$s）</string>
     <string name="character_skills_catalog_section">技能目录</string>
     <string name="character_skills_attributes">属性点</string>
+    <string name="character_skills_catalog_details">技能目录详情</string>
     <string name="character_skills_base_attributes_section">基础属性</string>
     <string name="character_skills_remap_section">属性重映射</string>
     <string name="character_skills_attr_perception">感知</string>
