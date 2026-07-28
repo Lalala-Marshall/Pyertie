@@ -8,6 +8,11 @@
     <string name="character_sheet">Character Sheet</string>
     <string name="character_sheet_skill_points">%1$s SP</string>
     <string name="character_clone_status">Clone Status</string>
+    <string name="character_skills">Skills</string>
+    <string name="character_skills_hint_idle">Idle: No skill training queue</string>
+    <string name="character_skills_hint_paused">Paused: %1$d skills (%2$s)</string>
+    <string name="character_skills_hint_training">Training: %1$d skills (%2$s)</string>
+    <string name="character_skills_page_placeholder">Skills details coming soon</string>
     <string name="character_clone_jump_now">Now</string>
     <string name="character_clone_jump_hint">Next jump: %1$s</string>
     <string name="character_clone_home_station_section">Home Station</string>
