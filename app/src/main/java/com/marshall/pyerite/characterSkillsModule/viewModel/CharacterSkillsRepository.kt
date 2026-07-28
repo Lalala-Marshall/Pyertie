@@ -2,6 +2,7 @@ package com.marshall.pyerite.characterSkillsModule.viewModel
 
 import com.marshall.pyerite.characterSkillsModule.data.CharacterSkillsCache
 import com.marshall.pyerite.characterSkillsModule.data.CharacterSkillsLoader
+import com.marshall.pyerite.characterSkillsModule.model.CharacterAttributes
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -12,6 +13,7 @@ class CharacterSkillsRepository internal constructor(
     private val skillsCache: CharacterSkillsCache,
 ) {
     private val statusByCharacterId = ConcurrentHashMap<Long, CharacterSkillQueueStatus>()
+    private val attributesByCharacterId = ConcurrentHashMap<Long, CharacterAttributes>()
 
     /** Memory first, then disk — for instant main-page hint. */
     fun cachedStatus(characterId: Long): CharacterSkillQueueStatus? {
@@ -26,6 +28,21 @@ class CharacterSkillsRepository internal constructor(
             val loaded = skillsLoader.load(characterId)
             statusByCharacterId[characterId] = loaded
             skillsCache.save(loaded)
+            loaded
+        }
+
+    fun cachedAttributes(characterId: Long): CharacterAttributes? {
+        attributesByCharacterId[characterId]?.let { return it }
+        return skillsCache.getAttributes(characterId)?.also { cached ->
+            attributesByCharacterId[characterId] = cached
+        }
+    }
+
+    suspend fun loadAttributes(characterId: Long): CharacterAttributes =
+        withContext(Dispatchers.IO) {
+            val loaded = skillsLoader.loadAttributes(characterId)
+            attributesByCharacterId[characterId] = loaded
+            skillsCache.saveAttributes(loaded)
             loaded
         }
 }

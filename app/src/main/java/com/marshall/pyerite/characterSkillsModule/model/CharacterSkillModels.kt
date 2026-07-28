@@ -41,3 +41,33 @@ data class CharacterSkillQueueStatus(
         )
     }
 }
+
+/**
+ * Character neural attributes from ESI `/characters/{id}/attributes`.
+ *
+ * [nextRemapAvailableEpochMs] comes from `accrued_remap_cooldown_date`
+ * (`null` = unknown / never remapped cooldown; `<= now` = remap available).
+ */
+data class CharacterAttributes(
+    val characterId: Long,
+    val perception: Int,
+    val memory: Int,
+    val willpower: Int,
+    val intelligence: Int,
+    val charisma: Int,
+    val bonusRemaps: Int,
+    val lastRemapEpochMs: Long? = null,
+    val nextRemapAvailableEpochMs: Long? = null,
+) {
+    companion object {
+        fun empty(characterId: Long): CharacterAttributes = CharacterAttributes(
+            characterId = characterId,
+            perception = 0,
+            memory = 0,
+            willpower = 0,
+            intelligence = 0,
+            charisma = 0,
+            bonusRemaps = 0,
+        )
+    }
+}

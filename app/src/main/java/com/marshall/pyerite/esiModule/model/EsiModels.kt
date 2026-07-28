@@ -67,6 +67,18 @@ internal data class EsiSkillQueueEntryDto(
 )
 
 @Serializable
+internal data class EsiCharacterAttributesDto(
+    val perception: Int = 0,
+    val memory: Int = 0,
+    val willpower: Int = 0,
+    val intelligence: Int = 0,
+    val charisma: Int = 0,
+    @SerialName("bonus_remaps") val bonusRemaps: Int = 0,
+    @SerialName("last_remap_date") val lastRemapDate: String? = null,
+    @SerialName("accrued_remap_cooldown_date") val accruedRemapCooldownDate: String? = null,
+)
+
+@Serializable
 internal data class EsiCharacterLocationDto(
     @SerialName("solar_system_id") val solarSystemId: Long,
     @SerialName("station_id") val stationId: Long? = null,

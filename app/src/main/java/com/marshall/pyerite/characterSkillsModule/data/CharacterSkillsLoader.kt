@@ -1,8 +1,10 @@
 package com.marshall.pyerite.characterSkillsModule.data
 
+import com.marshall.pyerite.characterSkillsModule.model.CharacterAttributes
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueState
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueStatus
 import com.marshall.pyerite.esiModule.api.EsiCharacterApi
+import com.marshall.pyerite.esiModule.model.EsiCharacterAttributesDto
 import com.marshall.pyerite.esiModule.model.EsiSkillQueueEntryDto
 import com.marshall.pyerite.esiModule.model.parseEsiDateMillis
 import com.marshall.pyerite.eveAuthModule.token.EveTokenManager
@@ -10,7 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Loads skill-queue summary for the home-page skills row.
+ * Loads skill-queue summary and character attributes for the skills feature.
  */
 internal class CharacterSkillsLoader(
     private val tokenManager: EveTokenManager,
@@ -22,6 +24,14 @@ internal class CharacterSkillsLoader(
         }
         mapQueue(characterId, entries)
     }
+
+    suspend fun loadAttributes(characterId: Long): CharacterAttributes =
+        withContext(Dispatchers.IO) {
+            val dto = tokenManager.executeWithAuthRetry(characterId) { auth ->
+                characterApi.fetchAttributes(characterId, auth)
+            }
+            mapAttributes(characterId, dto)
+        }
 
     private fun mapQueue(
         characterId: Long,
@@ -50,4 +60,19 @@ internal class CharacterSkillsLoader(
             )
         }
     }
+
+    private fun mapAttributes(
+        characterId: Long,
+        dto: EsiCharacterAttributesDto,
+    ): CharacterAttributes = CharacterAttributes(
+        characterId = characterId,
+        perception = dto.perception,
+        memory = dto.memory,
+        willpower = dto.willpower,
+        intelligence = dto.intelligence,
+        charisma = dto.charisma,
+        bonusRemaps = dto.bonusRemaps,
+        lastRemapEpochMs = parseEsiDateMillis(dto.lastRemapDate),
+        nextRemapAvailableEpochMs = parseEsiDateMillis(dto.accruedRemapCooldownDate),
+    )
 }

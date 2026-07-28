@@ -3,14 +3,15 @@ package com.marshall.pyerite.characterSkillsModule.data
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import com.marshall.pyerite.characterSkillsModule.model.CharacterAttributes
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueState
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueStatus
 import com.marshall.pyerite.infra.network.PyeriteJson
 import kotlinx.serialization.Serializable
 
 /**
- * Disk cache of non-secret [CharacterSkillQueueStatus] for instant main-page hint
- * on cold start. Never stores tokens.
+ * Disk cache of non-secret skill-queue / attributes payloads for instant UI paint.
+ * Never stores tokens.
  */
 internal class CharacterSkillsCache(
     context: Context,
@@ -19,7 +20,7 @@ internal class CharacterSkillsCache(
         context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     fun get(characterId: Long): CharacterSkillQueueStatus? {
-        val raw = prefs.getString(keyFor(characterId), null) ?: return null
+        val raw = prefs.getString(queueKeyFor(characterId), null) ?: return null
         return runCatching {
             PyeriteJson.decodeFromString<CachedCharacterSkillQueueStatus>(raw).toModel()
         }.getOrNull()
@@ -27,14 +28,29 @@ internal class CharacterSkillsCache(
 
     fun save(status: CharacterSkillQueueStatus) {
         val encoded = PyeriteJson.encodeToString(CachedCharacterSkillQueueStatus.from(status))
-        prefs.edit { putString(keyFor(status.characterId), encoded) }
+        prefs.edit { putString(queueKeyFor(status.characterId), encoded) }
     }
 
-    private fun keyFor(characterId: Long): String = "$KEY_PREFIX$characterId"
+    fun getAttributes(characterId: Long): CharacterAttributes? {
+        val raw = prefs.getString(attributesKeyFor(characterId), null) ?: return null
+        return runCatching {
+            PyeriteJson.decodeFromString<CachedCharacterAttributes>(raw).toModel()
+        }.getOrNull()
+    }
+
+    fun saveAttributes(attributes: CharacterAttributes) {
+        val encoded = PyeriteJson.encodeToString(CachedCharacterAttributes.from(attributes))
+        prefs.edit { putString(attributesKeyFor(attributes.characterId), encoded) }
+    }
+
+    private fun queueKeyFor(characterId: Long): String = "$QUEUE_KEY_PREFIX$characterId"
+
+    private fun attributesKeyFor(characterId: Long): String = "$ATTRIBUTES_KEY_PREFIX$characterId"
 
     private companion object {
         const val PREFS_NAME = "pyerite_character_skills_cache"
-        const val KEY_PREFIX = "skills_"
+        const val QUEUE_KEY_PREFIX = "skills_"
+        const val ATTRIBUTES_KEY_PREFIX = "attributes_"
     }
 }
 
@@ -63,6 +79,46 @@ private data class CachedCharacterSkillQueueStatus(
                 trainingFinishAtEpochMs = status.trainingFinishAtEpochMs,
                 pausedSkillCount = status.pausedSkillCount,
                 pausedRemainingSeconds = status.pausedRemainingSeconds,
+            )
+    }
+}
+
+@Serializable
+private data class CachedCharacterAttributes(
+    val characterId: Long,
+    val perception: Int = 0,
+    val memory: Int = 0,
+    val willpower: Int = 0,
+    val intelligence: Int = 0,
+    val charisma: Int = 0,
+    val bonusRemaps: Int = 0,
+    val lastRemapEpochMs: Long? = null,
+    val nextRemapAvailableEpochMs: Long? = null,
+) {
+    fun toModel(): CharacterAttributes = CharacterAttributes(
+        characterId = characterId,
+        perception = perception,
+        memory = memory,
+        willpower = willpower,
+        intelligence = intelligence,
+        charisma = charisma,
+        bonusRemaps = bonusRemaps,
+        lastRemapEpochMs = lastRemapEpochMs,
+        nextRemapAvailableEpochMs = nextRemapAvailableEpochMs,
+    )
+
+    companion object {
+        fun from(attributes: CharacterAttributes): CachedCharacterAttributes =
+            CachedCharacterAttributes(
+                characterId = attributes.characterId,
+                perception = attributes.perception,
+                memory = attributes.memory,
+                willpower = attributes.willpower,
+                intelligence = attributes.intelligence,
+                charisma = attributes.charisma,
+                bonusRemaps = attributes.bonusRemaps,
+                lastRemapEpochMs = attributes.lastRemapEpochMs,
+                nextRemapAvailableEpochMs = attributes.nextRemapAvailableEpochMs,
             )
     }
 }
