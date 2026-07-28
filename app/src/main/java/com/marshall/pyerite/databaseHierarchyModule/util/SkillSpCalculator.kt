@@ -3,8 +3,8 @@ package com.marshall.pyerite.databaseHierarchyModule.util
 import kotlin.math.pow
 
 /**
- * EVE skill SP: per-level `250 × skillTimeConstant × 32^((level - 1) / 2)`.
- * Cumulative from level 0 is the sum of per-level SP for levels 1 through the target level.
+ * EVE skill SP at a given level (already cumulative from 0):
+ * `250 × skillTimeConstant × 32^((level - 1) / 2)`.
  */
 internal object SkillSpCalculator {
     private const val BASE_SP = 250.0
@@ -18,14 +18,11 @@ internal object SkillSpCalculator {
 
     /**
      * Total SP required to train from level 0 to [targetLevel] (inclusive).
+     * Same as [spForLevel] — the EVE formula is cumulative, not a per-level delta.
      */
     fun cumulativeSpFromZero(skillTimeConstant: Double, targetLevel: Int): Long {
         require(targetLevel >= 1)
-        var total = 0L
-        for (level in 1..targetLevel) {
-            total += spForLevel(skillTimeConstant, level)
-        }
-        return total
+        return spForLevel(skillTimeConstant, targetLevel)
     }
 
     fun resolveMaxTrainableLevel(skillLevelAttribute: Double?): Int {

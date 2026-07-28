@@ -29,6 +29,8 @@ internal data class EsiCharacterSkillsDto(
 internal data class EsiCharacterSkillDto(
     @SerialName("skill_id") val skillId: Int,
     @SerialName("active_skill_level") val activeSkillLevel: Int = 0,
+    @SerialName("trained_skill_level") val trainedSkillLevel: Int = 0,
+    @SerialName("skillpoints_in_skill") val skillpointsInSkill: Long = 0L,
 )
 
 @Serializable

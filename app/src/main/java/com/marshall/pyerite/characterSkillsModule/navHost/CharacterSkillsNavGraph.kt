@@ -6,6 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.marshall.pyerite.characterSkillsModule.ui.CharacterAttributesPage
+import com.marshall.pyerite.characterSkillsModule.ui.CharacterSkillsCatalogDetailsPage
 import com.marshall.pyerite.characterSkillsModule.ui.CharacterSkillsPage
 import com.marshall.pyerite.characterSkillsModule.viewModel.CharacterSkillsViewModel
 
@@ -31,5 +32,15 @@ fun NavGraphBuilder.characterSkillsNavGraph(
         ),
     ) {
         CharacterAttributesPage(navController = navController)
+    }
+    composable(
+        route = CharacterSkillsRoute.CatalogDetails.route,
+        arguments = listOf(
+            navArgument(CharacterSkillsViewModel.NAV_ARG_CHARACTER_ID) {
+                type = NavType.LongType
+            },
+        ),
+    ) {
+        CharacterSkillsCatalogDetailsPage(navController = navController)
     }
 }

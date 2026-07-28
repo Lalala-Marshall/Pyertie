@@ -43,6 +43,11 @@
     <color name="character_skill_progress_paused">#9E9E9E</color>
     <color name="character_skill_progress_track">#E6E8EC</color>
     <color name="character_skill_progress_shimmer">#FFFFFF</color>
+    <color name="character_skills_catalog_progress_partial">#D6EAF8</color>
+    <color name="character_skills_catalog_progress_complete">#C8E6C9</color>
+    <color name="character_skills_catalog_filter_selected">#FFFFFF</color>
+    <color name="character_skills_catalog_queue_text">#00BFFF</color>
+    <color name="character_skills_catalog_queue_background">#B3EFFF</color>
     <color name="character_delete">#E53935</color>
     <color name="character_org_badge_background">#FFFFFF</color>
     <color name="character_status_positive">#34A853</color>

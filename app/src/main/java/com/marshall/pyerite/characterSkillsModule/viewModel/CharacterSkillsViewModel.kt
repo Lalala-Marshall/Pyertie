@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marshall.pyerite.characterSkillsModule.model.CharacterAttributes
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueStatus
+import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogFilter
+import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogGroup
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -15,11 +17,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * Shared by main-page skills hint, skills page, and attributes page.
+ * Shared by main-page skills hint, skills page, attributes page, and catalog details.
  * - Detail routes: [NAV_ARG_CHARACTER_ID] from [SavedStateHandle]
  * - Main page: call [setCharacterId] when selection changes
- *
- * Shows disk/memory cache immediately, then refreshes from ESI.
  */
 class CharacterSkillsViewModel(
     savedStateHandle: SavedStateHandle,
@@ -33,14 +33,14 @@ class CharacterSkillsViewModel(
 
     private var trackedCharacterId: Long? = routeCharacterId
     private var loadJob: Job? = null
+    private var catalogJob: Job? = null
 
     init {
         val characterId = routeCharacterId
         if (characterId != null) {
             load(
                 characterId = characterId,
-                indicateLoading = !_uiState.value.detailsReady || !_uiState.value.attributesReady,
-                includeAttributes = true,
+                indicateLoading = !_uiState.value.detailsReady,
             )
         }
     }
@@ -51,6 +51,7 @@ class CharacterSkillsViewModel(
         if (characterId == null) {
             trackedCharacterId = null
             loadJob?.cancel()
+            catalogJob?.cancel()
             _uiState.value = CharacterSkillsUiState.empty()
             return
         }
@@ -60,11 +61,11 @@ class CharacterSkillsViewModel(
             characterId = characterId,
             cachedStatus = repository.cachedStatus(characterId),
             cachedAttributes = repository.cachedAttributes(characterId),
+            cachedCatalog = repository.cachedCatalog(characterId),
         )
         load(
             characterId = characterId,
             indicateLoading = !_uiState.value.detailsReady,
-            includeAttributes = false,
         )
     }
 
@@ -74,8 +75,41 @@ class CharacterSkillsViewModel(
         load(
             characterId = characterId,
             indicateLoading = true,
-            includeAttributes = routeCharacterId != null,
         )
+    }
+
+    /** Load attributes for the attributes page (cache-first). */
+    fun ensureAttributesLoaded() {
+        val characterId = trackedCharacterId ?: return
+        if (_uiState.value.attributesReady) return
+        loadAttributes(characterId)
+    }
+
+    fun refreshAttributes() {
+        val characterId = trackedCharacterId ?: return
+        if (_uiState.value.isLoading) return
+        loadAttributes(characterId)
+    }
+
+    /** Load / refresh skill-catalog groups (catalog details page). */
+    fun ensureCatalogLoaded() {
+        val characterId = trackedCharacterId ?: return
+        if (_uiState.value.catalogReady) return
+        loadCatalog(characterId)
+    }
+
+    fun refreshCatalog() {
+        val characterId = trackedCharacterId ?: return
+        if (_uiState.value.isLoading) return
+        loadCatalog(characterId)
+    }
+
+    fun setCatalogFilter(filter: SkillCatalogFilter) {
+        _uiState.update { it.copy(catalogFilter = filter) }
+    }
+
+    fun setCatalogSearchQuery(query: String) {
+        _uiState.update { it.copy(catalogSearchQuery = query) }
     }
 
     private fun initialUiState(): CharacterSkillsUiState {
@@ -84,18 +118,17 @@ class CharacterSkillsViewModel(
             characterId = characterId,
             cachedStatus = repository.cachedStatus(characterId),
             cachedAttributes = repository.cachedAttributes(characterId),
+            cachedCatalog = repository.cachedCatalog(characterId),
         )
     }
 
     private fun load(
         characterId: Long,
         indicateLoading: Boolean,
-        includeAttributes: Boolean,
     ) {
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
             val hadCachedQueue = _uiState.value.detailsReady
-            val hadCachedAttributes = _uiState.value.attributesReady
             _uiState.update {
                 it.copy(
                     isLoading = indicateLoading,
@@ -103,37 +136,99 @@ class CharacterSkillsViewModel(
                 )
             }
             val result = runCatching {
-                if (includeAttributes) {
-                    coroutineScope {
-                        val statusDeferred = async { repository.loadStatus(characterId) }
-                        val attributesDeferred = async { repository.loadAttributes(characterId) }
-                        statusDeferred.await() to attributesDeferred.await()
-                    }
-                } else {
-                    repository.loadStatus(characterId) to null
-                }
+                repository.loadStatus(characterId)
             }
             if (trackedCharacterId != characterId) return@launch
             _uiState.update { current ->
                 result.fold(
-                    onSuccess = { (status, attributes) ->
+                    onSuccess = { status ->
                         current.copy(
                             status = status,
-                            attributes = attributes ?: current.attributes,
                             isLoading = false,
                             loadFailed = false,
                             detailsReady = true,
-                            attributesReady = attributes != null || current.attributesReady,
                         )
                     },
                     onFailure = {
                         current.copy(
                             isLoading = false,
-                            loadFailed = if (includeAttributes) {
-                                !hadCachedQueue && !hadCachedAttributes
-                            } else {
-                                !hadCachedQueue
-                            },
+                            loadFailed = !hadCachedQueue,
+                        )
+                    },
+                )
+            }
+        }
+    }
+
+    private fun loadAttributes(characterId: Long) {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
+            val hadCached = _uiState.value.attributesReady
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    loadFailed = false,
+                )
+            }
+            val result = runCatching {
+                repository.loadAttributes(characterId)
+            }
+            if (trackedCharacterId != characterId) return@launch
+            _uiState.update { current ->
+                result.fold(
+                    onSuccess = { attributes ->
+                        current.copy(
+                            attributes = attributes,
+                            isLoading = false,
+                            loadFailed = false,
+                            attributesReady = true,
+                        )
+                    },
+                    onFailure = {
+                        current.copy(
+                            isLoading = false,
+                            loadFailed = !hadCached,
+                        )
+                    },
+                )
+            }
+        }
+    }
+
+    private fun loadCatalog(characterId: Long) {
+        catalogJob?.cancel()
+        catalogJob = viewModelScope.launch {
+            val hadCached = _uiState.value.catalogReady
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    loadFailed = false,
+                )
+            }
+            val result = runCatching {
+                coroutineScope {
+                    val catalogDeferred = async { repository.loadCatalog(characterId) }
+                    val statusDeferred = async { repository.loadStatus(characterId) }
+                    catalogDeferred.await() to statusDeferred.await()
+                }
+            }
+            if (trackedCharacterId != characterId) return@launch
+            _uiState.update { current ->
+                result.fold(
+                    onSuccess = { (groups, status) ->
+                        current.copy(
+                            catalogGroups = groups,
+                            status = status,
+                            isLoading = false,
+                            loadFailed = false,
+                            catalogReady = true,
+                            detailsReady = true,
+                        )
+                    },
+                    onFailure = {
+                        current.copy(
+                            isLoading = false,
+                            loadFailed = !hadCached,
                         )
                     },
                 )
@@ -155,6 +250,10 @@ data class CharacterSkillsUiState(
     val detailsReady: Boolean,
     /** True after at least one successful attributes ESI load (or cache hit). */
     val attributesReady: Boolean,
+    val catalogGroups: List<SkillCatalogGroup> = emptyList(),
+    val catalogReady: Boolean = false,
+    val catalogFilter: SkillCatalogFilter = SkillCatalogFilter.ALL,
+    val catalogSearchQuery: String = "",
 ) {
     companion object {
         fun empty(): CharacterSkillsUiState = CharacterSkillsUiState(
@@ -170,6 +269,7 @@ data class CharacterSkillsUiState(
             characterId: Long,
             cachedStatus: CharacterSkillQueueStatus?,
             cachedAttributes: CharacterAttributes?,
+            cachedCatalog: List<SkillCatalogGroup>?,
         ): CharacterSkillsUiState = CharacterSkillsUiState(
             status = cachedStatus ?: CharacterSkillQueueStatus.empty(characterId),
             attributes = cachedAttributes ?: CharacterAttributes.empty(characterId),
@@ -177,6 +277,8 @@ data class CharacterSkillsUiState(
             loadFailed = false,
             detailsReady = cachedStatus != null,
             attributesReady = cachedAttributes != null,
+            catalogGroups = cachedCatalog.orEmpty(),
+            catalogReady = cachedCatalog != null,
         )
     }
 }

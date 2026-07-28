@@ -136,6 +136,12 @@
     <dimen name="character_skill_queue_icon_gap">4dp</dimen>
     <dimen name="character_skill_progress_height">6dp</dimen>
     <dimen name="character_skill_progress_corner_radius">3dp</dimen>
+    <dimen name="character_skills_catalog_filter_outer_vertical_padding">4dp</dimen>
+    <dimen name="character_skills_catalog_filter_outer_horizontal_padding">20dp</dimen>
+    <dimen name="character_skills_catalog_filter_bar_vertical_padding">3dp</dimen>
+    <dimen name="character_skills_catalog_filter_bar_horizontal_padding">4dp</dimen>
+    <dimen name="character_skills_catalog_filter_item_vertical_padding">6dp</dimen>
+    <dimen name="character_skills_catalog_filter_item_horizontal_padding">8dp</dimen>
 
     <!-- Character sheet -->
     <dimen name="character_sheet_online_dot_size">8dp</dimen>

@@ -148,4 +148,30 @@ interface SkillDao {
         """,
     )
     suspend fun getTypesUnlockedBySkillAtLevel(skillTypeId: Int, level: Int): List<SkillUnlockTypeRow>
+
+    /**
+     * Published skill types in [categoryId] with dogma `skillTimeConstant`
+     * (for skill-catalog group SP aggregation).
+     */
+    @Query(
+        """
+        SELECT
+            t.type_id AS typeId,
+            t.groupID AS groupId,
+            t.name AS name,
+            t.zh_name AS zhName,
+            t.en_name AS enName,
+            ta.value AS skillTimeConstant
+        FROM types t
+        INNER JOIN typeAttributes ta ON ta.type_id = t.type_id
+        INNER JOIN dogmaAttributes da
+            ON da.attribute_id = ta.attribute_id AND da.name = 'skillTimeConstant'
+        WHERE t.categoryID = :categoryId
+          AND t.published = 1
+          AND ta.value IS NOT NULL
+          AND ta.value > 0
+        ORDER BY t.groupID, t.type_id
+        """,
+    )
+    suspend fun getSkillCatalogTypes(categoryId: Int): List<SkillCatalogTypeRow>
 }

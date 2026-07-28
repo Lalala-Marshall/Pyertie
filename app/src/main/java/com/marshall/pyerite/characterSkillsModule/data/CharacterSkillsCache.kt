@@ -55,12 +55,19 @@ internal class CharacterSkillsCache(
 }
 
 @Serializable
+private data class CachedQueuedSkillTarget(
+    val skillId: Int,
+    val targetLevel: Int,
+)
+
+@Serializable
 private data class CachedCharacterSkillQueueStatus(
     val characterId: Long,
     val state: String,
     val trainingFinishAtEpochMs: List<Long> = emptyList(),
     val pausedSkillCount: Int = 0,
     val pausedRemainingSeconds: Long? = null,
+    val queuedSkillTargets: List<CachedQueuedSkillTarget> = emptyList(),
 ) {
     fun toModel(): CharacterSkillQueueStatus = CharacterSkillQueueStatus(
         characterId = characterId,
@@ -69,6 +76,7 @@ private data class CachedCharacterSkillQueueStatus(
         trainingFinishAtEpochMs = trainingFinishAtEpochMs,
         pausedSkillCount = pausedSkillCount,
         pausedRemainingSeconds = pausedRemainingSeconds,
+        queuedTargetLevelsBySkillId = queuedSkillTargets.associate { it.skillId to it.targetLevel },
     )
 
     companion object {
@@ -79,6 +87,9 @@ private data class CachedCharacterSkillQueueStatus(
                 trainingFinishAtEpochMs = status.trainingFinishAtEpochMs,
                 pausedSkillCount = status.pausedSkillCount,
                 pausedRemainingSeconds = status.pausedRemainingSeconds,
+                queuedSkillTargets = status.queuedTargetLevelsBySkillId.map { (skillId, level) ->
+                    CachedQueuedSkillTarget(skillId = skillId, targetLevel = level)
+                },
             )
     }
 }

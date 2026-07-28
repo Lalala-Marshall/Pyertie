@@ -74,7 +74,11 @@ internal fun CharacterSkillsPage(
                             CharacterSkillsRoute.Attributes.create(uiState.status.characterId),
                         )
                     },
-                    onCatalogDetailsClick = {},
+                    onCatalogDetailsClick = {
+                        navController.navigate(
+                            CharacterSkillsRoute.CatalogDetails.create(uiState.status.characterId),
+                        )
+                    },
                 )
             }
         }
