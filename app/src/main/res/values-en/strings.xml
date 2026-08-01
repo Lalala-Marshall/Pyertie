@@ -26,6 +26,7 @@
     <string name="character_skills_catalog_group_hint_in_queue">- %1$d in queue</string>
     <string name="character_skills_catalog_section_in_queue">In Queue</string>
     <string name="character_skills_catalog_skill_sp_hint">%1$s / %2$s SP</string>
+    <string name="character_skills_catalog_skill_title_with_rank">%1$s (x%2$d)</string>
     <string name="character_skills_base_attributes_section">Base Attributes</string>
     <string name="character_skills_remap_section">Neural Remap</string>
     <string name="character_skills_attr_perception">Perception</string>

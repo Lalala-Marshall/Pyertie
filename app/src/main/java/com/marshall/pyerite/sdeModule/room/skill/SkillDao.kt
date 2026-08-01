@@ -151,7 +151,7 @@ interface SkillDao {
 
     /**
      * Published skill types in [categoryId] with dogma `skillTimeConstant`
-     * (for skill-catalog group SP aggregation).
+     * (for skill-catalog group SP aggregation) and primary/secondary attributes.
      */
     @Query(
         """
@@ -162,11 +162,25 @@ interface SkillDao {
             t.zh_name AS zhName,
             t.en_name AS enName,
             ta.value AS skillTimeConstant,
+            primary_ta.value AS primaryAttributeId,
+            secondary_ta.value AS secondaryAttributeId,
             t.icon_filename AS iconFilename
         FROM types t
         INNER JOIN typeAttributes ta ON ta.type_id = t.type_id
         INNER JOIN dogmaAttributes da
             ON da.attribute_id = ta.attribute_id AND da.name = 'skillTimeConstant'
+        LEFT JOIN typeAttributes primary_ta
+            ON primary_ta.type_id = t.type_id
+           AND primary_ta.attribute_id = (
+               SELECT pda.attribute_id FROM dogmaAttributes pda
+               WHERE pda.name = 'primaryAttribute' LIMIT 1
+           )
+        LEFT JOIN typeAttributes secondary_ta
+            ON secondary_ta.type_id = t.type_id
+           AND secondary_ta.attribute_id = (
+               SELECT sda.attribute_id FROM dogmaAttributes sda
+               WHERE sda.name = 'secondaryAttribute' LIMIT 1
+           )
         WHERE t.categoryID = :categoryId
           AND t.published = 1
           AND ta.value IS NOT NULL

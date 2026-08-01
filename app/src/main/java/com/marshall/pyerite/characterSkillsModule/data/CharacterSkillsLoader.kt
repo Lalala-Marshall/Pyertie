@@ -81,6 +81,12 @@ internal class CharacterSkillsLoader(
                             maxSp = maxSp,
                             trainedLevel = trainedLevelByTypeId[type.typeId] ?: 0,
                             skillTimeConstant = type.skillTimeConstant,
+                            primaryAttributeTypeId = type.primaryAttributeId
+                                ?.toInt()
+                                ?.takeIf { it > 0 },
+                            secondaryAttributeTypeId = type.secondaryAttributeId
+                                ?.toInt()
+                                ?.takeIf { it > 0 },
                             isInjected = injected,
                             iconFilename = type.iconFilename,
                         )

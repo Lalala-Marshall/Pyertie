@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
+import com.marshall.pyerite.characterSkillsModule.model.CharacterAttributes
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogFilter
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogGroup
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogSkill
@@ -81,6 +82,8 @@ internal fun CharacterSkillsCatalogGroupPage(
     val queuedTargets = uiState.status.queuedTargetLevelsBySkillId
     val activeTrainingSkillId = uiState.status.activeTrainingSkillId
     val activeTrainingLevel = uiState.status.activeTrainingLevel
+    val attributes = uiState.attributes
+    val attributesReady = uiState.attributesReady
     val (queuedSkills, otherSkills) = remember(group, filter, queuedTargets) {
         splitCatalogGroupSkills(
             group = group,
@@ -123,6 +126,8 @@ internal fun CharacterSkillsCatalogGroupPage(
                         queuedTargetLevelsBySkillId = queuedTargets,
                         localeController = localeController,
                         highlightQueueTargets = true,
+                        attributes = attributes,
+                        attributesReady = attributesReady,
                         activeTrainingSkillId = activeTrainingSkillId,
                         activeTrainingLevel = activeTrainingLevel,
                         onSkillClick = { typeId ->
@@ -139,6 +144,8 @@ internal fun CharacterSkillsCatalogGroupPage(
                         queuedTargetLevelsBySkillId = queuedTargets,
                         localeController = localeController,
                         highlightQueueTargets = false,
+                        attributes = attributes,
+                        attributesReady = attributesReady,
                         activeTrainingSkillId = activeTrainingSkillId,
                         activeTrainingLevel = activeTrainingLevel,
                         onSkillClick = { typeId ->
@@ -171,6 +178,8 @@ private fun LazyListScope.catalogGroupSkillSection(
     queuedTargetLevelsBySkillId: Map<Int, Int>,
     localeController: LocaleController,
     highlightQueueTargets: Boolean,
+    attributes: CharacterAttributes,
+    attributesReady: Boolean,
     activeTrainingSkillId: Int?,
     activeTrainingLevel: Int?,
     onSkillClick: (Int) -> Unit,
@@ -200,6 +209,8 @@ private fun LazyListScope.catalogGroupSkillSection(
             showDivider = index != skills.lastIndex,
             indexInSection = index,
             sectionItemCount = skills.size,
+            attributes = attributes,
+            attributesReady = attributesReady,
             activeTrainingSkillId = activeTrainingSkillId,
             activeTrainingLevel = activeTrainingLevel,
             onClick = { onSkillClick(skill.typeId) },
@@ -239,6 +250,8 @@ private fun CatalogGroupSkillListItem(
     showDivider: Boolean,
     indexInSection: Int,
     sectionItemCount: Int,
+    attributes: CharacterAttributes,
+    attributesReady: Boolean,
     activeTrainingSkillId: Int?,
     activeTrainingLevel: Int?,
     onClick: () -> Unit,
@@ -259,6 +272,8 @@ private fun CatalogGroupSkillListItem(
             highlightQueueTarget = highlightQueueTarget,
             showDivider = showDivider,
             onClick = onClick,
+            attributes = attributes,
+            attributesReady = attributesReady,
             activeTrainingSkillId = activeTrainingSkillId,
             activeTrainingLevel = activeTrainingLevel,
         )

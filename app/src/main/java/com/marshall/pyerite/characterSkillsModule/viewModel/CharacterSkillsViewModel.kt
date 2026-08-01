@@ -104,7 +104,12 @@ class CharacterSkillsViewModel(
     /** Load / refresh skill-catalog groups (catalog details page). */
     fun ensureCatalogLoaded() {
         val characterId = trackedCharacterId ?: return
-        if (_uiState.value.catalogReady) return
+        if (_uiState.value.catalogReady) {
+            if (!_uiState.value.attributesReady) {
+                ensureAttributesLoaded()
+            }
+            return
+        }
         loadCatalog(characterId)
     }
 
@@ -232,20 +237,29 @@ class CharacterSkillsViewModel(
                 coroutineScope {
                     val catalogDeferred = async { repository.loadCatalog(characterId) }
                     val statusDeferred = async { repository.loadStatus(characterId) }
-                    catalogDeferred.await() to statusDeferred.await()
+                    val attributesDeferred = async {
+                        runCatching { repository.loadAttributes(characterId) }.getOrNull()
+                    }
+                    Triple(
+                        catalogDeferred.await(),
+                        statusDeferred.await(),
+                        attributesDeferred.await(),
+                    )
                 }
             }
             if (trackedCharacterId != characterId) return@launch
             _uiState.update { current ->
                 result.fold(
-                    onSuccess = { (groups, status) ->
+                    onSuccess = { (groups, status, attributes) ->
                         current.copy(
                             catalogGroups = groups,
                             status = status,
+                            attributes = attributes ?: current.attributes,
                             isLoading = false,
                             loadFailed = false,
                             catalogReady = true,
                             detailsReady = true,
+                            attributesReady = attributes != null || current.attributesReady,
                         )
                     },
                     onFailure = {

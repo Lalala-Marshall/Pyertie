@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
+import com.marshall.pyerite.characterSkillsModule.model.CharacterAttributes
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogConfig
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogFilter
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogGroup
@@ -176,6 +177,8 @@ internal fun CharacterSkillsCatalogDetailsPage(
                         queuedTargetLevelsBySkillId = queuedTargets,
                         activeTrainingSkillId = uiState.status.activeTrainingSkillId,
                         activeTrainingLevel = uiState.status.activeTrainingLevel,
+                        attributes = uiState.attributes,
+                        attributesReady = uiState.attributesReady,
                         localeController = localeController,
                         onSkillClick = { typeId ->
                             navController.navigate(DatabaseRoute.TypeDetail.create(typeId))
@@ -231,6 +234,8 @@ private fun CatalogSearchEntryContent(
     queuedTargetLevelsBySkillId: Map<Int, Int>,
     activeTrainingSkillId: Int?,
     activeTrainingLevel: Int?,
+    attributes: CharacterAttributes,
+    attributesReady: Boolean,
     localeController: LocaleController,
     onSkillClick: (Int) -> Unit,
 ) {
@@ -262,6 +267,8 @@ private fun CatalogSearchEntryContent(
                 showDivider = entry.showDivider,
                 indexInSection = entry.indexInSection,
                 sectionItemCount = entry.sectionItemCount,
+                attributes = attributes,
+                attributesReady = attributesReady,
                 activeTrainingSkillId = activeTrainingSkillId,
                 activeTrainingLevel = activeTrainingLevel,
                 onClick = { onSkillClick(entry.skill.typeId) },
@@ -281,6 +288,8 @@ private fun CatalogSearchSkillSectionItem(
     showDivider: Boolean,
     indexInSection: Int,
     sectionItemCount: Int,
+    attributes: CharacterAttributes,
+    attributesReady: Boolean,
     activeTrainingSkillId: Int?,
     activeTrainingLevel: Int?,
     onClick: () -> Unit,
@@ -301,6 +310,8 @@ private fun CatalogSearchSkillSectionItem(
             highlightQueueTarget = queuedTargetLevel != null,
             showDivider = showDivider,
             onClick = onClick,
+            attributes = attributes,
+            attributesReady = attributesReady,
             activeTrainingSkillId = activeTrainingSkillId,
             activeTrainingLevel = activeTrainingLevel,
         )

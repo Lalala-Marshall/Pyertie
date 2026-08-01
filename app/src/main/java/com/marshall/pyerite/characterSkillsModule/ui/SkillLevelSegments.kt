@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -29,9 +30,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import com.marshall.pyerite.R
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogConfig
+import com.marshall.pyerite.util.formatDurationDisplay
 
 /**
  * Compact skill-level trailing: short level label + 5-segment bar, or 「未吸收」 when not injected.
+ * Below that (when not maxed), shows time to finish the next level.
  *
  * Queued levels above [level] up to [queuedTargetLevel] render gray.
  * Only [blinkingLevel] (the actively training level) pulses — animation runs solely for that row.
@@ -43,42 +46,57 @@ internal fun SkillCatalogLevelTrailing(
     modifier: Modifier = Modifier,
     queuedTargetLevel: Int? = null,
     blinkingLevel: Int? = null,
+    nextLevelTrainingSeconds: Long? = null,
 ) {
     val primary = colorResource(R.color.text_primary)
     val hintColor = colorResource(R.color.hint_text)
     val labelSize = dimensionResource(R.dimen.sub_menu_value_text_size).value.sp
+    val durationSize = dimensionResource(R.dimen.detail_row_label_subtitle_text_size).value.sp
     val labelGap = dimensionResource(R.dimen.skill_level_segments_label_gap)
-
-    if (!isInjected) {
-        Text(
-            text = stringResource(R.string.character_skills_catalog_filter_untrained),
-            color = hintColor,
-            fontSize = labelSize,
-            maxLines = 1,
-            modifier = modifier,
-        )
-        return
+    val durationGap = dimensionResource(R.dimen.skill_level_segments_duration_gap)
+    val durationText = nextLevelTrainingSeconds?.let { seconds ->
+        formatDurationDisplay(totalSeconds = seconds, includeSeconds = false)
     }
 
-    val clampedLevel = level.coerceIn(0, SkillCatalogConfig.MAX_SKILL_LEVEL)
-    Row(
+    Column(
         modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(durationGap),
     ) {
-        Text(
-            text = stringResource(R.string.skill_level_short, clampedLevel),
-            color = primary,
-            fontSize = labelSize,
-            maxLines = 1,
-        )
-        Spacer(modifier = Modifier.width(labelGap))
-        SkillLevelSegments(
-            trainedLevel = clampedLevel,
-            queuedTargetLevel = queuedTargetLevel,
-            blinkingLevel = blinkingLevel,
-            activeColor = primary,
-            queueSegmentColor = colorResource(R.color.skill_level_queue_segment),
-        )
+        if (!isInjected) {
+            Text(
+                text = stringResource(R.string.character_skills_catalog_filter_untrained),
+                color = hintColor,
+                fontSize = labelSize,
+                maxLines = 1,
+            )
+        } else {
+            val clampedLevel = level.coerceIn(0, SkillCatalogConfig.MAX_SKILL_LEVEL)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.skill_level_short, clampedLevel),
+                    color = primary,
+                    fontSize = labelSize,
+                    maxLines = 1,
+                )
+                Spacer(modifier = Modifier.width(labelGap))
+                SkillLevelSegments(
+                    trainedLevel = clampedLevel,
+                    queuedTargetLevel = queuedTargetLevel,
+                    blinkingLevel = blinkingLevel,
+                    activeColor = primary,
+                    queueSegmentColor = colorResource(R.color.skill_level_queue_segment),
+                )
+            }
+        }
+        if (durationText != null) {
+            Text(
+                text = durationText,
+                color = hintColor,
+                fontSize = durationSize,
+                maxLines = 1,
+            )
+        }
     }
 }
 

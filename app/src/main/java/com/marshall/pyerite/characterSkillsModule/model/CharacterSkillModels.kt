@@ -3,6 +3,7 @@ package com.marshall.pyerite.characterSkillsModule.model
 import androidx.annotation.DrawableRes
 import com.marshall.pyerite.R
 import com.marshall.pyerite.localization.LocalizableName
+import kotlin.math.ceil
 import kotlin.math.pow
 
 /**
@@ -75,6 +76,16 @@ data class CharacterAttributes(
     val lastRemapEpochMs: Long? = null,
     val nextRemapAvailableEpochMs: Long? = null,
 ) {
+    /** Points for an EVE attribute type id (`primaryAttribute` / `secondaryAttribute` value). */
+    fun pointsForAttributeTypeId(attributeTypeId: Int): Int? = when (attributeTypeId) {
+        SkillCatalogConfig.ATTR_TYPE_CHARISMA -> charisma
+        SkillCatalogConfig.ATTR_TYPE_INTELLIGENCE -> intelligence
+        SkillCatalogConfig.ATTR_TYPE_MEMORY -> memory
+        SkillCatalogConfig.ATTR_TYPE_PERCEPTION -> perception
+        SkillCatalogConfig.ATTR_TYPE_WILLPOWER -> willpower
+        else -> null
+    }
+
     companion object {
         fun empty(characterId: Long): CharacterAttributes = CharacterAttributes(
             characterId = characterId,
@@ -107,6 +118,14 @@ internal object SkillCatalogConfig {
     const val SP_LEVEL_BASE = 32.0
     const val PROGRESS_MIN = 0f
     const val PROGRESS_MAX = 1f
+    const val SECONDS_PER_MINUTE = 60L
+
+    /** EVE attribute type ids (dogma `primaryAttribute` / `secondaryAttribute` values). */
+    const val ATTR_TYPE_CHARISMA = 164
+    const val ATTR_TYPE_INTELLIGENCE = 165
+    const val ATTR_TYPE_MEMORY = 166
+    const val ATTR_TYPE_PERCEPTION = 167
+    const val ATTR_TYPE_WILLPOWER = 168
 
     /** Queue training-segment blink (gray cell). */
     const val QUEUE_LEVEL_BLINK_PERIOD_MS = 1_100
@@ -127,6 +146,35 @@ internal object SkillCatalogConfig {
 
     fun cumulativeSpToMax(skillTimeConstant: Double): Long =
         cumulativeSpToLevel(skillTimeConstant, MAX_SKILL_LEVEL)
+
+    /**
+     * Seconds to finish the next level from current [trainedSp].
+     * Omega rate: `SP/minute = primary + secondary / 2` (ESI attributes include implants).
+     * Rounded up to whole minutes (same as the in-game skill UI), returned as seconds.
+     * Null when already V or inputs missing.
+     */
+    fun secondsToTrainNextLevel(
+        skillTimeConstant: Double,
+        trainedLevel: Int,
+        trainedSp: Long,
+        primaryAttributeTypeId: Int?,
+        secondaryAttributeTypeId: Int?,
+        attributes: CharacterAttributes,
+    ): Long? {
+        if (trainedLevel >= MAX_SKILL_LEVEL) return null
+        val primaryId = primaryAttributeTypeId ?: return null
+        val secondaryId = secondaryAttributeTypeId ?: return null
+        val primary = attributes.pointsForAttributeTypeId(primaryId) ?: return null
+        val secondary = attributes.pointsForAttributeTypeId(secondaryId) ?: return null
+        val spPerMinute = primary + secondary / 2.0
+        if (spPerMinute <= 0.0) return null
+        val nextLevel = trainedLevel + 1
+        val targetSp = cumulativeSpToLevel(skillTimeConstant, nextLevel)
+        val spNeeded = (targetSp - trainedSp).coerceAtLeast(0L)
+        if (spNeeded <= 0L) return 0L
+        val minutesNeeded = ceil(spNeeded / spPerMinute).toLong().coerceAtLeast(1L)
+        return minutesNeeded * SECONDS_PER_MINUTE
+    }
 }
 
 /**
@@ -180,6 +228,10 @@ data class SkillCatalogSkill(
     val trainedLevel: Int,
     /** Dogma `skillTimeConstant` (rank) for SP-to-level calculations. */
     val skillTimeConstant: Double,
+    /** Dogma `primaryAttribute` value (attribute type id). */
+    val primaryAttributeTypeId: Int? = null,
+    /** Dogma `secondaryAttribute` value (attribute type id). */
+    val secondaryAttributeTypeId: Int? = null,
     /**
      * True when this skill appears in ESI `/characters/{id}/skills`
      * (skillbook injected / absorbed onto the character).
@@ -193,6 +245,16 @@ data class SkillCatalogSkill(
     /** Never injected — 未吸收. */
     val isUninjected: Boolean
         get() = !isInjected
+
+    fun secondsToTrainNextLevel(attributes: CharacterAttributes): Long? =
+        SkillCatalogConfig.secondsToTrainNextLevel(
+            skillTimeConstant = skillTimeConstant,
+            trainedLevel = trainedLevel,
+            trainedSp = trainedSp,
+            primaryAttributeTypeId = primaryAttributeTypeId,
+            secondaryAttributeTypeId = secondaryAttributeTypeId,
+            attributes = attributes,
+        )
 }
 
 /**

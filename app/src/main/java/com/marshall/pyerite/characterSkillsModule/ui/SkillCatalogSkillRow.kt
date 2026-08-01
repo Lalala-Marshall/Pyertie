@@ -3,6 +3,7 @@ package com.marshall.pyerite.characterSkillsModule.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.marshall.pyerite.R
+import com.marshall.pyerite.characterSkillsModule.model.CharacterAttributes
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogSkill
 import com.marshall.pyerite.localization.LocaleController
 import com.marshall.pyerite.localization.displayName
@@ -19,16 +20,18 @@ internal fun SkillCatalogSkillRow(
     highlightQueueTarget: Boolean,
     showDivider: Boolean,
     onClick: () -> Unit,
+    attributes: CharacterAttributes,
+    attributesReady: Boolean,
     activeTrainingSkillId: Int? = null,
     activeTrainingLevel: Int? = null,
 ) {
     val trainedSpText = NumberDisplayFormatter.format(
         skill.trainedSp,
-        NumberDisplayFormatter.Style.COMPACT,
+        NumberDisplayFormatter.Style.FULL,
     )
     val maxSpText = NumberDisplayFormatter.format(
         skill.maxSp,
-        NumberDisplayFormatter.Style.COMPACT,
+        NumberDisplayFormatter.Style.FULL,
     )
     val inQueue = highlightQueueTarget && queuedTargetLevel != null
     val showAsInjected = skill.isInjected || inQueue
@@ -40,12 +43,23 @@ internal fun SkillCatalogSkillRow(
     } else {
         null
     }
+    val nextLevelTrainingSeconds = if (attributesReady) {
+        skill.secondsToTrainNextLevel(attributes)
+    } else {
+        null
+    }
+    val rank = skill.skillTimeConstant.toInt().coerceAtLeast(1)
+    val title = stringResource(
+        R.string.character_skills_catalog_skill_title_with_rank,
+        skill.displayName(localeController),
+        rank,
+    )
 
     BaseLazyColumnItem(
         model = BaseLazyColumnItemModel(
             iconFileName = skill.iconFilename,
             showLeadingIcon = !skill.iconFilename.isNullOrBlank(),
-            itemName = skill.displayName(localeController),
+            itemName = title,
             itemHints = listOf(
                 BaseLazyColumnItemHint(
                     text = stringResource(
@@ -65,6 +79,7 @@ internal fun SkillCatalogSkillRow(
                 level = skill.trainedLevel,
                 queuedTargetLevel = if (inQueue) queuedTargetLevel else null,
                 blinkingLevel = blinkingLevel,
+                nextLevelTrainingSeconds = nextLevelTrainingSeconds,
             )
         },
     )
