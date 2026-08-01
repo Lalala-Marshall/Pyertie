@@ -437,6 +437,7 @@ private fun SkillProgressFill(
     }
 }
 
+@Composable
 private fun formatRemainingDuration(remainingSeconds: Long): String =
     formatDurationDisplay(
         totalSeconds = remainingSeconds,

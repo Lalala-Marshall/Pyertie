@@ -46,6 +46,7 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
 private val QueueSectionDurationPrecision = DurationDisplayFormatter.Precision.HOUR
+private val QueueSectionDurationMaxUnit = DurationDisplayFormatter.MaxUnit.DAY
 
 @Composable
 internal fun CharacterSkillsPage(
@@ -210,6 +211,7 @@ private fun CharacterSkillsQueueSection(
                     null
                 },
                 remainingDurationPrecision = QueueSectionDurationPrecision,
+                remainingDurationMaxUnit = QueueSectionDurationMaxUnit,
                 showLeadingIcon = false,
                 showQueueTrainingLevel = true,
                 omitContentBottomPadding = isQueueHead,
@@ -273,6 +275,7 @@ private fun skillQueueSectionSummary(
     val zeroDuration = formatDurationDisplay(
         totalSeconds = 0L,
         precision = QueueSectionDurationPrecision,
+        maxUnit = QueueSectionDurationMaxUnit,
     )
 
     if (!detailsReady &&
@@ -293,6 +296,7 @@ private fun skillQueueSectionSummary(
                     formatDurationDisplay(
                         totalSeconds = seconds,
                         precision = QueueSectionDurationPrecision,
+                        maxUnit = QueueSectionDurationMaxUnit,
                     )
                 } ?: placeholder,
             )
@@ -307,6 +311,7 @@ private fun skillQueueSectionSummary(
                     remainingText = formatDurationDisplay(
                         totalSeconds = (endMs - nowMs) / CharacterSkillQueueConfig.MILLIS_PER_SECOND,
                         precision = QueueSectionDurationPrecision,
+                        maxUnit = QueueSectionDurationMaxUnit,
                     ),
                 )
             }

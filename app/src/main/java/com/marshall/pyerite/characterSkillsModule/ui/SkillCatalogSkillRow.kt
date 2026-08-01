@@ -37,6 +37,8 @@ internal fun SkillCatalogSkillRow(
     queueRemainingSeconds: Long? = null,
     remainingDurationPrecision: DurationDisplayFormatter.Precision =
         DurationDisplayFormatter.Precision.MINUTE,
+    remainingDurationMaxUnit: DurationDisplayFormatter.MaxUnit =
+        DurationDisplayFormatter.MaxUnit.YEAR,
     showLeadingIcon: Boolean = true,
     /**
      * Skills-page queue only: show trained level + 1 (level being trained toward).
@@ -115,6 +117,7 @@ internal fun SkillCatalogSkillRow(
                 blinkingLevel = blinkingLevel,
                 nextLevelTrainingSeconds = trailingSeconds,
                 durationPrecision = remainingDurationPrecision,
+                durationMaxUnit = remainingDurationMaxUnit,
             )
         },
     )

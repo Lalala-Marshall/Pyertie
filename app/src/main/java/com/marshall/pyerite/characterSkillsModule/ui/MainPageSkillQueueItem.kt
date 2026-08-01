@@ -10,10 +10,13 @@ import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueState
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueStatus
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
+import com.marshall.pyerite.util.DurationDisplayFormatter
 import com.marshall.pyerite.util.formatDurationDisplay
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+
+private val HomeSkillQueueDurationMaxUnit = DurationDisplayFormatter.MaxUnit.DAY
 
 /** Home-page skills row (under clone status inside the Character section card). */
 @Composable
@@ -66,7 +69,11 @@ private fun skillQueueHint(status: CharacterSkillQueueStatus): String {
         }
         CharacterSkillQueueState.PAUSED -> {
             val durationText = status.pausedRemainingSeconds?.let { seconds ->
-                formatDurationDisplay(totalSeconds = seconds, includeSeconds = false)
+                formatDurationDisplay(
+                    totalSeconds = seconds,
+                    includeSeconds = false,
+                    maxUnit = HomeSkillQueueDurationMaxUnit,
+                )
             } ?: placeholder
             stringResource(
                 R.string.character_skills_hint_paused,
@@ -83,6 +90,7 @@ private fun skillQueueHint(status: CharacterSkillQueueStatus): String {
                 val durationText = formatDurationDisplay(
                     totalSeconds = (endMs - nowMs) / CharacterSkillQueueConfig.MILLIS_PER_SECOND,
                     includeSeconds = false,
+                    maxUnit = HomeSkillQueueDurationMaxUnit,
                 )
                 stringResource(
                     R.string.character_skills_hint_training,

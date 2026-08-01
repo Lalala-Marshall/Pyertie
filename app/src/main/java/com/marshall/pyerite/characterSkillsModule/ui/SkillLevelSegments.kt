@@ -50,6 +50,8 @@ internal fun SkillCatalogLevelTrailing(
     nextLevelTrainingSeconds: Long? = null,
     durationPrecision: DurationDisplayFormatter.Precision =
         DurationDisplayFormatter.Precision.MINUTE,
+    durationMaxUnit: DurationDisplayFormatter.MaxUnit =
+        DurationDisplayFormatter.MaxUnit.YEAR,
 ) {
     val primary = colorResource(R.color.text_primary)
     val hintColor = colorResource(R.color.hint_text)
@@ -58,7 +60,11 @@ internal fun SkillCatalogLevelTrailing(
     val labelGap = dimensionResource(R.dimen.skill_level_segments_label_gap)
     val durationGap = dimensionResource(R.dimen.skill_level_segments_duration_gap)
     val durationText = nextLevelTrainingSeconds?.let { seconds ->
-        formatDurationDisplay(totalSeconds = seconds, precision = durationPrecision)
+        formatDurationDisplay(
+            totalSeconds = seconds,
+            precision = durationPrecision,
+            maxUnit = durationMaxUnit,
+        )
     }
 
     Column(
