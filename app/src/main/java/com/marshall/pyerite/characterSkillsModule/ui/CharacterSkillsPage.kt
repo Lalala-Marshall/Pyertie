@@ -79,6 +79,11 @@ internal fun CharacterSkillsPage(
                             CharacterSkillsRoute.CatalogDetails.create(uiState.status.characterId),
                         )
                     },
+                    onSkillPlanClick = {
+                        navController.navigate(
+                            CharacterSkillsRoute.SkillPlan.create(uiState.status.characterId),
+                        )
+                    },
                 )
             }
         }
@@ -89,6 +94,7 @@ internal fun CharacterSkillsPage(
 private fun CharacterSkillsCatalogSection(
     onAttributesClick: () -> Unit,
     onCatalogDetailsClick: () -> Unit,
+    onSkillPlanClick: () -> Unit,
 ) {
     BaseContainer(
         title = stringResource(R.string.character_skills_catalog_section),
@@ -107,6 +113,14 @@ private fun CharacterSkillsCatalogSection(
                 iconRes = R.drawable.ic_character_skills,
                 itemName = stringResource(R.string.character_skills_catalog_details),
                 onClick = onCatalogDetailsClick,
+            ),
+            showDivider = true,
+        )
+        BaseLazyColumnItem(
+            model = BaseLazyColumnItemModel(
+                iconRes = R.drawable.ic_character_skill_plan,
+                itemName = stringResource(R.string.character_skills_skill_plan),
+                onClick = onSkillPlanClick,
             ),
             showDivider = false,
         )
