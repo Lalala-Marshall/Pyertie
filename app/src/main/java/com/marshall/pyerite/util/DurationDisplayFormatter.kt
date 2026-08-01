@@ -1,5 +1,7 @@
 package com.marshall.pyerite.util
 
+import kotlin.math.ceil
+
 /**
  * Project-wide duration breakdown for user-visible remaining / training times.
  *
@@ -27,6 +29,21 @@ object DurationDisplayFormatter {
     private const val UNIT_SECOND = "s"
     private const val PART_SEPARATOR = " "
 
+    /** Smallest unit included in [format] / [split]. */
+    enum class Precision {
+        /** y → … → s (type-detail dogma, manufacturing, etc.). */
+        SECOND,
+
+        /** y → … → m; leftover seconds dropped (most remaining-time UI). */
+        MINUTE,
+
+        /**
+         * y → … → h; rounded **up** to whole hours (skills-page queue),
+         * matching in-game hour-precision remaining display.
+         */
+        HOUR,
+    }
+
     /**
      * @param includeSeconds when false, leftover seconds are dropped (minute is the
      *   smallest unit — used for character skill-queue remaining time).
@@ -34,8 +51,19 @@ object DurationDisplayFormatter {
     fun split(
         totalSeconds: Long,
         includeSeconds: Boolean = true,
+    ): Components = split(
+        totalSeconds = totalSeconds,
+        precision = if (includeSeconds) Precision.SECOND else Precision.MINUTE,
+    )
+
+    fun split(
+        totalSeconds: Long,
+        precision: Precision,
     ): Components {
-        var remaining = totalSeconds.coerceAtLeast(0L)
+        var remaining = when (precision) {
+            Precision.HOUR -> roundUpToWholeHours(totalSeconds)
+            Precision.MINUTE, Precision.SECOND -> totalSeconds.coerceAtLeast(0L)
+        }
 
         val years = (remaining / SECONDS_PER_YEAR).toInt()
         remaining %= SECONDS_PER_YEAR
@@ -45,11 +73,13 @@ object DurationDisplayFormatter {
         remaining %= SECONDS_PER_DAY
         val hours = (remaining / SECONDS_PER_HOUR).toInt()
         remaining %= SECONDS_PER_HOUR
-        val minutes = (remaining / SECONDS_PER_MINUTE).toInt()
-        val seconds = if (includeSeconds) {
-            (remaining % SECONDS_PER_MINUTE).toInt()
-        } else {
-            0
+        val minutes = when (precision) {
+            Precision.HOUR -> 0
+            Precision.MINUTE, Precision.SECOND -> (remaining / SECONDS_PER_MINUTE).toInt()
+        }
+        val seconds = when (precision) {
+            Precision.SECOND -> (remaining % SECONDS_PER_MINUTE).toInt()
+            Precision.MINUTE, Precision.HOUR -> 0
         }
 
         return Components(
@@ -62,16 +92,30 @@ object DurationDisplayFormatter {
         )
     }
 
+    /** Ceil to whole hours so e.g. 2h 1m displays as 3h, not 2h. */
+    private fun roundUpToWholeHours(totalSeconds: Long): Long {
+        if (totalSeconds <= 0L) return 0L
+        return ceil(totalSeconds.toDouble() / SECONDS_PER_HOUR).toLong() * SECONDS_PER_HOUR
+    }
+
     /**
      * Formats [totalSeconds] as e.g. `1y 2mo 3d 4h 5m` (lowercase Latin units).
      */
     fun format(
         totalSeconds: Long,
         includeSeconds: Boolean = false,
+    ): String = format(
+        totalSeconds = totalSeconds,
+        precision = if (includeSeconds) Precision.SECOND else Precision.MINUTE,
+    )
+
+    fun format(
+        totalSeconds: Long,
+        precision: Precision,
     ): String {
         val components = split(
             totalSeconds = totalSeconds,
-            includeSeconds = includeSeconds,
+            precision = precision,
         )
         val parts = buildList {
             if (components.years > 0) {
@@ -86,15 +130,25 @@ object DurationDisplayFormatter {
             if (components.hours > 0) {
                 add("${components.hours}$UNIT_HOUR")
             }
-            if (components.minutes > 0) {
+            if (precision != Precision.HOUR && components.minutes > 0) {
                 add("${components.minutes}$UNIT_MINUTE")
             }
-            if (includeSeconds) {
-                if (components.seconds > 0 || isEmpty()) {
-                    add("${components.seconds}$UNIT_SECOND")
+            when (precision) {
+                Precision.SECOND -> {
+                    if (components.seconds > 0 || isEmpty()) {
+                        add("${components.seconds}$UNIT_SECOND")
+                    }
                 }
-            } else if (isEmpty()) {
-                add("0$UNIT_MINUTE")
+                Precision.MINUTE -> {
+                    if (isEmpty()) {
+                        add("0$UNIT_MINUTE")
+                    }
+                }
+                Precision.HOUR -> {
+                    if (isEmpty()) {
+                        add("0$UNIT_HOUR")
+                    }
+                }
             }
         }
         return parts.joinToString(PART_SEPARATOR)

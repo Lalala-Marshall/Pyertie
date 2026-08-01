@@ -6,6 +6,7 @@ import androidx.core.content.edit
 import com.marshall.pyerite.characterSkillsModule.model.CharacterAttributes
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueState
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueStatus
+import com.marshall.pyerite.characterSkillsModule.model.SkillQueueHeadTraining
 import com.marshall.pyerite.infra.network.PyeriteJson
 import kotlinx.serialization.Serializable
 
@@ -61,6 +62,40 @@ private data class CachedQueuedSkillTarget(
 )
 
 @Serializable
+private data class CachedQueueHeadTraining(
+    val skillId: Int,
+    val finishedLevel: Int,
+    val trainingStartSp: Long? = null,
+    val levelStartSp: Long? = null,
+    val levelEndSp: Long? = null,
+    val startAtEpochMs: Long? = null,
+    val finishAtEpochMs: Long? = null,
+) {
+    fun toModel(): SkillQueueHeadTraining = SkillQueueHeadTraining(
+        skillId = skillId,
+        finishedLevel = finishedLevel,
+        trainingStartSp = trainingStartSp,
+        levelStartSp = levelStartSp,
+        levelEndSp = levelEndSp,
+        startAtEpochMs = startAtEpochMs,
+        finishAtEpochMs = finishAtEpochMs,
+    )
+
+    companion object {
+        fun from(head: SkillQueueHeadTraining): CachedQueueHeadTraining =
+            CachedQueueHeadTraining(
+                skillId = head.skillId,
+                finishedLevel = head.finishedLevel,
+                trainingStartSp = head.trainingStartSp,
+                levelStartSp = head.levelStartSp,
+                levelEndSp = head.levelEndSp,
+                startAtEpochMs = head.startAtEpochMs,
+                finishAtEpochMs = head.finishAtEpochMs,
+            )
+    }
+}
+
+@Serializable
 private data class CachedCharacterSkillQueueStatus(
     val characterId: Long,
     val state: String,
@@ -68,6 +103,7 @@ private data class CachedCharacterSkillQueueStatus(
     val pausedSkillCount: Int = 0,
     val pausedRemainingSeconds: Long? = null,
     val queuedSkillTargets: List<CachedQueuedSkillTarget> = emptyList(),
+    val queueHead: CachedQueueHeadTraining? = null,
     val activeTrainingSkillId: Int? = null,
     val activeTrainingLevel: Int? = null,
 ) {
@@ -79,6 +115,8 @@ private data class CachedCharacterSkillQueueStatus(
         pausedSkillCount = pausedSkillCount,
         pausedRemainingSeconds = pausedRemainingSeconds,
         queuedTargetLevelsBySkillId = queuedSkillTargets.associate { it.skillId to it.targetLevel },
+        queuedSkillIdsInOrder = queuedSkillTargets.map { it.skillId },
+        queueHead = queueHead?.toModel(),
         activeTrainingSkillId = activeTrainingSkillId,
         activeTrainingLevel = activeTrainingLevel,
     )
@@ -91,9 +129,15 @@ private data class CachedCharacterSkillQueueStatus(
                 trainingFinishAtEpochMs = status.trainingFinishAtEpochMs,
                 pausedSkillCount = status.pausedSkillCount,
                 pausedRemainingSeconds = status.pausedRemainingSeconds,
-                queuedSkillTargets = status.queuedTargetLevelsBySkillId.map { (skillId, level) ->
+                queuedSkillTargets = status.queuedSkillIdsInOrder.mapNotNull { skillId ->
+                    val level = status.queuedTargetLevelsBySkillId[skillId] ?: return@mapNotNull null
                     CachedQueuedSkillTarget(skillId = skillId, targetLevel = level)
+                }.ifEmpty {
+                    status.queuedTargetLevelsBySkillId.map { (skillId, level) ->
+                        CachedQueuedSkillTarget(skillId = skillId, targetLevel = level)
+                    }
                 },
+                queueHead = status.queueHead?.let(CachedQueueHeadTraining::from),
                 activeTrainingSkillId = status.activeTrainingSkillId,
                 activeTrainingLevel = status.activeTrainingLevel,
             )

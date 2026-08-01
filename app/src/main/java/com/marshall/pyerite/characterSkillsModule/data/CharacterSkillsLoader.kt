@@ -6,6 +6,7 @@ import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueStatu
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogConfig
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogGroup
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogSkill
+import com.marshall.pyerite.characterSkillsModule.model.SkillQueueHeadTraining
 import com.marshall.pyerite.esiModule.api.EsiCharacterApi
 import com.marshall.pyerite.esiModule.model.EsiCharacterAttributesDto
 import com.marshall.pyerite.esiModule.model.EsiSkillQueueEntryDto
@@ -115,18 +116,32 @@ internal class CharacterSkillsLoader(
         val queuedTargetLevelsBySkillId = ordered
             .groupBy { it.skillId }
             .mapValues { (_, skillEntries) -> skillEntries.maxOf { it.finishedLevel } }
+        val queuedSkillIdsInOrder = ordered.map { it.skillId }.distinct()
         val finishTimes = ordered.mapNotNull { entry ->
             entry.finishDate?.let { parseEsiDateMillis(it) }
         }
-        val head = ordered.firstOrNull()
+        val headDto = ordered.firstOrNull()
+        val queueHead = headDto?.let { entry ->
+            SkillQueueHeadTraining(
+                skillId = entry.skillId,
+                finishedLevel = entry.finishedLevel,
+                trainingStartSp = entry.trainingStartSp,
+                levelStartSp = entry.levelStartSp,
+                levelEndSp = entry.levelEndSp,
+                startAtEpochMs = entry.startDate?.let { parseEsiDateMillis(it) },
+                finishAtEpochMs = entry.finishDate?.let { parseEsiDateMillis(it) },
+            )
+        }
         return if (finishTimes.isNotEmpty()) {
             CharacterSkillQueueStatus(
                 characterId = characterId,
                 state = CharacterSkillQueueState.TRAINING,
                 trainingFinishAtEpochMs = finishTimes,
                 queuedTargetLevelsBySkillId = queuedTargetLevelsBySkillId,
-                activeTrainingSkillId = head?.skillId,
-                activeTrainingLevel = head?.finishedLevel,
+                queuedSkillIdsInOrder = queuedSkillIdsInOrder,
+                queueHead = queueHead,
+                activeTrainingSkillId = headDto?.skillId,
+                activeTrainingLevel = headDto?.finishedLevel,
             )
         } else {
             CharacterSkillQueueStatus(
@@ -135,6 +150,8 @@ internal class CharacterSkillsLoader(
                 pausedSkillCount = ordered.size,
                 pausedRemainingSeconds = null,
                 queuedTargetLevelsBySkillId = queuedTargetLevelsBySkillId,
+                queuedSkillIdsInOrder = queuedSkillIdsInOrder,
+                queueHead = queueHead,
             )
         }
     }

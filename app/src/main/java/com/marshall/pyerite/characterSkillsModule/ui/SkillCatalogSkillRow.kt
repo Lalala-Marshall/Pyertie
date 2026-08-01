@@ -4,12 +4,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.marshall.pyerite.R
 import com.marshall.pyerite.characterSkillsModule.model.CharacterAttributes
+import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogConfig
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogSkill
 import com.marshall.pyerite.localization.LocaleController
 import com.marshall.pyerite.localization.displayName
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemHint
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
+import com.marshall.pyerite.util.DurationDisplayFormatter
 import com.marshall.pyerite.util.NumberDisplayFormatter
 
 @Composable
@@ -24,9 +26,33 @@ internal fun SkillCatalogSkillRow(
     attributesReady: Boolean,
     activeTrainingSkillId: Int? = null,
     activeTrainingLevel: Int? = null,
+    /** When set (queue head live tick), replaces catalog [SkillCatalogSkill.trainedSp]. */
+    trainedSpOverride: Long? = null,
+    /**
+     * When true, trailing duration uses [queueRemainingSeconds] only (no attribute estimate).
+     * Used for the skills-page queue head row.
+     */
+    useQueueRemaining: Boolean = false,
+    /** Remaining seconds for the active queue entry; null hides the duration line. */
+    queueRemainingSeconds: Long? = null,
+    remainingDurationPrecision: DurationDisplayFormatter.Precision =
+        DurationDisplayFormatter.Precision.MINUTE,
+    showLeadingIcon: Boolean = true,
+    /**
+     * Skills-page queue only: show trained level + 1 (level being trained toward).
+     * Catalog details must leave this false.
+     */
+    showQueueTrainingLevel: Boolean = false,
+    /**
+     * Queue-head row: omit bottom content padding so [belowContent] sits flush
+     * under the SP hint.
+     */
+    omitContentBottomPadding: Boolean = false,
+    /** Inside the clickable item, under the main row (e.g. training progress). */
+    belowContent: (@Composable () -> Unit)? = null,
 ) {
     val trainedSpText = NumberDisplayFormatter.format(
-        skill.trainedSp,
+        trainedSpOverride ?: skill.trainedSp,
         NumberDisplayFormatter.Style.FULL,
     )
     val maxSpText = NumberDisplayFormatter.format(
@@ -43,10 +69,10 @@ internal fun SkillCatalogSkillRow(
     } else {
         null
     }
-    val nextLevelTrainingSeconds = if (attributesReady) {
-        skill.secondsToTrainNextLevel(attributes)
-    } else {
-        null
+    val trailingSeconds = when {
+        useQueueRemaining -> queueRemainingSeconds
+        attributesReady -> skill.secondsToTrainNextLevel(attributes)
+        else -> null
     }
     val rank = skill.skillTimeConstant.toInt().coerceAtLeast(1)
     val title = stringResource(
@@ -54,11 +80,17 @@ internal fun SkillCatalogSkillRow(
         skill.displayName(localeController),
         rank,
     )
+    val leadingIconVisible = showLeadingIcon && !skill.iconFilename.isNullOrBlank()
+    val displayLevel = if (showQueueTrainingLevel) {
+        (skill.trainedLevel + 1).coerceAtMost(SkillCatalogConfig.MAX_SKILL_LEVEL)
+    } else {
+        skill.trainedLevel
+    }
 
     BaseLazyColumnItem(
         model = BaseLazyColumnItemModel(
             iconFileName = skill.iconFilename,
-            showLeadingIcon = !skill.iconFilename.isNullOrBlank(),
+            showLeadingIcon = leadingIconVisible,
             itemName = title,
             itemHints = listOf(
                 BaseLazyColumnItemHint(
@@ -73,13 +105,16 @@ internal fun SkillCatalogSkillRow(
             onClick = onClick,
         ),
         showDivider = showDivider,
+        omitContentBottomPadding = omitContentBottomPadding,
+        belowContent = belowContent,
         trailingContent = {
             SkillCatalogLevelTrailing(
                 isInjected = showAsInjected,
-                level = skill.trainedLevel,
+                level = displayLevel,
                 queuedTargetLevel = if (inQueue) queuedTargetLevel else null,
                 blinkingLevel = blinkingLevel,
-                nextLevelTrainingSeconds = nextLevelTrainingSeconds,
+                nextLevelTrainingSeconds = trailingSeconds,
+                durationPrecision = remainingDurationPrecision,
             )
         },
     )

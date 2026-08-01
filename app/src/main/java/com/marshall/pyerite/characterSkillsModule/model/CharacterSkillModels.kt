@@ -23,6 +23,81 @@ enum class CharacterSkillQueueState {
 internal object CharacterSkillQueueConfig {
     const val UI_TICK_MS = 1_000L
     const val MILLIS_PER_SECOND = 1_000L
+    const val PROGRESS_SHIMMER_DURATION_MS = 2_400
+    const val PROGRESS_SHIMMER_WIDTH_FRACTION = 0.4f
+    const val PROGRESS_SHIMMER_PEAK_ALPHA = 0.55f
+}
+
+/**
+ * ESI head-of-queue entry fields for live SP / remaining-time on the skills page.
+ */
+data class SkillQueueHeadTraining(
+    val skillId: Int,
+    val finishedLevel: Int,
+    val trainingStartSp: Long? = null,
+    val levelStartSp: Long? = null,
+    val levelEndSp: Long? = null,
+    val startAtEpochMs: Long? = null,
+    val finishAtEpochMs: Long? = null,
+) {
+    /**
+     * Interpolated current SP for this queue entry at [nowMs]; frozen when dates missing.
+     *
+     * Uses second-granularity **floor** division (same discrete ticks as the client),
+     * not float truncation of the gained portion — that could read 1–2 SP high.
+     */
+    fun currentSpAt(nowMs: Long): Long? {
+        val trainingStart = trainingStartSp ?: return null
+        val levelEnd = levelEndSp ?: return trainingStart
+        val finishMs = finishAtEpochMs ?: return trainingStart
+        val startMs = startAtEpochMs ?: return trainingStart
+        if (levelEnd < trainingStart) return trainingStart
+        if (finishMs <= startMs) return trainingStart
+        if (nowMs <= startMs) return trainingStart
+        if (nowMs >= finishMs) return levelEnd
+        val durationSeconds =
+            (finishMs - startMs) / CharacterSkillQueueConfig.MILLIS_PER_SECOND
+        if (durationSeconds <= 0L) return trainingStart
+        val elapsedSeconds =
+            ((nowMs - startMs) / CharacterSkillQueueConfig.MILLIS_PER_SECOND)
+                .coerceAtMost(durationSeconds)
+        return trainingStart +
+            (levelEnd - trainingStart) * elapsedSeconds / durationSeconds
+    }
+
+    fun remainingSecondsAt(nowMs: Long): Long? {
+        val finishMs = finishAtEpochMs ?: return null
+        val deltaMs = finishMs - nowMs
+        if (deltaMs <= 0L) return 0L
+        return deltaMs / CharacterSkillQueueConfig.MILLIS_PER_SECOND
+    }
+
+    /**
+     * Progress within the level being trained (0…1), from [levelStartSp]→[levelEndSp]
+     * using live floor [currentSpAt]; falls back to time fraction of this queue entry.
+     */
+    fun levelProgressAt(nowMs: Long): Float {
+        val levelStart = levelStartSp
+        val levelEnd = levelEndSp
+        val currentSp = currentSpAt(nowMs)
+        if (levelStart != null &&
+            levelEnd != null &&
+            levelEnd > levelStart &&
+            currentSp != null
+        ) {
+            return ((currentSp - levelStart).toDouble() / (levelEnd - levelStart).toDouble())
+                .toFloat()
+                .coerceIn(SkillCatalogConfig.PROGRESS_MIN, SkillCatalogConfig.PROGRESS_MAX)
+        }
+        val finishMs = finishAtEpochMs ?: return SkillCatalogConfig.PROGRESS_MIN
+        val startMs = startAtEpochMs ?: return SkillCatalogConfig.PROGRESS_MIN
+        if (finishMs <= startMs) return SkillCatalogConfig.PROGRESS_MIN
+        if (nowMs <= startMs) return SkillCatalogConfig.PROGRESS_MIN
+        if (nowMs >= finishMs) return SkillCatalogConfig.PROGRESS_MAX
+        return ((nowMs - startMs).toDouble() / (finishMs - startMs).toDouble())
+            .toFloat()
+            .coerceIn(SkillCatalogConfig.PROGRESS_MIN, SkillCatalogConfig.PROGRESS_MAX)
+    }
 }
 
 /**
@@ -44,6 +119,13 @@ data class CharacterSkillQueueStatus(
      * Example: L1 done, queueing L2/L3/L4 → map value is 4.
      */
     val queuedTargetLevelsBySkillId: Map<Int, Int> = emptyMap(),
+    /**
+     * Distinct skill type ids in ESI queue order (first appearance).
+     * Used to render the skills-page queue section.
+     */
+    val queuedSkillIdsInOrder: List<Int> = emptyList(),
+    /** First ESI queue entry (for live SP / remaining on the skills page). */
+    val queueHead: SkillQueueHeadTraining? = null,
     /**
      * Head of the ESI skill queue while [state] is [CharacterSkillQueueState.TRAINING]:
      * skill type id + `finished_level` currently being trained. Null when idle / paused.

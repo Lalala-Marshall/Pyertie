@@ -30,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import com.marshall.pyerite.R
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogConfig
+import com.marshall.pyerite.util.DurationDisplayFormatter
 import com.marshall.pyerite.util.formatDurationDisplay
 
 /**
@@ -47,6 +48,8 @@ internal fun SkillCatalogLevelTrailing(
     queuedTargetLevel: Int? = null,
     blinkingLevel: Int? = null,
     nextLevelTrainingSeconds: Long? = null,
+    durationPrecision: DurationDisplayFormatter.Precision =
+        DurationDisplayFormatter.Precision.MINUTE,
 ) {
     val primary = colorResource(R.color.text_primary)
     val hintColor = colorResource(R.color.hint_text)
@@ -55,7 +58,7 @@ internal fun SkillCatalogLevelTrailing(
     val labelGap = dimensionResource(R.dimen.skill_level_segments_label_gap)
     val durationGap = dimensionResource(R.dimen.skill_level_segments_duration_gap)
     val durationText = nextLevelTrainingSeconds?.let { seconds ->
-        formatDurationDisplay(totalSeconds = seconds, includeSeconds = false)
+        formatDurationDisplay(totalSeconds = seconds, precision = durationPrecision)
     }
 
     Column(
