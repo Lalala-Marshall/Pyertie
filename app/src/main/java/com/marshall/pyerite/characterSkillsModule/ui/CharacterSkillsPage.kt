@@ -24,6 +24,7 @@ import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueState
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueStatus
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogGroup
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogSkill
+import com.marshall.pyerite.characterSkillsModule.model.SkillQueueHeadTraining
 import com.marshall.pyerite.characterSkillsModule.navHost.CharacterSkillsRoute
 import com.marshall.pyerite.characterSkillsModule.viewModel.CharacterSkillsViewModel
 import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
@@ -78,14 +79,13 @@ internal fun CharacterSkillsPage(
         viewModel.refresh()
     }
 
-    val queuedSkills = remember(
+    val queuedRows = remember(
         uiState.catalogGroups,
-        uiState.status.queuedSkillIdsInOrder,
-        uiState.status.queuedTargetLevelsBySkillId,
+        uiState.status.queuedEntries,
     ) {
-        resolveQueuedCatalogSkills(
+        resolveQueuedCatalogRows(
             groups = uiState.catalogGroups,
-            queuedSkillIdsInOrder = uiState.status.queuedSkillIdsInOrder,
+            queuedEntries = uiState.status.queuedEntries,
         )
     }
 
@@ -128,8 +128,7 @@ internal fun CharacterSkillsPage(
                 CharacterSkillsQueueSection(
                     status = uiState.status,
                     detailsReady = uiState.detailsReady,
-                    skills = queuedSkills,
-                    queuedTargetLevelsBySkillId = uiState.status.queuedTargetLevelsBySkillId,
+                    rows = queuedRows,
                     attributes = uiState.attributes,
                     attributesReady = uiState.attributesReady,
                     activeTrainingSkillId = uiState.status.activeTrainingSkillId,
@@ -148,8 +147,7 @@ internal fun CharacterSkillsPage(
 private fun CharacterSkillsQueueSection(
     status: CharacterSkillQueueStatus,
     detailsReady: Boolean,
-    skills: List<SkillCatalogSkill>,
-    queuedTargetLevelsBySkillId: Map<Int, Int>,
+    rows: List<QueuedCatalogRow>,
     attributes: CharacterAttributes,
     attributesReady: Boolean,
     activeTrainingSkillId: Int?,
@@ -181,7 +179,6 @@ private fun CharacterSkillsQueueSection(
         detailsReady = detailsReady,
         nowMs = nowMs,
     )
-    val queueHead = status.queueHead
     BaseContainer(
         title = stringResource(
             R.string.character_skills_queue_section,
@@ -190,37 +187,35 @@ private fun CharacterSkillsQueueSection(
         ),
         useSystemBarsPadding = false,
     ) {
-        skills.forEachIndexed { index, skill ->
-            val isQueueHead = queueHead != null && skill.typeId == queueHead.skillId && index == 0
+        rows.forEachIndexed { index, row ->
+            val entry = row.entry
+            val skill = row.skill
+            val isQueueHead = index == 0
             SkillCatalogSkillRow(
                 skill = skill,
-                queuedTargetLevel = queuedTargetLevelsBySkillId[skill.typeId],
+                queuedTargetLevel = entry.finishedLevel,
                 localeController = localeController,
                 highlightQueueTarget = true,
-                showDivider = index != skills.lastIndex,
+                showDivider = index != rows.lastIndex,
                 onClick = { onSkillClick(skill.typeId) },
                 attributes = attributes,
                 attributesReady = attributesReady,
                 activeTrainingSkillId = activeTrainingSkillId,
                 activeTrainingLevel = activeTrainingLevel,
-                trainedSpOverride = if (isQueueHead) queueHead.currentSpAt(nowMs) else null,
-                useQueueRemaining = isQueueHead,
-                queueRemainingSeconds = if (isQueueHead) {
-                    queueHead.remainingSecondsAt(nowMs)
-                } else {
-                    null
-                },
+                trainedSpOverride = if (isQueueHead) entry.currentSpAt(nowMs) else null,
+                useQueueRemaining = true,
+                queueRemainingSeconds = entry.remainingSecondsAt(nowMs),
                 remainingDurationPrecision = QueueSectionDurationPrecision,
                 remainingDurationMaxUnit = QueueSectionDurationMaxUnit,
                 showLeadingIcon = false,
-                showQueueTrainingLevel = true,
+                queueEntryFinishedLevel = entry.finishedLevel,
                 omitContentBottomPadding = isQueueHead,
                 belowContent = if (isQueueHead) {
                     {
                         SkillQueueTrainingProgressBar(
-                            progress = queueHead.levelProgressAt(nowMs),
+                            progress = entry.levelProgressAt(nowMs),
                             animateShimmer = status.state == CharacterSkillQueueState.TRAINING &&
-                                (queueHead.remainingSecondsAt(nowMs) ?: 0L) > 0L,
+                                (entry.remainingSecondsAt(nowMs) ?: 0L) > 0L,
                             showLeadingIcon = false,
                         )
                     }
@@ -319,13 +314,21 @@ private fun skillQueueSectionSummary(
     }
 }
 
-private fun resolveQueuedCatalogSkills(
+private data class QueuedCatalogRow(
+    val entry: SkillQueueHeadTraining,
+    val skill: SkillCatalogSkill,
+)
+
+private fun resolveQueuedCatalogRows(
     groups: List<SkillCatalogGroup>,
-    queuedSkillIdsInOrder: List<Int>,
-): List<SkillCatalogSkill> {
-    if (queuedSkillIdsInOrder.isEmpty()) return emptyList()
+    queuedEntries: List<SkillQueueHeadTraining>,
+): List<QueuedCatalogRow> {
+    if (queuedEntries.isEmpty()) return emptyList()
     val byTypeId = groups.asSequence()
         .flatMap { it.skills }
         .associateBy { it.typeId }
-    return queuedSkillIdsInOrder.mapNotNull { typeId -> byTypeId[typeId] }
+    return queuedEntries.mapNotNull { entry ->
+        val skill = byTypeId[entry.skillId] ?: return@mapNotNull null
+        QueuedCatalogRow(entry = entry, skill = skill)
+    }
 }

@@ -103,23 +103,32 @@ private data class CachedCharacterSkillQueueStatus(
     val pausedSkillCount: Int = 0,
     val pausedRemainingSeconds: Long? = null,
     val queuedSkillTargets: List<CachedQueuedSkillTarget> = emptyList(),
+    /** Full ESI queue order (may repeat skill ids). Absent in older cache blobs. */
+    val queuedEntries: List<CachedQueueHeadTraining> = emptyList(),
     val queueHead: CachedQueueHeadTraining? = null,
     val activeTrainingSkillId: Int? = null,
     val activeTrainingLevel: Int? = null,
 ) {
-    fun toModel(): CharacterSkillQueueStatus = CharacterSkillQueueStatus(
-        characterId = characterId,
-        state = runCatching { CharacterSkillQueueState.valueOf(state) }
-            .getOrDefault(CharacterSkillQueueState.IDLE),
-        trainingFinishAtEpochMs = trainingFinishAtEpochMs,
-        pausedSkillCount = pausedSkillCount,
-        pausedRemainingSeconds = pausedRemainingSeconds,
-        queuedTargetLevelsBySkillId = queuedSkillTargets.associate { it.skillId to it.targetLevel },
-        queuedSkillIdsInOrder = queuedSkillTargets.map { it.skillId },
-        queueHead = queueHead?.toModel(),
-        activeTrainingSkillId = activeTrainingSkillId,
-        activeTrainingLevel = activeTrainingLevel,
-    )
+    fun toModel(): CharacterSkillQueueStatus {
+        val entries = when {
+            queuedEntries.isNotEmpty() -> queuedEntries.map { it.toModel() }
+            queueHead != null -> listOf(queueHead.toModel())
+            else -> emptyList()
+        }
+        return CharacterSkillQueueStatus(
+            characterId = characterId,
+            state = runCatching { CharacterSkillQueueState.valueOf(state) }
+                .getOrDefault(CharacterSkillQueueState.IDLE),
+            trainingFinishAtEpochMs = trainingFinishAtEpochMs,
+            pausedSkillCount = pausedSkillCount,
+            pausedRemainingSeconds = pausedRemainingSeconds,
+            queuedTargetLevelsBySkillId = queuedSkillTargets.associate { it.skillId to it.targetLevel },
+            queuedEntries = entries,
+            queueHead = queueHead?.toModel() ?: entries.firstOrNull(),
+            activeTrainingSkillId = activeTrainingSkillId,
+            activeTrainingLevel = activeTrainingLevel,
+        )
+    }
 
     companion object {
         fun from(status: CharacterSkillQueueStatus): CachedCharacterSkillQueueStatus =
@@ -129,15 +138,12 @@ private data class CachedCharacterSkillQueueStatus(
                 trainingFinishAtEpochMs = status.trainingFinishAtEpochMs,
                 pausedSkillCount = status.pausedSkillCount,
                 pausedRemainingSeconds = status.pausedRemainingSeconds,
-                queuedSkillTargets = status.queuedSkillIdsInOrder.mapNotNull { skillId ->
-                    val level = status.queuedTargetLevelsBySkillId[skillId] ?: return@mapNotNull null
+                queuedSkillTargets = status.queuedTargetLevelsBySkillId.map { (skillId, level) ->
                     CachedQueuedSkillTarget(skillId = skillId, targetLevel = level)
-                }.ifEmpty {
-                    status.queuedTargetLevelsBySkillId.map { (skillId, level) ->
-                        CachedQueuedSkillTarget(skillId = skillId, targetLevel = level)
-                    }
                 },
-                queueHead = status.queueHead?.let(CachedQueueHeadTraining::from),
+                queuedEntries = status.queuedEntries.map(CachedQueueHeadTraining::from),
+                queueHead = status.queueHead?.let(CachedQueueHeadTraining::from)
+                    ?: status.queuedEntries.firstOrNull()?.let(CachedQueueHeadTraining::from),
                 activeTrainingSkillId = status.activeTrainingSkillId,
                 activeTrainingLevel = status.activeTrainingLevel,
             )

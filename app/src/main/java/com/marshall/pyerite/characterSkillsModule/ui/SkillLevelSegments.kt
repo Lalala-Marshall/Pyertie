@@ -39,12 +39,17 @@ import com.marshall.pyerite.util.formatDurationDisplay
  *
  * Queued levels above [level] up to [queuedTargetLevel] render gray.
  * Only [blinkingLevel] (the actively training level) pulses — animation runs solely for that row.
+ *
+ * @param level Filled segment count (completed levels).
+ * @param levelLabel Optional "Lv.N" text when different from [level]
+ *   (skills-page queue: label = entry `finished_level`, filled = that − 1).
  */
 @Composable
 internal fun SkillCatalogLevelTrailing(
     isInjected: Boolean,
     level: Int,
     modifier: Modifier = Modifier,
+    levelLabel: Int? = null,
     queuedTargetLevel: Int? = null,
     blinkingLevel: Int? = null,
     nextLevelTrainingSeconds: Long? = null,
@@ -80,17 +85,19 @@ internal fun SkillCatalogLevelTrailing(
                 maxLines = 1,
             )
         } else {
-            val clampedLevel = level.coerceIn(0, SkillCatalogConfig.MAX_SKILL_LEVEL)
+            val filledLevel = level.coerceIn(0, SkillCatalogConfig.MAX_SKILL_LEVEL)
+            val displayLabel = (levelLabel ?: level)
+                .coerceIn(0, SkillCatalogConfig.MAX_SKILL_LEVEL)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = stringResource(R.string.skill_level_short, clampedLevel),
+                    text = stringResource(R.string.skill_level_short, displayLabel),
                     color = primary,
                     fontSize = labelSize,
                     maxLines = 1,
                 )
                 Spacer(modifier = Modifier.width(labelGap))
                 SkillLevelSegments(
-                    trainedLevel = clampedLevel,
+                    trainedLevel = filledLevel,
                     queuedTargetLevel = queuedTargetLevel,
                     blinkingLevel = blinkingLevel,
                     activeColor = primary,

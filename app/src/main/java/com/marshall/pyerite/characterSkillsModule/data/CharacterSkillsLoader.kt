@@ -116,12 +116,7 @@ internal class CharacterSkillsLoader(
         val queuedTargetLevelsBySkillId = ordered
             .groupBy { it.skillId }
             .mapValues { (_, skillEntries) -> skillEntries.maxOf { it.finishedLevel } }
-        val queuedSkillIdsInOrder = ordered.map { it.skillId }.distinct()
-        val finishTimes = ordered.mapNotNull { entry ->
-            entry.finishDate?.let { parseEsiDateMillis(it) }
-        }
-        val headDto = ordered.firstOrNull()
-        val queueHead = headDto?.let { entry ->
+        val queuedEntries = ordered.map { entry ->
             SkillQueueHeadTraining(
                 skillId = entry.skillId,
                 finishedLevel = entry.finishedLevel,
@@ -132,16 +127,18 @@ internal class CharacterSkillsLoader(
                 finishAtEpochMs = entry.finishDate?.let { parseEsiDateMillis(it) },
             )
         }
+        val queueHead = queuedEntries.firstOrNull()
+        val finishTimes = queuedEntries.mapNotNull { it.finishAtEpochMs }
         return if (finishTimes.isNotEmpty()) {
             CharacterSkillQueueStatus(
                 characterId = characterId,
                 state = CharacterSkillQueueState.TRAINING,
                 trainingFinishAtEpochMs = finishTimes,
                 queuedTargetLevelsBySkillId = queuedTargetLevelsBySkillId,
-                queuedSkillIdsInOrder = queuedSkillIdsInOrder,
+                queuedEntries = queuedEntries,
                 queueHead = queueHead,
-                activeTrainingSkillId = headDto?.skillId,
-                activeTrainingLevel = headDto?.finishedLevel,
+                activeTrainingSkillId = queueHead?.skillId,
+                activeTrainingLevel = queueHead?.finishedLevel,
             )
         } else {
             CharacterSkillQueueStatus(
@@ -150,7 +147,7 @@ internal class CharacterSkillsLoader(
                 pausedSkillCount = ordered.size,
                 pausedRemainingSeconds = null,
                 queuedTargetLevelsBySkillId = queuedTargetLevelsBySkillId,
-                queuedSkillIdsInOrder = queuedSkillIdsInOrder,
+                queuedEntries = queuedEntries,
                 queueHead = queueHead,
             )
         }

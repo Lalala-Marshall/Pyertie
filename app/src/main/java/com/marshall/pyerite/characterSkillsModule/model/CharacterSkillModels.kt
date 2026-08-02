@@ -117,14 +117,15 @@ data class CharacterSkillQueueStatus(
     /**
      * ESI skill queue targets: skill type id → highest `finished_level` in queue.
      * Example: L1 done, queueing L2/L3/L4 → map value is 4.
+     * Used by catalog filters / group highlights (not the skills-page queue list).
      */
     val queuedTargetLevelsBySkillId: Map<Int, Int> = emptyMap(),
     /**
-     * Distinct skill type ids in ESI queue order (first appearance).
-     * Used to render the skills-page queue section.
+     * Every ESI queue entry in order (not deduplicated). Same skill queued for
+     * L1…L5 appears five times. Used by the skills-page queue section.
      */
-    val queuedSkillIdsInOrder: List<Int> = emptyList(),
-    /** First ESI queue entry (for live SP / remaining on the skills page). */
+    val queuedEntries: List<SkillQueueHeadTraining> = emptyList(),
+    /** First ESI queue entry; same as [queuedEntries].firstOrNull(). */
     val queueHead: SkillQueueHeadTraining? = null,
     /**
      * Head of the ESI skill queue while [state] is [CharacterSkillQueueState.TRAINING]:

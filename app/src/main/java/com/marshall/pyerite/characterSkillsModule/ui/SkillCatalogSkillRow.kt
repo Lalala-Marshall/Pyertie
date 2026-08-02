@@ -30,10 +30,10 @@ internal fun SkillCatalogSkillRow(
     trainedSpOverride: Long? = null,
     /**
      * When true, trailing duration uses [queueRemainingSeconds] only (no attribute estimate).
-     * Used for the skills-page queue head row.
+     * Used for skills-page queue rows.
      */
     useQueueRemaining: Boolean = false,
-    /** Remaining seconds for the active queue entry; null hides the duration line. */
+    /** Remaining seconds for the queue entry; null hides the duration line. */
     queueRemainingSeconds: Long? = null,
     remainingDurationPrecision: DurationDisplayFormatter.Precision =
         DurationDisplayFormatter.Precision.MINUTE,
@@ -41,10 +41,11 @@ internal fun SkillCatalogSkillRow(
         DurationDisplayFormatter.MaxUnit.YEAR,
     showLeadingIcon: Boolean = true,
     /**
-     * Skills-page queue only: show trained level + 1 (level being trained toward).
-     * Catalog details must leave this false.
+     * Skills-page queue entry: ESI `finished_level` for **this** row.
+     * Label = this level; filled segments = level − 1; gray = this level only.
+     * Catalog details must leave this null.
      */
-    showQueueTrainingLevel: Boolean = false,
+    queueEntryFinishedLevel: Int? = null,
     /**
      * Queue-head row: omit bottom content padding so [belowContent] sits flush
      * under the SP hint.
@@ -61,15 +62,20 @@ internal fun SkillCatalogSkillRow(
         skill.maxSp,
         NumberDisplayFormatter.Style.FULL,
     )
-    val inQueue = highlightQueueTarget && queuedTargetLevel != null
+    val inQueue = highlightQueueTarget && (
+        queuedTargetLevel != null || queueEntryFinishedLevel != null
+    )
     val showAsInjected = skill.isInjected || inQueue
-    val blinkingLevel = if (
-        activeTrainingSkillId == skill.typeId &&
-        activeTrainingLevel != null
-    ) {
-        activeTrainingLevel
-    } else {
-        null
+    val entryFinishedLevel = queueEntryFinishedLevel
+        ?.coerceIn(1, SkillCatalogConfig.MAX_SKILL_LEVEL)
+    val blinkingLevel = when {
+        entryFinishedLevel != null &&
+            activeTrainingSkillId == skill.typeId &&
+            activeTrainingLevel == entryFinishedLevel -> entryFinishedLevel
+        entryFinishedLevel == null &&
+            activeTrainingSkillId == skill.typeId &&
+            activeTrainingLevel != null -> activeTrainingLevel
+        else -> null
     }
     val trailingSeconds = when {
         useQueueRemaining -> queueRemainingSeconds
@@ -83,10 +89,18 @@ internal fun SkillCatalogSkillRow(
         rank,
     )
     val leadingIconVisible = showLeadingIcon && !skill.iconFilename.isNullOrBlank()
-    val displayLevel = if (showQueueTrainingLevel) {
-        (skill.trainedLevel + 1).coerceAtMost(SkillCatalogConfig.MAX_SKILL_LEVEL)
+    val filledLevel: Int
+    val labelLevel: Int?
+    val rowQueuedTarget: Int?
+    if (entryFinishedLevel != null) {
+        // This queue entry trains toward [entryFinishedLevel]: prior levels filled, target gray.
+        filledLevel = entryFinishedLevel - 1
+        labelLevel = entryFinishedLevel
+        rowQueuedTarget = entryFinishedLevel
     } else {
-        skill.trainedLevel
+        filledLevel = skill.trainedLevel
+        labelLevel = null
+        rowQueuedTarget = if (inQueue) queuedTargetLevel else null
     }
 
     BaseLazyColumnItem(
@@ -112,8 +126,9 @@ internal fun SkillCatalogSkillRow(
         trailingContent = {
             SkillCatalogLevelTrailing(
                 isInjected = showAsInjected,
-                level = displayLevel,
-                queuedTargetLevel = if (inQueue) queuedTargetLevel else null,
+                level = filledLevel,
+                levelLabel = labelLevel,
+                queuedTargetLevel = rowQueuedTarget,
                 blinkingLevel = blinkingLevel,
                 nextLevelTrainingSeconds = trailingSeconds,
                 durationPrecision = remainingDurationPrecision,
