@@ -89,6 +89,27 @@ internal fun CharacterSkillsPage(
         )
     }
 
+    val nowMs by produceState(
+        initialValue = System.currentTimeMillis(),
+        key1 = uiState.status,
+    ) {
+        val status = uiState.status
+        val shouldTick = status.state == CharacterSkillQueueState.TRAINING ||
+            status.queueHead?.finishAtEpochMs != null
+        if (!shouldTick) {
+            value = System.currentTimeMillis()
+            return@produceState
+        }
+        while (isActive) {
+            value = System.currentTimeMillis()
+            val headFinish = status.queueHead?.finishAtEpochMs
+            val remainingEnds = status.trainingFinishAtEpochMs.filter { it > value }
+            val headDone = headFinish == null || value >= headFinish
+            if (remainingEnds.isEmpty() && headDone) break
+            delay(CharacterSkillQueueConfig.UI_TICK_MS.milliseconds)
+        }
+    }
+
     PyeritePageScaffold(
         title = pageTitle,
         showCollapsedTitle = showCollapsedTitle,
@@ -134,7 +155,18 @@ internal fun CharacterSkillsPage(
                     activeTrainingSkillId = uiState.status.activeTrainingSkillId,
                     activeTrainingLevel = uiState.status.activeTrainingLevel,
                     localeController = localeController,
+                    nowMs = nowMs,
                     onSkillClick = { typeId ->
+                        navController.navigate(DatabaseRoute.TypeDetail.create(typeId))
+                    },
+                )
+                Spacer(modifier = Modifier.height(sectionGap))
+                CharacterSkillsQueueInjectorsSection(
+                    status = uiState.status,
+                    skillPoints = uiState.skillPoints,
+                    nowMs = nowMs,
+                    localeController = localeController,
+                    onInjectorClick = { typeId ->
                         navController.navigate(DatabaseRoute.TypeDetail.create(typeId))
                     },
                 )
@@ -153,27 +185,9 @@ private fun CharacterSkillsQueueSection(
     activeTrainingSkillId: Int?,
     activeTrainingLevel: Int?,
     localeController: LocaleController,
+    nowMs: Long,
     onSkillClick: (Int) -> Unit,
 ) {
-    val nowMs by produceState(
-        initialValue = System.currentTimeMillis(),
-        key1 = status,
-    ) {
-        val shouldTick = status.state == CharacterSkillQueueState.TRAINING ||
-            status.queueHead?.finishAtEpochMs != null
-        if (!shouldTick) {
-            value = System.currentTimeMillis()
-            return@produceState
-        }
-        while (isActive) {
-            value = System.currentTimeMillis()
-            val headFinish = status.queueHead?.finishAtEpochMs
-            val remainingEnds = status.trainingFinishAtEpochMs.filter { it > value }
-            val headDone = headFinish == null || value >= headFinish
-            if (remainingEnds.isEmpty() && headDone) break
-            delay(CharacterSkillQueueConfig.UI_TICK_MS.milliseconds)
-        }
-    }
     val summary = skillQueueSectionSummary(
         status = status,
         detailsReady = detailsReady,

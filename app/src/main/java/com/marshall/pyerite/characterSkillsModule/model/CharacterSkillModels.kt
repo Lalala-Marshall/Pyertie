@@ -72,6 +72,13 @@ data class SkillQueueHeadTraining(
         return deltaMs / CharacterSkillQueueConfig.MILLIS_PER_SECOND
     }
 
+    /** True when ESI gave a window and [nowMs] falls inside it (actively training). */
+    fun isActivelyTrainingAt(nowMs: Long): Boolean {
+        val startMs = startAtEpochMs ?: return false
+        val finishMs = finishAtEpochMs ?: return false
+        return nowMs >= startMs && nowMs <= finishMs
+    }
+
     /**
      * Progress within the level being trained (0…1), from [levelStartSp]→[levelEndSp]
      * using live floor [currentSpAt]; falls back to time fraction of this queue entry.

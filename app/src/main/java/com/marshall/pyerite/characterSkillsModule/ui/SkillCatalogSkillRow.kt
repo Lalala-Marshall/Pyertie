@@ -42,7 +42,9 @@ internal fun SkillCatalogSkillRow(
     showLeadingIcon: Boolean = true,
     /**
      * Skills-page queue entry: ESI `finished_level` for **this** row.
-     * Label = this level; filled segments = level − 1; gray = this level only.
+     * Label = this level; solid = actual [SkillCatalogSkill.trainedLevel];
+     * sky-blue = levels (trained+1)…this entry’s finished level
+     * (e.g. L3 row → first 3 cells sky when untrained).
      * Catalog details must leave this null.
      */
     queueEntryFinishedLevel: Int? = null,
@@ -93,8 +95,9 @@ internal fun SkillCatalogSkillRow(
     val labelLevel: Int?
     val rowQueuedTarget: Int?
     if (entryFinishedLevel != null) {
-        // This queue entry trains toward [entryFinishedLevel]: prior levels filled, target gray.
-        filledLevel = entryFinishedLevel - 1
+        // This row = one queue step to [entryFinishedLevel]: sky-blue through that
+        // level only (L1→1 cell, L2→2 cells, …). Solid fill = already trained.
+        filledLevel = skill.trainedLevel.coerceAtMost(entryFinishedLevel - 1)
         labelLevel = entryFinishedLevel
         rowQueuedTarget = entryFinishedLevel
     } else {

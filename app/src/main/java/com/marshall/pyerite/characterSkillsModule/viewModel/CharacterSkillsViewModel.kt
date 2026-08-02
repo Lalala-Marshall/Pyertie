@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marshall.pyerite.characterSkillsModule.model.CharacterAttributes
+import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillPoints
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueStatus
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogFilter
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogGroup
@@ -72,6 +73,7 @@ class CharacterSkillsViewModel(
             cachedStatus = repository.cachedStatus(characterId),
             cachedAttributes = repository.cachedAttributes(characterId),
             cachedCatalog = repository.cachedCatalog(characterId),
+            cachedSkillPoints = repository.cachedSkillPoints(characterId),
         )
         load(
             characterId = characterId,
@@ -147,6 +149,7 @@ class CharacterSkillsViewModel(
             cachedStatus = repository.cachedStatus(characterId),
             cachedAttributes = repository.cachedAttributes(characterId),
             cachedCatalog = repository.cachedCatalog(characterId),
+            cachedSkillPoints = repository.cachedSkillPoints(characterId),
         )
     }
 
@@ -250,9 +253,10 @@ class CharacterSkillsViewModel(
             if (trackedCharacterId != characterId) return@launch
             _uiState.update { current ->
                 result.fold(
-                    onSuccess = { (groups, status, attributes) ->
+                    onSuccess = { (catalogResult, status, attributes) ->
                         current.copy(
-                            catalogGroups = groups,
+                            catalogGroups = catalogResult.groups,
+                            skillPoints = catalogResult.skillPoints,
                             status = status,
                             attributes = attributes ?: current.attributes,
                             isLoading = false,
@@ -260,6 +264,7 @@ class CharacterSkillsViewModel(
                             catalogReady = true,
                             detailsReady = true,
                             attributesReady = attributes != null || current.attributesReady,
+                            skillPointsReady = true,
                         )
                     },
                     onFailure = {
@@ -291,6 +296,8 @@ data class CharacterSkillsUiState(
     val attributesReady: Boolean,
     val catalogGroups: List<SkillCatalogGroup> = emptyList(),
     val catalogReady: Boolean = false,
+    val skillPoints: CharacterSkillPoints = CharacterSkillPoints.empty(characterId = 0L),
+    val skillPointsReady: Boolean = false,
     val catalogFilter: SkillCatalogFilter = SkillCatalogFilter.ALL,
     val catalogSearchQuery: String = "",
     val catalogSearchActive: Boolean = false,
@@ -310,6 +317,7 @@ data class CharacterSkillsUiState(
             cachedStatus: CharacterSkillQueueStatus?,
             cachedAttributes: CharacterAttributes?,
             cachedCatalog: List<SkillCatalogGroup>?,
+            cachedSkillPoints: CharacterSkillPoints?,
         ): CharacterSkillsUiState = CharacterSkillsUiState(
             status = cachedStatus ?: CharacterSkillQueueStatus.empty(characterId),
             attributes = cachedAttributes ?: CharacterAttributes.empty(characterId),
@@ -319,6 +327,8 @@ data class CharacterSkillsUiState(
             attributesReady = cachedAttributes != null,
             catalogGroups = cachedCatalog.orEmpty(),
             catalogReady = cachedCatalog != null,
+            skillPoints = cachedSkillPoints ?: CharacterSkillPoints.empty(characterId),
+            skillPointsReady = cachedSkillPoints != null,
         )
     }
 }

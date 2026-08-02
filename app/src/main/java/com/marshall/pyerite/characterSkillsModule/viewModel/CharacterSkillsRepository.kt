@@ -3,8 +3,10 @@ package com.marshall.pyerite.characterSkillsModule.viewModel
 import com.marshall.pyerite.characterSkillsModule.data.CharacterSkillsCache
 import com.marshall.pyerite.characterSkillsModule.data.CharacterSkillsLoader
 import com.marshall.pyerite.characterSkillsModule.model.CharacterAttributes
+import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillPoints
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueStatus
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogGroup
+import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogLoadResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
@@ -16,6 +18,7 @@ class CharacterSkillsRepository internal constructor(
     private val statusByCharacterId = ConcurrentHashMap<Long, CharacterSkillQueueStatus>()
     private val attributesByCharacterId = ConcurrentHashMap<Long, CharacterAttributes>()
     private val catalogByCharacterId = ConcurrentHashMap<Long, List<SkillCatalogGroup>>()
+    private val skillPointsByCharacterId = ConcurrentHashMap<Long, CharacterSkillPoints>()
 
     /** Memory first, then disk — for instant main-page hint. */
     fun cachedStatus(characterId: Long): CharacterSkillQueueStatus? {
@@ -51,10 +54,19 @@ class CharacterSkillsRepository internal constructor(
     fun cachedCatalog(characterId: Long): List<SkillCatalogGroup>? =
         catalogByCharacterId[characterId]
 
-    suspend fun loadCatalog(characterId: Long): List<SkillCatalogGroup> =
+    fun cachedSkillPoints(characterId: Long): CharacterSkillPoints? {
+        skillPointsByCharacterId[characterId]?.let { return it }
+        return skillsCache.getSkillPoints(characterId)?.also { cached ->
+            skillPointsByCharacterId[characterId] = cached
+        }
+    }
+
+    suspend fun loadCatalog(characterId: Long): SkillCatalogLoadResult =
         withContext(Dispatchers.IO) {
             val loaded = skillsLoader.loadCatalog(characterId)
-            catalogByCharacterId[characterId] = loaded
+            catalogByCharacterId[characterId] = loaded.groups
+            skillPointsByCharacterId[characterId] = loaded.skillPoints
+            skillsCache.saveSkillPoints(loaded.skillPoints)
             loaded
         }
 }

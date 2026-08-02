@@ -15,6 +15,11 @@
     <string name="character_skills_hint_training">训练中：%1$d个技能（%2$s）</string>
     <string name="character_skills_catalog_section">技能目录</string>
     <string name="character_skills_queue_section">技能队列(%1$d) - 剩余%2$s</string>
+    <string name="character_skills_queue_injectors_section">完成队列所需注入器</string>
+    <string name="character_skills_queue_injector_yield">当前每个 +%1$s SP</string>
+    <string name="character_skills_queue_injectors_estimated_sp">预估所需技能点：%1$s 点</string>
+    <string name="character_skills_queue_injector_large_fallback">大型技能注入器</string>
+    <string name="character_skills_queue_injector_small_fallback">小型技能注入器</string>
     <string name="character_skills_attributes">属性点</string>
     <string name="character_skills_catalog_details">技能目录详情</string>
     <string name="character_skills_catalog_filter_all">全部</string>

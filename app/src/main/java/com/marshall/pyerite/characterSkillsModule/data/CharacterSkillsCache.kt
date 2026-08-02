@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.marshall.pyerite.characterSkillsModule.model.CharacterAttributes
+import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillPoints
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueState
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueStatus
 import com.marshall.pyerite.characterSkillsModule.model.SkillQueueHeadTraining
@@ -44,14 +45,29 @@ internal class CharacterSkillsCache(
         prefs.edit { putString(attributesKeyFor(attributes.characterId), encoded) }
     }
 
+    fun getSkillPoints(characterId: Long): CharacterSkillPoints? {
+        val raw = prefs.getString(skillPointsKeyFor(characterId), null) ?: return null
+        return runCatching {
+            PyeriteJson.decodeFromString<CachedCharacterSkillPoints>(raw).toModel()
+        }.getOrNull()
+    }
+
+    fun saveSkillPoints(skillPoints: CharacterSkillPoints) {
+        val encoded = PyeriteJson.encodeToString(CachedCharacterSkillPoints.from(skillPoints))
+        prefs.edit { putString(skillPointsKeyFor(skillPoints.characterId), encoded) }
+    }
+
     private fun queueKeyFor(characterId: Long): String = "$QUEUE_KEY_PREFIX$characterId"
 
     private fun attributesKeyFor(characterId: Long): String = "$ATTRIBUTES_KEY_PREFIX$characterId"
+
+    private fun skillPointsKeyFor(characterId: Long): String = "$SKILL_POINTS_KEY_PREFIX$characterId"
 
     private companion object {
         const val PREFS_NAME = "pyerite_character_skills_cache"
         const val QUEUE_KEY_PREFIX = "skills_"
         const val ATTRIBUTES_KEY_PREFIX = "attributes_"
+        const val SKILL_POINTS_KEY_PREFIX = "skill_points_"
     }
 }
 
@@ -146,6 +162,28 @@ private data class CachedCharacterSkillQueueStatus(
                     ?: status.queuedEntries.firstOrNull()?.let(CachedQueueHeadTraining::from),
                 activeTrainingSkillId = status.activeTrainingSkillId,
                 activeTrainingLevel = status.activeTrainingLevel,
+            )
+    }
+}
+
+@Serializable
+private data class CachedCharacterSkillPoints(
+    val characterId: Long,
+    val totalSp: Long = 0L,
+    val unallocatedSp: Long = 0L,
+) {
+    fun toModel(): CharacterSkillPoints = CharacterSkillPoints(
+        characterId = characterId,
+        totalSp = totalSp,
+        unallocatedSp = unallocatedSp,
+    )
+
+    companion object {
+        fun from(skillPoints: CharacterSkillPoints): CachedCharacterSkillPoints =
+            CachedCharacterSkillPoints(
+                characterId = skillPoints.characterId,
+                totalSp = skillPoints.totalSp,
+                unallocatedSp = skillPoints.unallocatedSp,
             )
     }
 }

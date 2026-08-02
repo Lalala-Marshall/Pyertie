@@ -1,10 +1,12 @@
 package com.marshall.pyerite.characterSkillsModule.data
 
 import com.marshall.pyerite.characterSkillsModule.model.CharacterAttributes
+import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillPoints
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueState
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueStatus
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogConfig
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogGroup
+import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogLoadResult
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogSkill
 import com.marshall.pyerite.characterSkillsModule.model.SkillQueueHeadTraining
 import com.marshall.pyerite.esiModule.api.EsiCharacterApi
@@ -41,7 +43,7 @@ internal class CharacterSkillsLoader(
             mapAttributes(characterId, dto)
         }
 
-    suspend fun loadCatalog(characterId: Long): List<SkillCatalogGroup> =
+    suspend fun loadCatalog(characterId: Long): SkillCatalogLoadResult =
         withContext(Dispatchers.IO) {
             coroutineScope {
                 val skillsDeferred = async {
@@ -59,7 +61,13 @@ internal class CharacterSkillsLoader(
                     db.skillDao().getSkillCatalogTypes(SkillCatalogConfig.SKILLS_CATEGORY_ID)
                 }
 
-                val esiSkills = skillsDeferred.await()?.skills.orEmpty()
+                val skillsDto = skillsDeferred.await()
+                val esiSkills = skillsDto?.skills.orEmpty()
+                val skillPoints = CharacterSkillPoints(
+                    characterId = characterId,
+                    totalSp = skillsDto?.totalSp ?: 0L,
+                    unallocatedSp = skillsDto?.unallocatedSp ?: 0L,
+                )
                 val trainedSpByTypeId = esiSkills.associate { it.skillId to it.skillpointsInSkill }
                 val trainedLevelByTypeId = esiSkills.associate { it.skillId to it.trainedSkillLevel }
                 val injectedSkillIds = esiSkills.map { it.skillId }.toSet()
@@ -68,7 +76,7 @@ internal class CharacterSkillsLoader(
                     .associateBy { it.id }
                 val typesByGroup = catalogTypesDeferred.await().groupBy { it.groupId }
 
-                typesByGroup.mapNotNull { (groupId, types) ->
+                val catalogGroups = typesByGroup.mapNotNull { (groupId, types) ->
                     val group = groups[groupId] ?: return@mapNotNull null
                     val skills = types.map { type ->
                         val maxSp = SkillCatalogConfig.cumulativeSpToMax(type.skillTimeConstant)
@@ -102,6 +110,11 @@ internal class CharacterSkillsLoader(
                         skills = skills,
                     )
                 }.sortedBy { it.groupId }
+
+                SkillCatalogLoadResult(
+                    groups = catalogGroups,
+                    skillPoints = skillPoints,
+                )
             }
         }
 
