@@ -19,6 +19,11 @@
     <string name="character_skills_queue_injectors_estimated_sp">Estimated SP required: %1$s</string>
     <string name="character_skills_queue_injector_large_fallback">Large Skill Injector</string>
     <string name="character_skills_queue_injector_small_fallback">Small Skill Injector</string>
+    <string name="character_skills_optimal_attributes_section">Optimal Attribute Allocation</string>
+    <string name="character_skills_optimal_attributes_bonus">+%1$d</string>
+    <string name="character_skills_optimal_attributes_time_saved">Saves %1$s after remap</string>
+    <string name="character_skills_optimal_attributes_already_optimal">Already optimal for this queue</string>
+    <string name="character_skills_optimal_attributes_booster_note">Cerebral accelerator bonuses are excluded from the comparison</string>
     <string name="character_skills_attributes">Attributes</string>
     <string name="character_skills_catalog_details">Skill Catalog Details</string>
     <string name="character_skills_catalog_filter_all">All</string>

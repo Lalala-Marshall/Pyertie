@@ -1,9 +1,11 @@
 package com.marshall.pyerite.characterSkillsModule.data
 
+import com.marshall.pyerite.characterSkillsModule.model.AttributeRemapConfig
 import com.marshall.pyerite.characterSkillsModule.model.CharacterAttributes
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillPoints
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueState
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueStatus
+import com.marshall.pyerite.characterSkillsModule.model.ImplantAttributeBonuses
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogConfig
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogGroup
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogLoadResult
@@ -15,6 +17,7 @@ import com.marshall.pyerite.esiModule.model.EsiSkillQueueEntryDto
 import com.marshall.pyerite.esiModule.model.parseEsiDateMillis
 import com.marshall.pyerite.eveAuthModule.token.EveTokenManager
 import com.marshall.pyerite.sdeModule.room.RoomProvider
+import kotlin.math.max
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -41,6 +44,56 @@ internal class CharacterSkillsLoader(
                 characterApi.fetchAttributes(characterId, auth)
             }
             mapAttributes(characterId, dto)
+        }
+
+    /**
+     * Active implant bonuses for remap optimization (ESI implants + SDE dogma 175–179).
+     * Returns [ImplantAttributeBonuses.ZERO] when the call fails or no implants are fitted.
+     */
+    suspend fun loadImplantAttributeBonuses(characterId: Long): ImplantAttributeBonuses =
+        withContext(Dispatchers.IO) {
+            val typeIds = runCatching {
+                tokenManager.executeWithAuthRetry(characterId) { auth ->
+                    characterApi.fetchImplants(characterId, auth)
+                }
+            }.getOrNull().orEmpty()
+            if (typeIds.isEmpty()) return@withContext ImplantAttributeBonuses.ZERO
+
+            val dogmaDao = roomProvider.getDatabase().dogmaDao()
+            val implantAttrIds = AttributeRemapConfig.IMPLANT_ATTRIBUTE_IDS.toSet()
+            var perception = 0
+            var memory = 0
+            var willpower = 0
+            var intelligence = 0
+            var charisma = 0
+            for (typeId in typeIds) {
+                val details = runCatching {
+                    dogmaDao.getTypeAttributeDetails(typeId)
+                }.getOrNull().orEmpty()
+                for (detail in details) {
+                    if (detail.attributeId !in implantAttrIds) continue
+                    val bonus = detail.value?.toInt() ?: continue
+                    when (detail.attributeId) {
+                        AttributeRemapConfig.IMPLANT_ATTR_PERCEPTION ->
+                            perception = max(perception, bonus)
+                        AttributeRemapConfig.IMPLANT_ATTR_MEMORY ->
+                            memory = max(memory, bonus)
+                        AttributeRemapConfig.IMPLANT_ATTR_WILLPOWER ->
+                            willpower = max(willpower, bonus)
+                        AttributeRemapConfig.IMPLANT_ATTR_INTELLIGENCE ->
+                            intelligence = max(intelligence, bonus)
+                        AttributeRemapConfig.IMPLANT_ATTR_CHARISMA ->
+                            charisma = max(charisma, bonus)
+                    }
+                }
+            }
+            ImplantAttributeBonuses(
+                perception = perception,
+                memory = memory,
+                willpower = willpower,
+                intelligence = intelligence,
+                charisma = charisma,
+            )
         }
 
     suspend fun loadCatalog(characterId: Long): SkillCatalogLoadResult =

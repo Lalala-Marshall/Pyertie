@@ -6,8 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.marshall.pyerite.characterSkillsModule.model.CharacterAttributes
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillPoints
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueStatus
+import com.marshall.pyerite.characterSkillsModule.model.ImplantAttributeBonuses
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogFilter
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogGroup
+import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogLoadResult
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -74,6 +76,7 @@ class CharacterSkillsViewModel(
             cachedAttributes = repository.cachedAttributes(characterId),
             cachedCatalog = repository.cachedCatalog(characterId),
             cachedSkillPoints = repository.cachedSkillPoints(characterId),
+            cachedImplantBonuses = repository.cachedImplantAttributeBonuses(characterId),
         )
         load(
             characterId = characterId,
@@ -150,6 +153,7 @@ class CharacterSkillsViewModel(
             cachedAttributes = repository.cachedAttributes(characterId),
             cachedCatalog = repository.cachedCatalog(characterId),
             cachedSkillPoints = repository.cachedSkillPoints(characterId),
+            cachedImplantBonuses = repository.cachedImplantAttributeBonuses(characterId),
         )
     }
 
@@ -243,28 +247,39 @@ class CharacterSkillsViewModel(
                     val attributesDeferred = async {
                         runCatching { repository.loadAttributes(characterId) }.getOrNull()
                     }
-                    Triple(
-                        catalogDeferred.await(),
-                        statusDeferred.await(),
-                        attributesDeferred.await(),
+                    val implantsDeferred = async {
+                        runCatching {
+                            repository.loadImplantAttributeBonuses(characterId)
+                        }.getOrNull()
+                    }
+                    CatalogLoadBundle(
+                        catalogResult = catalogDeferred.await(),
+                        status = statusDeferred.await(),
+                        attributes = attributesDeferred.await(),
+                        implantBonuses = implantsDeferred.await(),
                     )
                 }
             }
             if (trackedCharacterId != characterId) return@launch
             _uiState.update { current ->
                 result.fold(
-                    onSuccess = { (catalogResult, status, attributes) ->
+                    onSuccess = { bundle ->
                         current.copy(
-                            catalogGroups = catalogResult.groups,
-                            skillPoints = catalogResult.skillPoints,
-                            status = status,
-                            attributes = attributes ?: current.attributes,
+                            catalogGroups = bundle.catalogResult.groups,
+                            skillPoints = bundle.catalogResult.skillPoints,
+                            status = bundle.status,
+                            attributes = bundle.attributes ?: current.attributes,
+                            implantBonuses = bundle.implantBonuses
+                                ?: current.implantBonuses,
                             isLoading = false,
                             loadFailed = false,
                             catalogReady = true,
                             detailsReady = true,
-                            attributesReady = attributes != null || current.attributesReady,
+                            attributesReady = bundle.attributes != null ||
+                                current.attributesReady,
                             skillPointsReady = true,
+                            implantBonusesReady = bundle.implantBonuses != null ||
+                                current.implantBonusesReady,
                         )
                     },
                     onFailure = {
@@ -277,6 +292,13 @@ class CharacterSkillsViewModel(
             }
         }
     }
+
+    private data class CatalogLoadBundle(
+        val catalogResult: SkillCatalogLoadResult,
+        val status: CharacterSkillQueueStatus,
+        val attributes: CharacterAttributes?,
+        val implantBonuses: ImplantAttributeBonuses?,
+    )
 
     companion object {
         const val NAV_ARG_CHARACTER_ID = "characterId"
@@ -298,6 +320,8 @@ data class CharacterSkillsUiState(
     val catalogReady: Boolean = false,
     val skillPoints: CharacterSkillPoints = CharacterSkillPoints.empty(characterId = 0L),
     val skillPointsReady: Boolean = false,
+    val implantBonuses: ImplantAttributeBonuses = ImplantAttributeBonuses.ZERO,
+    val implantBonusesReady: Boolean = false,
     val catalogFilter: SkillCatalogFilter = SkillCatalogFilter.ALL,
     val catalogSearchQuery: String = "",
     val catalogSearchActive: Boolean = false,
@@ -318,6 +342,7 @@ data class CharacterSkillsUiState(
             cachedAttributes: CharacterAttributes?,
             cachedCatalog: List<SkillCatalogGroup>?,
             cachedSkillPoints: CharacterSkillPoints?,
+            cachedImplantBonuses: ImplantAttributeBonuses? = null,
         ): CharacterSkillsUiState = CharacterSkillsUiState(
             status = cachedStatus ?: CharacterSkillQueueStatus.empty(characterId),
             attributes = cachedAttributes ?: CharacterAttributes.empty(characterId),
@@ -329,6 +354,8 @@ data class CharacterSkillsUiState(
             catalogReady = cachedCatalog != null,
             skillPoints = cachedSkillPoints ?: CharacterSkillPoints.empty(characterId),
             skillPointsReady = cachedSkillPoints != null,
+            implantBonuses = cachedImplantBonuses ?: ImplantAttributeBonuses.ZERO,
+            implantBonusesReady = cachedImplantBonuses != null,
         )
     }
 }

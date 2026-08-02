@@ -170,6 +170,17 @@ internal fun CharacterSkillsPage(
                         navController.navigate(DatabaseRoute.TypeDetail.create(typeId))
                     },
                 )
+                CharacterSkillsOptimalAttributesSection(
+                    status = uiState.status,
+                    catalogGroups = uiState.catalogGroups,
+                    attributes = uiState.attributes,
+                    implantBonuses = uiState.implantBonuses,
+                    attributesReady = uiState.attributesReady,
+                    catalogReady = uiState.catalogReady,
+                    implantBonusesReady = uiState.implantBonusesReady,
+                    nowMs = nowMs,
+                    sectionGap = sectionGap,
+                )
             }
         }
     }

@@ -5,6 +5,7 @@ import com.marshall.pyerite.characterSkillsModule.data.CharacterSkillsLoader
 import com.marshall.pyerite.characterSkillsModule.model.CharacterAttributes
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillPoints
 import com.marshall.pyerite.characterSkillsModule.model.CharacterSkillQueueStatus
+import com.marshall.pyerite.characterSkillsModule.model.ImplantAttributeBonuses
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogGroup
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogLoadResult
 import kotlinx.coroutines.Dispatchers
@@ -19,6 +20,7 @@ class CharacterSkillsRepository internal constructor(
     private val attributesByCharacterId = ConcurrentHashMap<Long, CharacterAttributes>()
     private val catalogByCharacterId = ConcurrentHashMap<Long, List<SkillCatalogGroup>>()
     private val skillPointsByCharacterId = ConcurrentHashMap<Long, CharacterSkillPoints>()
+    private val implantBonusesByCharacterId = ConcurrentHashMap<Long, ImplantAttributeBonuses>()
 
     /** Memory first, then disk — for instant main-page hint. */
     fun cachedStatus(characterId: Long): CharacterSkillQueueStatus? {
@@ -67,6 +69,16 @@ class CharacterSkillsRepository internal constructor(
             catalogByCharacterId[characterId] = loaded.groups
             skillPointsByCharacterId[characterId] = loaded.skillPoints
             skillsCache.saveSkillPoints(loaded.skillPoints)
+            loaded
+        }
+
+    fun cachedImplantAttributeBonuses(characterId: Long): ImplantAttributeBonuses? =
+        implantBonusesByCharacterId[characterId]
+
+    suspend fun loadImplantAttributeBonuses(characterId: Long): ImplantAttributeBonuses =
+        withContext(Dispatchers.IO) {
+            val loaded = skillsLoader.loadImplantAttributeBonuses(characterId)
+            implantBonusesByCharacterId[characterId] = loaded
             loaded
         }
 }

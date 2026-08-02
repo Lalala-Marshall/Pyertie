@@ -20,6 +20,11 @@
     <string name="character_skills_queue_injectors_estimated_sp">预估所需技能点：%1$s 点</string>
     <string name="character_skills_queue_injector_large_fallback">大型技能注入器</string>
     <string name="character_skills_queue_injector_small_fallback">小型技能注入器</string>
+    <string name="character_skills_optimal_attributes_section">最优属性分配</string>
+    <string name="character_skills_optimal_attributes_bonus">+%1$d</string>
+    <string name="character_skills_optimal_attributes_time_saved">优化后可节省 %1$s</string>
+    <string name="character_skills_optimal_attributes_already_optimal">当前已是最优</string>
+    <string name="character_skills_optimal_attributes_booster_note">计算已排除脑控加速剂影响</string>
     <string name="character_skills_attributes">属性点</string>
     <string name="character_skills_catalog_details">技能目录详情</string>
     <string name="character_skills_catalog_filter_all">全部</string>
