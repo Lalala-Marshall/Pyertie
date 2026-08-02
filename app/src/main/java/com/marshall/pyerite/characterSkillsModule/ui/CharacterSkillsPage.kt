@@ -139,6 +139,11 @@ internal fun CharacterSkillsPage(
                             CharacterSkillsRoute.Attributes.create(uiState.status.characterId),
                         )
                     },
+                    onSkillPlanClick = {
+                        navController.navigate(
+                            CharacterSkillsRoute.SkillPlan.create(uiState.status.characterId),
+                        )
+                    },
                     onCatalogDetailsClick = {
                         navController.navigate(
                             CharacterSkillsRoute.CatalogDetails.create(uiState.status.characterId),
@@ -255,6 +260,7 @@ private fun CharacterSkillsQueueSection(
 @Composable
 private fun CharacterSkillsCatalogSection(
     onAttributesClick: () -> Unit,
+    onSkillPlanClick: () -> Unit,
     onCatalogDetailsClick: () -> Unit,
 ) {
     BaseContainer(
@@ -274,6 +280,14 @@ private fun CharacterSkillsCatalogSection(
                 iconRes = R.drawable.ic_character_skills,
                 itemName = stringResource(R.string.character_skills_catalog_details),
                 onClick = onCatalogDetailsClick,
+            ),
+            showDivider = true,
+        )
+        BaseLazyColumnItem(
+            model = BaseLazyColumnItemModel(
+                iconRes = R.drawable.ic_character_skill_plan,
+                itemName = stringResource(R.string.character_skills_skill_plan),
+                onClick = onSkillPlanClick,
             ),
             showDivider = false,
         )

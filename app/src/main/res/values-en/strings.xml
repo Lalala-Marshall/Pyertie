@@ -26,6 +26,14 @@
     <string name="character_skills_optimal_attributes_booster_note">Cerebral accelerator bonuses are excluded from the comparison</string>
     <string name="character_skills_attributes">Attributes</string>
     <string name="character_skills_catalog_details">Skill Catalog Details</string>
+    <string name="character_skills_skill_plan">Skill Plans</string>
+    <string name="character_skills_skill_plan_empty">No skill plans yet</string>
+    <string name="character_skills_skill_plan_add">Add skill plan</string>
+    <string name="character_skills_skill_plan_dialog_title">Add Plan</string>
+    <string name="character_skills_skill_plan_name">Plan name</string>
+    <string name="character_skills_skill_plan_cancel">Cancel</string>
+    <string name="character_skills_skill_plan_confirm_add">Add Plan</string>
+    <string name="character_skills_skill_plan_skill_count">%1$d skills</string>
     <string name="character_skills_catalog_filter_all">All</string>
     <string name="character_skills_catalog_filter_completed">Completed</string>
     <string name="character_skills_catalog_filter_untrained">Untrained</string>
