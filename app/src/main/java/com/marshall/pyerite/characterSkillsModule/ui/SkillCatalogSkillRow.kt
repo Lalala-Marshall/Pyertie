@@ -1,6 +1,7 @@
 package com.marshall.pyerite.characterSkillsModule.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import com.marshall.pyerite.R
 import com.marshall.pyerite.characterSkillsModule.model.CharacterAttributes
@@ -49,6 +50,11 @@ internal fun SkillCatalogSkillRow(
      */
     queueEntryFinishedLevel: Int? = null,
     /**
+     * Optional status under the level bar (e.g. plan “completed”); hides duration when set.
+     */
+    levelFooterText: String? = null,
+    levelFooterColor: Color? = null,
+    /**
      * Queue-head row: omit bottom content padding so [belowContent] sits flush
      * under the SP hint.
      */
@@ -80,6 +86,7 @@ internal fun SkillCatalogSkillRow(
         else -> null
     }
     val trailingSeconds = when {
+        levelFooterText != null -> null
         useQueueRemaining -> queueRemainingSeconds
         attributesReady -> skill.secondsToTrainNextLevel(attributes)
         else -> null
@@ -95,11 +102,17 @@ internal fun SkillCatalogSkillRow(
     val labelLevel: Int?
     val rowQueuedTarget: Int?
     if (entryFinishedLevel != null) {
-        // This row = one queue step to [entryFinishedLevel]: sky-blue through that
-        // level only (L1→1 cell, L2→2 cells, …). Solid fill = already trained.
-        filledLevel = skill.trainedLevel.coerceAtMost(entryFinishedLevel - 1)
+        // One queue/plan step ending at [entryFinishedLevel].
         labelLevel = entryFinishedLevel
-        rowQueuedTarget = entryFinishedLevel
+        if (skill.trainedLevel >= entryFinishedLevel) {
+            // Already finished this step: solid fill through this level (no sky queue tint).
+            filledLevel = entryFinishedLevel
+            rowQueuedTarget = null
+        } else {
+            // Solid = already trained; sky-blue = remaining cells through this step.
+            filledLevel = skill.trainedLevel.coerceAtMost(entryFinishedLevel - 1)
+            rowQueuedTarget = entryFinishedLevel
+        }
     } else {
         filledLevel = skill.trainedLevel
         labelLevel = null
@@ -136,6 +149,8 @@ internal fun SkillCatalogSkillRow(
                 nextLevelTrainingSeconds = trailingSeconds,
                 durationPrecision = remainingDurationPrecision,
                 durationMaxUnit = remainingDurationMaxUnit,
+                levelFooterText = levelFooterText,
+                levelFooterColor = levelFooterColor,
             )
         },
     )

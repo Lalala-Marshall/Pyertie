@@ -1,5 +1,6 @@
 package com.marshall.pyerite.ui.golbalComponents
 
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -13,18 +14,26 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,13 +44,26 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.marshall.pyerite.R
+
+@Immutable
+data class PyeriteTopBarMenuItem(
+    val label: String,
+    val onClick: () -> Unit,
+    val icon: ImageVector? = null,
+    @param:DrawableRes val iconRes: Int? = null,
+    /** When false, [iconRes] is drawn without tint (bitmaps / multicolor assets). */
+    val tintIcon: Boolean = true,
+)
 
 @Immutable
 data class PyeriteTopBarActionItem(
@@ -55,6 +77,8 @@ data class PyeriteTopBarActionItem(
     val iconBadge: Boolean = false,
     val showIcon: Boolean = true,
     val spinning: Boolean = false,
+    /** When non-empty, tapping the action opens an anchored dropdown instead of only [onClick]. */
+    val menuItems: List<PyeriteTopBarMenuItem> = emptyList(),
 )
 
 /**
@@ -127,6 +151,14 @@ private fun TopBarActionSegment(
         defaultIconTint
     }
     val hasLabel = !action.label.isNullOrBlank()
+    val hasMenu = action.menuItems.isNotEmpty()
+    var menuExpanded by remember { mutableStateOf(false) }
+    val onActionClick: () -> Unit = {
+        if (hasMenu) {
+            menuExpanded = true
+        }
+        action.onClick()
+    }
 
     val content: @Composable () -> Unit = {
         if (hasLabel) {
@@ -174,40 +206,121 @@ private fun TopBarActionSegment(
         }
     }
 
-    if (hasLabel) {
-        Row(
-            modifier = modifier
-                .clickable(
-                    enabled = action.enabled,
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = action.onClick,
-                )
-                .semantics { role = Role.Button }
-                .padding(
-                    start = if (inPill) textStartPadding else 0.dp,
-                    end = if (inPill) textEndPadding else 0.dp,
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            content()
+    Box(modifier = modifier) {
+        if (hasLabel) {
+            Row(
+                modifier = Modifier
+                    .clickable(
+                        enabled = action.enabled,
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onActionClick,
+                    )
+                    .semantics { role = Role.Button }
+                    .padding(
+                        start = if (inPill) textStartPadding else 0.dp,
+                        end = if (inPill) textEndPadding else 0.dp,
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                content()
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .then(
+                        if (inPill) {
+                            Modifier.size(buttonSize)
+                        } else {
+                            Modifier.fillMaxSize()
+                        },
+                    )
+                    .clickable(
+                        enabled = action.enabled,
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onActionClick,
+                    )
+                    .semantics { role = Role.Button },
+                contentAlignment = Alignment.Center,
+            ) {
+                content()
+            }
         }
-        return
+        if (hasMenu) {
+            val menuCorner = dimensionResource(R.dimen.top_bar_dropdown_corner)
+            val menuMinWidth = dimensionResource(R.dimen.top_bar_dropdown_min_width)
+            val dividerHorizontalPadding =
+                dimensionResource(R.dimen.top_bar_dropdown_divider_horizontal_padding)
+            val menuIconSize = dimensionResource(R.dimen.top_bar_dropdown_item_icon_size)
+            val menuIconTint = colorResource(R.color.text_primary)
+            DropdownMenu(
+                expanded = menuExpanded,
+                onDismissRequest = { menuExpanded = false },
+                modifier = Modifier.width(menuMinWidth),
+                shape = RoundedCornerShape(menuCorner),
+                containerColor = colorResource(R.color.second_background),
+            ) {
+                action.menuItems.forEachIndexed { index, item ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = item.label,
+                                color = colorResource(R.color.text_primary),
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Start,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        },
+                        leadingIcon = {
+                            TopBarDropdownMenuIcon(
+                                item = item,
+                                size = menuIconSize,
+                                tint = menuIconTint,
+                            )
+                        },
+                        onClick = {
+                            menuExpanded = false
+                            item.onClick()
+                        },
+                        contentPadding = MenuDefaults.DropdownMenuItemContentPadding,
+                    )
+                    if (index != action.menuItems.lastIndex) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = dividerHorizontalPadding),
+                            thickness = dimensionResource(R.dimen.detail_divider_thickness),
+                            color = colorResource(R.color.border),
+                        )
+                    }
+                }
+            }
+        }
     }
+}
 
-    Box(
-        modifier = modifier
-            .then(if (inPill) Modifier.size(buttonSize) else Modifier)
-            .clickable(
-                enabled = action.enabled,
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = action.onClick,
+@Composable
+private fun TopBarDropdownMenuIcon(
+    item: PyeriteTopBarMenuItem,
+    size: Dp,
+    tint: Color,
+) {
+    when {
+        item.icon != null -> {
+            Icon(
+                imageVector = item.icon,
+                contentDescription = null,
+                tint = if (item.tintIcon) tint else Color.Unspecified,
+                modifier = Modifier.size(size),
             )
-            .semantics { role = Role.Button },
-        contentAlignment = Alignment.Center,
-    ) {
-        content()
+        }
+        item.iconRes != null -> {
+            Icon(
+                painter = painterResource(item.iconRes),
+                contentDescription = null,
+                tint = if (item.tintIcon) tint else Color.Unspecified,
+                modifier = Modifier.size(size),
+            )
+        }
     }
 }
 

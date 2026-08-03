@@ -17,14 +17,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,7 +46,6 @@ import com.marshall.pyerite.R
 import com.marshall.pyerite.characterSkillsModule.model.CharacterAttributes
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogSkill
 import com.marshall.pyerite.characterSkillsModule.model.SkillPlanEntry
-import com.marshall.pyerite.characterSkillsModule.model.SkillPlanListItem
 import com.marshall.pyerite.characterSkillsModule.model.SkillPlanProgressCalculator
 import com.marshall.pyerite.characterSkillsModule.model.SkillPlanProgressSummary
 import com.marshall.pyerite.characterSkillsModule.viewModel.CharacterSkillsViewModel
@@ -53,6 +57,8 @@ import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
 import com.marshall.pyerite.ui.golbalComponents.PageTitle
 import com.marshall.pyerite.ui.golbalComponents.PyeritePageScaffold
+import com.marshall.pyerite.ui.golbalComponents.PyeriteTopBarActionItem
+import com.marshall.pyerite.ui.golbalComponents.PyeriteTopBarMenuItem
 import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
 import com.marshall.pyerite.ui.golbalComponents.rememberScrollTitleCollapsed
 import com.marshall.pyerite.util.NumberDisplayFormatter
@@ -67,6 +73,7 @@ internal fun CharacterSkillsSkillPlanDetailPage(
     skillsViewModel: CharacterSkillsViewModel = koinViewModel(),
 ) {
     val plan by planViewModel.plan.collectAsState()
+    val levelSteps by planViewModel.levelSteps.collectAsState()
     val showCompleted by planViewModel.showCompleted.collectAsState()
     val skillsUiState by skillsViewModel.uiState.collectAsState()
     val onBack = navController.rememberNavigateUpAction()
@@ -75,6 +82,32 @@ internal fun CharacterSkillsSkillPlanDetailPage(
     val sectionGap = dimensionResource(R.dimen.type_detail_section_gap)
     val bottomPadding = dimensionResource(R.dimen.type_detail_bottom_padding)
     val localeController = koinInject<LocaleController>()
+    var showAddSkillSheet by rememberSaveable { mutableStateOf(false) }
+    val addContentDescription = stringResource(R.string.character_skills_skill_plan_add_content)
+    val addSkillLabel = stringResource(R.string.character_skills_skill_plan_add_skill)
+    val addItemLabel = stringResource(R.string.character_skills_skill_plan_add_item)
+    val endActions = listOf(
+        PyeriteTopBarActionItem(
+            onClick = {},
+            icon = Icons.Default.Add,
+            contentDescription = addContentDescription,
+            menuItems = listOf(
+                PyeriteTopBarMenuItem(
+                    label = addSkillLabel,
+                    icon = Icons.Default.Add,
+                    onClick = { showAddSkillSheet = true },
+                ),
+                PyeriteTopBarMenuItem(
+                    label = addItemLabel,
+                    iconRes = R.drawable.ic_skill_plan_add_item,
+                    tintIcon = false,
+                    onClick = {
+                        // Item picker — not wired yet.
+                    },
+                ),
+            ),
+        ),
+    )
 
     LaunchedEffect(Unit) {
         skillsViewModel.ensureCatalogLoaded()
@@ -84,6 +117,17 @@ internal fun CharacterSkillsSkillPlanDetailPage(
         if (plan == null) {
             onBack?.invoke()
         }
+    }
+
+    if (showAddSkillSheet) {
+        SkillPlanAddSkillBottomSheet(
+            catalogGroups = skillsUiState.catalogGroups,
+            onDismiss = { showAddSkillSheet = false },
+            onConfirm = { levels ->
+                planViewModel.addSkills(levels)
+                showAddSkillSheet = false
+            },
+        )
     }
 
     val currentPlan = plan ?: return
@@ -107,8 +151,8 @@ internal fun CharacterSkillsSkillPlanDetailPage(
             attributesReady = skillsUiState.attributesReady,
         )
     }
-    val visibleEntries = remember(currentPlan.entries, skillsByTypeId, showCompleted) {
-        currentPlan.entries.filter { entry ->
+    val visibleEntries = remember(levelSteps, skillsByTypeId, showCompleted) {
+        levelSteps.filter { entry ->
             showCompleted ||
                 !SkillPlanProgressCalculator.isEntryCompleted(entry, skillsByTypeId)
         }
@@ -118,6 +162,7 @@ internal fun CharacterSkillsSkillPlanDetailPage(
         title = pageTitle,
         showCollapsedTitle = showCollapsedTitle,
         onBack = onBack,
+        endActions = endActions,
     ) { topBarPadding ->
         Column(
             modifier = Modifier
@@ -131,7 +176,7 @@ internal fun CharacterSkillsSkillPlanDetailPage(
             SkillPlanSpSection(summary = summary)
             Spacer(modifier = Modifier.height(sectionGap))
             SkillPlanEntriesSection(
-                plan = currentPlan,
+                stepCount = levelSteps.size,
                 visibleEntries = visibleEntries,
                 skillsByTypeId = skillsByTypeId,
                 showCompleted = showCompleted,
@@ -146,6 +191,12 @@ internal fun CharacterSkillsSkillPlanDetailPage(
                     navController.navigate(DatabaseRoute.TypeDetail.create(typeId))
                 },
             )
+            if (currentPlan.entries.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(sectionGap))
+                SkillPlanClearQueueSection(
+                    onClear = planViewModel::clearSkills,
+                )
+            }
         }
     }
 }
@@ -193,7 +244,7 @@ private fun SkillPlanSpSection(
 
 @Composable
 private fun SkillPlanEntriesSection(
-    plan: SkillPlanListItem,
+    stepCount: Int,
     visibleEntries: List<SkillPlanEntry>,
     skillsByTypeId: Map<Int, SkillCatalogSkill>,
     showCompleted: Boolean,
@@ -209,7 +260,7 @@ private fun SkillPlanEntriesSection(
     BaseContainer(
         title = stringResource(
             R.string.character_skills_skill_plan_section,
-            plan.skillCount,
+            stepCount,
         ),
         titleTrailingContent = {
             SkillPlanShowCompletedToggle(
@@ -220,10 +271,22 @@ private fun SkillPlanEntriesSection(
         useSystemBarsPadding = false,
     ) {
         if (visibleEntries.isEmpty()) {
+            val allCompleted = stepCount > 0 && !showCompleted
             BaseLazyColumnItem(
                 model = BaseLazyColumnItemModel(
                     showLeadingIcon = false,
-                    itemName = stringResource(R.string.character_skills_skill_plan_empty),
+                    itemName = stringResource(
+                        if (allCompleted) {
+                            R.string.character_skills_skill_plan_all_completed
+                        } else {
+                            R.string.character_skills_skill_plan_empty
+                        },
+                    ),
+                    itemNameColor = if (allCompleted) {
+                        colorResource(R.color.character_status_positive)
+                    } else {
+                        null
+                    },
                     showChevron = false,
                     onClick = null,
                 ),
@@ -233,6 +296,10 @@ private fun SkillPlanEntriesSection(
             visibleEntries.forEachIndexed { index, entry ->
                 val skill = skillsByTypeId[entry.skillTypeId]
                 if (skill != null) {
+                    val isCompleted = SkillPlanProgressCalculator.isEntryCompleted(
+                        entry,
+                        skillsByTypeId,
+                    )
                     SkillCatalogSkillRow(
                         skill = skill,
                         queuedTargetLevel = queuedTargets[skill.typeId]
@@ -246,6 +313,16 @@ private fun SkillPlanEntriesSection(
                         activeTrainingSkillId = activeTrainingSkillId,
                         activeTrainingLevel = activeTrainingLevel,
                         queueEntryFinishedLevel = entry.targetLevel,
+                        levelFooterText = if (isCompleted) {
+                            stringResource(R.string.character_skills_catalog_filter_completed)
+                        } else {
+                            null
+                        },
+                        levelFooterColor = if (isCompleted) {
+                            colorResource(R.color.character_status_positive)
+                        } else {
+                            null
+                        },
                     )
                 } else {
                     BaseLazyColumnItem(
@@ -267,6 +344,38 @@ private fun SkillPlanEntriesSection(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SkillPlanClearQueueSection(
+    onClear: () -> Unit,
+) {
+    val deleteColor = colorResource(R.color.character_delete)
+    BaseContainer(
+        title = null,
+        useSystemBarsPadding = false,
+    ) {
+        BaseLazyColumnItem(
+            model = BaseLazyColumnItemModel(
+                showLeadingIcon = false,
+                itemName = stringResource(R.string.character_skills_skill_plan_clear_queue),
+                itemNameColor = deleteColor,
+                showChevron = false,
+                onClick = onClear,
+            ),
+            showDivider = false,
+            leadingContent = { iconSize ->
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = stringResource(
+                        R.string.character_skills_skill_plan_clear_queue,
+                    ),
+                    tint = deleteColor,
+                    modifier = Modifier.size(iconSize),
+                )
+            },
+        )
     }
 }
 

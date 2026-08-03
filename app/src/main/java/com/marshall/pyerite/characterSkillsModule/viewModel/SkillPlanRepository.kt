@@ -1,6 +1,8 @@
 package com.marshall.pyerite.characterSkillsModule.viewModel
 
 import com.marshall.pyerite.characterSkillsModule.data.SkillPlanStore
+import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogConfig
+import com.marshall.pyerite.characterSkillsModule.model.SkillPlanEntry
 import com.marshall.pyerite.characterSkillsModule.model.SkillPlanListItem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,6 +32,58 @@ class SkillPlanRepository internal constructor(
                 id = nextId(current),
                 name = trimmed,
             )
+            store.savePlans(next)
+            next
+        }
+    }
+
+    /**
+     * Merges [levelsBySkillTypeId] into the plan: new skills are appended; existing skills
+     * keep the higher of current and incoming target levels.
+     */
+    fun mergePlanEntries(planId: Long, levelsBySkillTypeId: Map<Int, Int>) {
+        if (levelsBySkillTypeId.isEmpty()) return
+        _plans.update { current ->
+            val index = current.indexOfFirst { it.id == planId }
+            if (index < 0) return@update current
+            val plan = current[index]
+            val incoming = levelsBySkillTypeId.mapNotNull { (typeId, level) ->
+                if (level <= 0) return@mapNotNull null
+                typeId to level.coerceIn(1, SkillCatalogConfig.MAX_SKILL_LEVEL)
+            }.toMap()
+            if (incoming.isEmpty()) return@update current
+
+            val existingIds = plan.entries.map { it.skillTypeId }
+            val existingIdSet = existingIds.toSet()
+            val updatedExisting = plan.entries.map { entry ->
+                val raised = incoming[entry.skillTypeId] ?: return@map entry
+                if (raised > entry.targetLevel) {
+                    entry.copy(targetLevel = raised)
+                } else {
+                    entry
+                }
+            }
+            val appended = incoming
+                .filterKeys { it !in existingIdSet }
+                .map { (typeId, targetLevel) ->
+                    SkillPlanEntry(skillTypeId = typeId, targetLevel = targetLevel)
+                }
+            val next = current.toMutableList()
+            next[index] = plan.copy(entries = updatedExisting + appended)
+            store.savePlans(next)
+            next
+        }
+    }
+
+    /** Clears all skill entries from the plan; keeps the plan itself. */
+    fun clearPlanEntries(planId: Long) {
+        _plans.update { current ->
+            val index = current.indexOfFirst { it.id == planId }
+            if (index < 0) return@update current
+            val plan = current[index]
+            if (plan.entries.isEmpty()) return@update current
+            val next = current.toMutableList()
+            next[index] = plan.copy(entries = emptyList())
             store.savePlans(next)
             next
         }

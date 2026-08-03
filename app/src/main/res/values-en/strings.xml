@@ -41,8 +41,16 @@
     <string name="character_skills_skill_plan_sp_value">%1$s SP</string>
     <string name="character_skills_skill_plan_section">Skill Plan (%1$d)</string>
     <string name="character_skills_skill_plan_show_completed">Show completed</string>
+    <string name="character_skills_skill_plan_add_content">Add to plan</string>
+    <string name="character_skills_skill_plan_add_skill">Add skill</string>
+    <string name="character_skills_skill_plan_add_item">Add item</string>
+    <string name="character_skills_skill_plan_picker_group_hint">%1$d skills</string>
+    <string name="character_skills_skill_plan_level_minus">−</string>
+    <string name="character_skills_skill_plan_level_plus">+</string>
     <string name="character_skills_skill_plan_entry_unknown">Skill #%1$d</string>
     <string name="character_skills_skill_plan_entry_level">Level %1$d</string>
+    <string name="character_skills_skill_plan_all_completed">All completed</string>
+    <string name="character_skills_skill_plan_clear_queue">Clear Queue</string>
     <string name="character_skills_catalog_filter_all">All</string>
     <string name="character_skills_catalog_filter_completed">Completed</string>
     <string name="character_skills_catalog_filter_untrained">Untrained</string>
@@ -218,6 +226,7 @@
     <string name="sde_update_ok">OK</string>
 
     <string name="search">Search</string>
+    <string name="search_input_hint">Enter search content…</string>
     <string name="cancel_search">Cancel search</string>
     <string name="search_clear">Clear search</string>
     <string name="search_no_results">No matching results</string>

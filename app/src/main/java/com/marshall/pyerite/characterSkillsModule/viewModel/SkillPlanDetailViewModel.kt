@@ -3,18 +3,24 @@ package com.marshall.pyerite.characterSkillsModule.viewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.marshall.pyerite.characterSkillsModule.data.SkillPrerequisiteResolver
+import com.marshall.pyerite.characterSkillsModule.model.SkillPlanEntry
+import com.marshall.pyerite.characterSkillsModule.model.SkillPlanLevelStepExpander
 import com.marshall.pyerite.characterSkillsModule.model.SkillPlanListItem
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 
 private const val PLAN_FLOW_STOP_TIMEOUT_MS = 5_000L
 
 /** Detail for one skill plan; [showCompleted] filters finished entries for the selected character. */
-class SkillPlanDetailViewModel(
+internal class SkillPlanDetailViewModel(
     savedStateHandle: SavedStateHandle,
     private val repository: SkillPlanRepository,
+    private val prerequisiteResolver: SkillPrerequisiteResolver,
 ) : ViewModel() {
 
     val characterId: Long = checkNotNull(savedStateHandle[SkillPlanViewModel.NAV_ARG_CHARACTER_ID]) {
@@ -33,9 +39,70 @@ class SkillPlanDetailViewModel(
             initialValue = repository.plan(planId),
         )
 
+    /**
+     * Plan entries expanded to one row per level step (0→1, 1→2, …), prerequisites first.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val levelSteps: StateFlow<List<SkillPlanEntry>> = plan
+        .mapLatest { current -> expandToLevelSteps(current?.entries.orEmpty()) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(PLAN_FLOW_STOP_TIMEOUT_MS),
+            initialValue = emptyList(),
+        )
+
     val showCompleted: StateFlow<Boolean> = repository.showCompleted
 
     fun setShowCompleted(show: Boolean) {
         repository.setShowCompleted(show)
+    }
+
+    /** Adds or raises planned skill levels for this plan (levels ≤ 0 are ignored). */
+    fun addSkills(levelsBySkillTypeId: Map<Int, Int>) {
+        repository.mergePlanEntries(planId, levelsBySkillTypeId)
+    }
+
+    /** Removes every skill entry from this plan. */
+    fun clearSkills() {
+        repository.clearPlanEntries(planId)
+    }
+
+    private suspend fun expandToLevelSteps(entries: List<SkillPlanEntry>): List<SkillPlanEntry> {
+        if (entries.isEmpty()) return emptyList()
+
+        val flattenedBySkill = mutableMapOf<Int, Map<Int, Int>>()
+        val directBySkill = mutableMapOf<Int, Map<Int, Int>>()
+
+        suspend fun loadFlattened(skillTypeId: Int): Map<Int, Int> {
+            flattenedBySkill[skillTypeId]?.let { return it }
+            return prerequisiteResolver.requiredLevels(skillTypeId).also {
+                flattenedBySkill[skillTypeId] = it
+            }
+        }
+
+        suspend fun loadDirect(skillTypeId: Int): Map<Int, Int> {
+            directBySkill[skillTypeId]?.let { return it }
+            return prerequisiteResolver.directRequiredLevels(skillTypeId).also {
+                directBySkill[skillTypeId] = it
+            }
+        }
+
+        for (entry in entries) {
+            loadFlattened(entry.skillTypeId)
+        }
+        val relatedSkillIds = buildSet {
+            addAll(entries.map { it.skillTypeId })
+            flattenedBySkill.values.forEach { addAll(it.keys) }
+        }
+        for (skillTypeId in relatedSkillIds) {
+            loadFlattened(skillTypeId)
+            loadDirect(skillTypeId)
+        }
+
+        return SkillPlanLevelStepExpander.expand(
+            entries = entries,
+            flattenedPrerequisitesFor = { flattenedBySkill[it].orEmpty() },
+            directPrerequisitesFor = { directBySkill[it].orEmpty() },
+        )
     }
 }

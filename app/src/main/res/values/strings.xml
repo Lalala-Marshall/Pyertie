@@ -42,8 +42,16 @@
     <string name="character_skills_skill_plan_sp_value">%1$s SP</string>
     <string name="character_skills_skill_plan_section">技能计划（%1$d）</string>
     <string name="character_skills_skill_plan_show_completed">显示完成</string>
+    <string name="character_skills_skill_plan_add_content">添加到计划</string>
+    <string name="character_skills_skill_plan_add_skill">添加技能</string>
+    <string name="character_skills_skill_plan_add_item">添加物品</string>
+    <string name="character_skills_skill_plan_picker_group_hint">%1$d 个技能</string>
+    <string name="character_skills_skill_plan_level_minus">−</string>
+    <string name="character_skills_skill_plan_level_plus">+</string>
     <string name="character_skills_skill_plan_entry_unknown">技能 #%1$d</string>
     <string name="character_skills_skill_plan_entry_level">等级 %1$d</string>
+    <string name="character_skills_skill_plan_all_completed">已全部完成</string>
+    <string name="character_skills_skill_plan_clear_queue">清空队列</string>
     <string name="character_skills_catalog_filter_all">全部</string>
     <string name="character_skills_catalog_filter_completed">已完成</string>
     <string name="character_skills_catalog_filter_untrained">未吸收</string>
@@ -220,6 +228,7 @@
 
     <!-- Search preview (dev comparison screen) -->
     <string name="search">搜索</string>
+    <string name="search_input_hint">输入搜索内容…</string>
     <string name="cancel_search">取消搜索</string>
     <string name="search_clear">清除搜索</string>
     <string name="search_no_results">无匹配结果</string>

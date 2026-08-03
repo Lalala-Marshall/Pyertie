@@ -35,7 +35,7 @@ import com.marshall.pyerite.util.formatDurationDisplay
 
 /**
  * Compact skill-level trailing: short level label + 5-segment bar, or 「未吸收」 when not injected.
- * Below that (when not maxed), shows time to finish the next level.
+ * Below that: optional [levelFooterText], else time to finish the next level when not maxed.
  *
  * Queued levels above [level] up to [queuedTargetLevel] render gray.
  * Only [blinkingLevel] (the actively training level) pulses — animation runs solely for that row.
@@ -43,6 +43,8 @@ import com.marshall.pyerite.util.formatDurationDisplay
  * @param level Filled segment count (completed levels).
  * @param levelLabel Optional "Lv.N" text when different from [level]
  *   (skills-page queue: label = entry `finished_level`, filled = that − 1).
+ * @param levelFooterText Optional status under the bar (e.g. plan entry completed);
+ *   when set, hides the duration line.
  */
 @Composable
 internal fun SkillCatalogLevelTrailing(
@@ -57,6 +59,8 @@ internal fun SkillCatalogLevelTrailing(
         DurationDisplayFormatter.Precision.MINUTE,
     durationMaxUnit: DurationDisplayFormatter.MaxUnit =
         DurationDisplayFormatter.MaxUnit.YEAR,
+    levelFooterText: String? = null,
+    levelFooterColor: Color? = null,
 ) {
     val primary = colorResource(R.color.text_primary)
     val hintColor = colorResource(R.color.hint_text)
@@ -64,13 +68,18 @@ internal fun SkillCatalogLevelTrailing(
     val durationSize = dimensionResource(R.dimen.detail_row_label_subtitle_text_size).value.sp
     val labelGap = dimensionResource(R.dimen.skill_level_segments_label_gap)
     val durationGap = dimensionResource(R.dimen.skill_level_segments_duration_gap)
-    val durationText = nextLevelTrainingSeconds?.let { seconds ->
-        formatDurationDisplay(
-            totalSeconds = seconds,
-            precision = durationPrecision,
-            maxUnit = durationMaxUnit,
-        )
+    val durationText = if (levelFooterText == null) {
+        nextLevelTrainingSeconds?.let { seconds ->
+            formatDurationDisplay(
+                totalSeconds = seconds,
+                precision = durationPrecision,
+                maxUnit = durationMaxUnit,
+            )
+        }
+    } else {
+        null
     }
+    val footerColor = levelFooterColor ?: hintColor
 
     Column(
         modifier = modifier,
@@ -105,7 +114,14 @@ internal fun SkillCatalogLevelTrailing(
                 )
             }
         }
-        if (durationText != null) {
+        if (levelFooterText != null) {
+            Text(
+                text = levelFooterText,
+                color = footerColor,
+                fontSize = durationSize,
+                maxLines = 1,
+            )
+        } else if (durationText != null) {
             Text(
                 text = durationText,
                 color = hintColor,

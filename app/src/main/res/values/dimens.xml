@@ -167,6 +167,20 @@
     <dimen name="skill_plan_show_completed_icon_size">12dp</dimen>
     <dimen name="skill_plan_show_completed_label_gap">4dp</dimen>
     <dimen name="skill_plan_show_completed_border">1.5dp</dimen>
+    <dimen name="top_bar_dropdown_corner">12dp</dimen>
+    <dimen name="top_bar_dropdown_min_width">200dp</dimen>
+    <dimen name="top_bar_dropdown_divider_horizontal_padding">12dp</dimen>
+    <dimen name="top_bar_dropdown_item_icon_size">20dp</dimen>
+    <dimen name="top_bar_dropdown_item_icon_gap">12dp</dimen>
+    <dimen name="skill_plan_add_skill_sheet_corner">28dp</dimen>
+    <dimen name="skill_plan_add_skill_sheet_horizontal_padding">16dp</dimen>
+    <dimen name="skill_plan_add_skill_header_top_padding">12dp</dimen>
+    <dimen name="skill_plan_add_skill_search_top_gap">12dp</dimen>
+    <dimen name="skill_plan_add_skill_search_bottom_gap">12dp</dimen>
+    <dimen name="skill_plan_add_skill_stepper_width">72dp</dimen>
+    <dimen name="skill_plan_add_skill_stepper_height">32dp</dimen>
+    <dimen name="skill_plan_add_skill_stepper_divider_inset">8dp</dimen>
+    <dimen name="skill_plan_add_skill_stepper_divider_thickness">1dp</dimen>
 
     <!-- Character sheet -->
     <dimen name="character_sheet_online_dot_size">8dp</dimen>

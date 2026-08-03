@@ -3,6 +3,7 @@ package com.marshall.pyerite.characterSkillsModule
 import com.marshall.pyerite.characterSkillsModule.data.CharacterSkillsCache
 import com.marshall.pyerite.characterSkillsModule.data.CharacterSkillsLoader
 import com.marshall.pyerite.characterSkillsModule.data.SkillPlanStore
+import com.marshall.pyerite.characterSkillsModule.data.SkillPrerequisiteResolver
 import com.marshall.pyerite.characterSkillsModule.viewModel.CharacterSkillsRepository
 import com.marshall.pyerite.characterSkillsModule.viewModel.CharacterSkillsViewModel
 import com.marshall.pyerite.characterSkillsModule.viewModel.SkillPlanDetailViewModel
@@ -17,6 +18,7 @@ val characterSkillsModule = module {
     single { CharacterSkillsCache(androidContext()) }
     single { SkillPlanStore(androidContext()) }
     singleOf(::CharacterSkillsLoader)
+    singleOf(::SkillPrerequisiteResolver)
     singleOf(::CharacterSkillsRepository)
     singleOf(::SkillPlanRepository)
     viewModelOf(::CharacterSkillsViewModel)
