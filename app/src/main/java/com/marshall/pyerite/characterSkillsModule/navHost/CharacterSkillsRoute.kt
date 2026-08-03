@@ -20,6 +20,13 @@ sealed class CharacterSkillsRoute(val route: String) {
         fun create(characterId: Long) = "character/skills/$characterId/skill-plan"
     }
 
+    object SkillPlanDetail : CharacterSkillsRoute(
+        "character/skills/{characterId}/skill-plan/{planId}",
+    ) {
+        fun create(characterId: Long, planId: Long) =
+            "character/skills/$characterId/skill-plan/$planId"
+    }
+
     object CatalogGroup : CharacterSkillsRoute(
         "character/skills/{characterId}/catalog/{groupId}/{filter}",
     ) {

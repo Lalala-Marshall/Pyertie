@@ -16,6 +16,12 @@ class SkillPlanRepository internal constructor(
     private val _plans = MutableStateFlow(store.loadPlans())
     val plans: StateFlow<List<SkillPlanListItem>> = _plans.asStateFlow()
 
+    private val _showCompleted = MutableStateFlow(store.loadShowCompleted())
+    val showCompleted: StateFlow<Boolean> = _showCompleted.asStateFlow()
+
+    fun plan(planId: Long): SkillPlanListItem? =
+        _plans.value.firstOrNull { it.id == planId }
+
     fun addPlan(name: String) {
         val trimmed = name.trim()
         if (trimmed.isEmpty()) return
@@ -27,6 +33,12 @@ class SkillPlanRepository internal constructor(
             store.savePlans(next)
             next
         }
+    }
+
+    fun setShowCompleted(showCompleted: Boolean) {
+        if (_showCompleted.value == showCompleted) return
+        _showCompleted.value = showCompleted
+        store.saveShowCompleted(showCompleted)
     }
 
     private fun nextId(current: List<SkillPlanListItem>): Long =

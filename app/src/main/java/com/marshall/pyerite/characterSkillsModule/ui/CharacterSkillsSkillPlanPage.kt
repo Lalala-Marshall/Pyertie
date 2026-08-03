@@ -43,6 +43,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
+import com.marshall.pyerite.characterSkillsModule.navHost.CharacterSkillsRoute
 import com.marshall.pyerite.characterSkillsModule.viewModel.SkillPlanViewModel
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
@@ -152,7 +153,14 @@ internal fun CharacterSkillsSkillPlanPage(
                                         plan.skillCount,
                                     ),
                                     showChevron = true,
-                                    onClick = {},
+                                    onClick = {
+                                        navController.navigate(
+                                            CharacterSkillsRoute.SkillPlanDetail.create(
+                                                characterId = viewModel.characterId,
+                                                planId = plan.id,
+                                            ),
+                                        )
+                                    },
                                 ),
                                 showDivider = index != visiblePlans.lastIndex,
                             )

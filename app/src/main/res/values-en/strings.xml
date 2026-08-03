@@ -34,6 +34,15 @@
     <string name="character_skills_skill_plan_cancel">Cancel</string>
     <string name="character_skills_skill_plan_confirm_add">Add Plan</string>
     <string name="character_skills_skill_plan_skill_count">%1$d skills</string>
+    <string name="character_skills_skill_plan_sp_section">Skill Points</string>
+    <string name="character_skills_skill_plan_need_learn">Need to train</string>
+    <string name="character_skills_skill_plan_need_time">Time required</string>
+    <string name="character_skills_skill_plan_total_sp">Total SP</string>
+    <string name="character_skills_skill_plan_sp_value">%1$s SP</string>
+    <string name="character_skills_skill_plan_section">Skill Plan (%1$d)</string>
+    <string name="character_skills_skill_plan_show_completed">Show completed</string>
+    <string name="character_skills_skill_plan_entry_unknown">Skill #%1$d</string>
+    <string name="character_skills_skill_plan_entry_level">Level %1$d</string>
     <string name="character_skills_catalog_filter_all">All</string>
     <string name="character_skills_catalog_filter_completed">Completed</string>
     <string name="character_skills_catalog_filter_untrained">Untrained</string>

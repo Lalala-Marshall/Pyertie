@@ -29,8 +29,19 @@ internal class SkillPlanStore(
         }
     }
 
+    fun loadShowCompleted(): Boolean =
+        prefs.getBoolean(KEY_SHOW_COMPLETED, DEFAULT_SHOW_COMPLETED)
+
+    fun saveShowCompleted(showCompleted: Boolean) {
+        prefs.edit(commit = true) {
+            putBoolean(KEY_SHOW_COMPLETED, showCompleted)
+        }
+    }
+
     private companion object {
         const val PREFS_NAME = "pyerite_skill_plans"
         const val KEY_PLANS = "plans"
+        const val KEY_SHOW_COMPLETED = "show_completed"
+        const val DEFAULT_SHOW_COMPLETED = true
     }
 }

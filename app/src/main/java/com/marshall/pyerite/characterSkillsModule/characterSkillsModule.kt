@@ -5,6 +5,7 @@ import com.marshall.pyerite.characterSkillsModule.data.CharacterSkillsLoader
 import com.marshall.pyerite.characterSkillsModule.data.SkillPlanStore
 import com.marshall.pyerite.characterSkillsModule.viewModel.CharacterSkillsRepository
 import com.marshall.pyerite.characterSkillsModule.viewModel.CharacterSkillsViewModel
+import com.marshall.pyerite.characterSkillsModule.viewModel.SkillPlanDetailViewModel
 import com.marshall.pyerite.characterSkillsModule.viewModel.SkillPlanRepository
 import com.marshall.pyerite.characterSkillsModule.viewModel.SkillPlanViewModel
 import org.koin.android.ext.koin.androidContext
@@ -20,4 +21,5 @@ val characterSkillsModule = module {
     singleOf(::SkillPlanRepository)
     viewModelOf(::CharacterSkillsViewModel)
     viewModelOf(::SkillPlanViewModel)
+    viewModelOf(::SkillPlanDetailViewModel)
 }

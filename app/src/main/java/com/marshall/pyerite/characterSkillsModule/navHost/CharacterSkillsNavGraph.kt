@@ -9,8 +9,10 @@ import com.marshall.pyerite.characterSkillsModule.ui.CharacterAttributesPage
 import com.marshall.pyerite.characterSkillsModule.ui.CharacterSkillsCatalogDetailsPage
 import com.marshall.pyerite.characterSkillsModule.ui.CharacterSkillsCatalogGroupPage
 import com.marshall.pyerite.characterSkillsModule.ui.CharacterSkillsPage
+import com.marshall.pyerite.characterSkillsModule.ui.CharacterSkillsSkillPlanDetailPage
 import com.marshall.pyerite.characterSkillsModule.ui.CharacterSkillsSkillPlanPage
 import com.marshall.pyerite.characterSkillsModule.viewModel.CharacterSkillsViewModel
+import com.marshall.pyerite.characterSkillsModule.viewModel.SkillPlanViewModel
 
 fun NavGraphBuilder.characterSkillsNavGraph(
     navController: NavController,
@@ -70,5 +72,18 @@ fun NavGraphBuilder.characterSkillsNavGraph(
         ),
     ) {
         CharacterSkillsSkillPlanPage(navController = navController)
+    }
+    composable(
+        route = CharacterSkillsRoute.SkillPlanDetail.route,
+        arguments = listOf(
+            navArgument(CharacterSkillsViewModel.NAV_ARG_CHARACTER_ID) {
+                type = NavType.LongType
+            },
+            navArgument(SkillPlanViewModel.NAV_ARG_PLAN_ID) {
+                type = NavType.LongType
+            },
+        ),
+    ) {
+        CharacterSkillsSkillPlanDetailPage(navController = navController)
     }
 }

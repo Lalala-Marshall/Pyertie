@@ -35,6 +35,15 @@
     <string name="character_skills_skill_plan_cancel">取消</string>
     <string name="character_skills_skill_plan_confirm_add">添加计划</string>
     <string name="character_skills_skill_plan_skill_count">%1$d个技能</string>
+    <string name="character_skills_skill_plan_sp_section">技能点数</string>
+    <string name="character_skills_skill_plan_need_learn">需要学习</string>
+    <string name="character_skills_skill_plan_need_time">需要时间</string>
+    <string name="character_skills_skill_plan_total_sp">全部点数</string>
+    <string name="character_skills_skill_plan_sp_value">%1$s SP</string>
+    <string name="character_skills_skill_plan_section">技能计划（%1$d）</string>
+    <string name="character_skills_skill_plan_show_completed">显示完成</string>
+    <string name="character_skills_skill_plan_entry_unknown">技能 #%1$d</string>
+    <string name="character_skills_skill_plan_entry_level">等级 %1$d</string>
     <string name="character_skills_catalog_filter_all">全部</string>
     <string name="character_skills_catalog_filter_completed">已完成</string>
     <string name="character_skills_catalog_filter_untrained">未吸收</string>

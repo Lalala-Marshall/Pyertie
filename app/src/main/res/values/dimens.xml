@@ -163,6 +163,10 @@
     <dimen name="skill_plan_dialog_button_corner">12dp</dimen>
     <dimen name="skill_plan_dialog_button_horizontal_padding">12dp</dimen>
     <dimen name="skill_plan_dialog_corner">24dp</dimen>
+    <dimen name="skill_plan_show_completed_check_size">18dp</dimen>
+    <dimen name="skill_plan_show_completed_icon_size">12dp</dimen>
+    <dimen name="skill_plan_show_completed_label_gap">4dp</dimen>
+    <dimen name="skill_plan_show_completed_border">1.5dp</dimen>
 
     <!-- Character sheet -->
     <dimen name="character_sheet_online_dot_size">8dp</dimen>
