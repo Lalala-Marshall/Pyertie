@@ -2,12 +2,54 @@ package com.marshall.pyerite.characterSkillsModule.model
 
 /**
  * Expands compact plan targets into one [SkillPlanEntry] per finished level
- * (0→1, 1→2, …), with prerequisite skills ordered before dependents.
+ * (0→1, 1→2, …).
+ *
+ * Order follows **plan entry add order**: for each compact entry in list order,
+ * emit its missing prerequisites (topo-sorted), then that skill’s level steps.
+ * Example: add X (prereq Y), then Z (prereq L) → Y, X, L, Z.
  */
 internal object SkillPlanLevelStepExpander {
 
     /**
-     * @param entries compact plan targets (skill → max level)
+     * Orders compact targets for a single add batch: prerequisites before each
+     * selected skill, preserving [levelsBySkillTypeId] iteration order across roots.
+     */
+    fun orderCompactTargets(
+        levelsBySkillTypeId: Map<Int, Int>,
+        flattenedPrerequisitesFor: (skillTypeId: Int) -> Map<Int, Int>,
+        directPrerequisitesFor: (skillTypeId: Int) -> Map<Int, Int>,
+    ): List<SkillPlanEntry> {
+        if (levelsBySkillTypeId.isEmpty()) return emptyList()
+
+        val ordered = linkedMapOf<Int, Int>()
+
+        fun ensure(skillTypeId: Int, level: Int) {
+            val target = level.coerceIn(1, SkillCatalogConfig.MAX_SKILL_LEVEL)
+            if (target <= 0) return
+            val prereqs = flattenedPrerequisitesFor(skillTypeId)
+            if (prereqs.isNotEmpty()) {
+                val prereqOrder = topologicalSkillOrder(
+                    skillIds = prereqs.keys,
+                    directPrerequisitesFor = directPrerequisitesFor,
+                )
+                for (prereqId in prereqOrder) {
+                    val required = prereqs[prereqId] ?: continue
+                    ensure(prereqId, required)
+                }
+            }
+            ordered[skillTypeId] = maxOf(ordered[skillTypeId] ?: 0, target)
+        }
+
+        for ((skillTypeId, level) in levelsBySkillTypeId) {
+            if (level > 0) ensure(skillTypeId, level)
+        }
+        return ordered.map { (skillTypeId, targetLevel) ->
+            SkillPlanEntry(skillTypeId = skillTypeId, targetLevel = targetLevel)
+        }
+    }
+
+    /**
+     * @param entries compact plan targets in add order (skill → max level)
      * @param flattenedPrerequisitesFor recursive prereq map for a skill (excludes itself)
      * @param directPrerequisitesFor immediate prereq map for topo edges
      */
@@ -18,30 +60,44 @@ internal object SkillPlanLevelStepExpander {
     ): List<SkillPlanEntry> {
         if (entries.isEmpty()) return emptyList()
 
-        val targets = linkedMapOf<Int, Int>()
+        val emittedUpTo = mutableMapOf<Int, Int>()
+        val steps = ArrayList<SkillPlanEntry>()
+
+        fun emitUpTo(skillTypeId: Int, level: Int) {
+            val target = level.coerceIn(1, SkillCatalogConfig.MAX_SKILL_LEVEL)
+            val from = (emittedUpTo[skillTypeId] ?: 0) + 1
+            if (from > target) return
+            for (finishedLevel in from..target) {
+                steps += SkillPlanEntry(
+                    skillTypeId = skillTypeId,
+                    targetLevel = finishedLevel,
+                )
+            }
+            emittedUpTo[skillTypeId] = target
+        }
+
+        fun emitPrerequisitesThenSkill(skillTypeId: Int, level: Int) {
+            val prereqs = flattenedPrerequisitesFor(skillTypeId)
+            if (prereqs.isNotEmpty()) {
+                val prereqOrder = topologicalSkillOrder(
+                    skillIds = prereqs.keys,
+                    directPrerequisitesFor = directPrerequisitesFor,
+                )
+                for (prereqId in prereqOrder) {
+                    val required = prereqs[prereqId] ?: continue
+                    emitUpTo(prereqId, required)
+                }
+            }
+            emitUpTo(skillTypeId, level)
+        }
+
         for (entry in entries) {
-            val level = entry.targetLevel.coerceIn(1, SkillCatalogConfig.MAX_SKILL_LEVEL)
-            targets[entry.skillTypeId] = maxOf(targets[entry.skillTypeId] ?: 0, level)
+            emitPrerequisitesThenSkill(
+                skillTypeId = entry.skillTypeId,
+                level = entry.targetLevel,
+            )
         }
-
-        val plannedSkillIds = targets.keys.toList()
-        for (skillTypeId in plannedSkillIds) {
-            flattenedPrerequisitesFor(skillTypeId).forEach { (prereqId, requiredLevel) ->
-                val level = requiredLevel.coerceIn(1, SkillCatalogConfig.MAX_SKILL_LEVEL)
-                targets[prereqId] = maxOf(targets[prereqId] ?: 0, level)
-            }
-        }
-
-        val orderedSkillIds = topologicalSkillOrder(
-            skillIds = targets.keys,
-            directPrerequisitesFor = directPrerequisitesFor,
-        )
-        return orderedSkillIds.flatMap { skillTypeId ->
-            val targetLevel = targets.getValue(skillTypeId)
-            (1..targetLevel).map { level ->
-                SkillPlanEntry(skillTypeId = skillTypeId, targetLevel = level)
-            }
-        }
+        return steps
     }
 
     /**
@@ -85,7 +141,6 @@ internal object SkillPlanLevelStepExpander {
             }
         }
 
-        // Cycles / missing edges: append leftovers in original order.
         if (ordered.size < skillIds.size) {
             for (skillId in skillIds) {
                 if (skillId !in ordered) ordered.add(skillId)

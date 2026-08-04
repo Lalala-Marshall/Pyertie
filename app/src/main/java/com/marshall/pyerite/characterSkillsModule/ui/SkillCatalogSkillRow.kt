@@ -73,9 +73,10 @@ internal fun SkillCatalogSkillRow(
     val inQueue = highlightQueueTarget && (
         queuedTargetLevel != null || queueEntryFinishedLevel != null
     )
-    val showAsInjected = skill.isInjected || inQueue
     val entryFinishedLevel = queueEntryFinishedLevel
         ?.coerceIn(1, SkillCatalogConfig.MAX_SKILL_LEVEL)
+    // Plan / queue steps always show the level bar from 0 — never 「未吸收」.
+    val showAsInjected = skill.isInjected || inQueue || entryFinishedLevel != null
     val blinkingLevel = when {
         entryFinishedLevel != null &&
             activeTrainingSkillId == skill.typeId &&

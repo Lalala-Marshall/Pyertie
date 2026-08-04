@@ -61,6 +61,7 @@ import com.marshall.pyerite.ui.golbalComponents.PyeriteTopBarActionItem
 import com.marshall.pyerite.ui.golbalComponents.PyeriteTopBarMenuItem
 import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
 import com.marshall.pyerite.ui.golbalComponents.rememberScrollTitleCollapsed
+import com.marshall.pyerite.util.DurationDisplayFormatter
 import com.marshall.pyerite.util.NumberDisplayFormatter
 import com.marshall.pyerite.util.formatDurationDisplay
 import org.koin.androidx.compose.koinViewModel
@@ -122,6 +123,9 @@ internal fun CharacterSkillsSkillPlanDetailPage(
     if (showAddSkillSheet) {
         SkillPlanAddSkillBottomSheet(
             catalogGroups = skillsUiState.catalogGroups,
+            initialPlannedLevels = plan?.entries.orEmpty().associate { entry ->
+                entry.skillTypeId to entry.targetLevel
+            },
             onDismiss = { showAddSkillSheet = false },
             onConfirm = { levels ->
                 planViewModel.addSkills(levels)
@@ -216,6 +220,7 @@ private fun SkillPlanSpSection(
     val needTime = formatDurationDisplay(
         totalSeconds = summary.needSeconds,
         includeSeconds = true,
+        maxUnit = DurationDisplayFormatter.MaxUnit.DAY,
     )
     val rows = listOf(
         stringResource(R.string.character_skills_skill_plan_need_learn) to needLearnSp,

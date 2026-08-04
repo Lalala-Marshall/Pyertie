@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 private const val PLAN_FLOW_STOP_TIMEOUT_MS = 5_000L
 
@@ -40,7 +41,8 @@ internal class SkillPlanDetailViewModel(
         )
 
     /**
-     * Plan entries expanded to one row per level step (0→1, 1→2, …), prerequisites first.
+     * Plan entries expanded to one row per level step (0→1, 1→2, …),
+     * in add-time order with prerequisites before each added skill.
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     val levelSteps: StateFlow<List<SkillPlanEntry>> = plan
@@ -59,7 +61,11 @@ internal class SkillPlanDetailViewModel(
 
     /** Adds or raises planned skill levels for this plan (levels ≤ 0 are ignored). */
     fun addSkills(levelsBySkillTypeId: Map<Int, Int>) {
-        repository.mergePlanEntries(planId, levelsBySkillTypeId)
+        if (levelsBySkillTypeId.isEmpty()) return
+        viewModelScope.launch {
+            val ordered = orderCompactForMerge(levelsBySkillTypeId)
+            repository.mergePlanEntries(planId, ordered)
+        }
     }
 
     /** Removes every skill entry from this plan. */
@@ -67,12 +73,44 @@ internal class SkillPlanDetailViewModel(
         repository.clearPlanEntries(planId)
     }
 
-    private suspend fun expandToLevelSteps(entries: List<SkillPlanEntry>): List<SkillPlanEntry> {
-        if (entries.isEmpty()) return emptyList()
-
+    private suspend fun orderCompactForMerge(
+        levelsBySkillTypeId: Map<Int, Int>,
+    ): List<SkillPlanEntry> {
         val flattenedBySkill = mutableMapOf<Int, Map<Int, Int>>()
         val directBySkill = mutableMapOf<Int, Map<Int, Int>>()
+        loadPrerequisiteCaches(
+            skillTypeIds = levelsBySkillTypeId.keys,
+            flattenedBySkill = flattenedBySkill,
+            directBySkill = directBySkill,
+        )
+        return SkillPlanLevelStepExpander.orderCompactTargets(
+            levelsBySkillTypeId = levelsBySkillTypeId,
+            flattenedPrerequisitesFor = { flattenedBySkill[it].orEmpty() },
+            directPrerequisitesFor = { directBySkill[it].orEmpty() },
+        )
+    }
 
+    private suspend fun expandToLevelSteps(entries: List<SkillPlanEntry>): List<SkillPlanEntry> {
+        if (entries.isEmpty()) return emptyList()
+        val flattenedBySkill = mutableMapOf<Int, Map<Int, Int>>()
+        val directBySkill = mutableMapOf<Int, Map<Int, Int>>()
+        loadPrerequisiteCaches(
+            skillTypeIds = entries.map { it.skillTypeId },
+            flattenedBySkill = flattenedBySkill,
+            directBySkill = directBySkill,
+        )
+        return SkillPlanLevelStepExpander.expand(
+            entries = entries,
+            flattenedPrerequisitesFor = { flattenedBySkill[it].orEmpty() },
+            directPrerequisitesFor = { directBySkill[it].orEmpty() },
+        )
+    }
+
+    private suspend fun loadPrerequisiteCaches(
+        skillTypeIds: Collection<Int>,
+        flattenedBySkill: MutableMap<Int, Map<Int, Int>>,
+        directBySkill: MutableMap<Int, Map<Int, Int>>,
+    ) {
         suspend fun loadFlattened(skillTypeId: Int): Map<Int, Int> {
             flattenedBySkill[skillTypeId]?.let { return it }
             return prerequisiteResolver.requiredLevels(skillTypeId).also {
@@ -87,22 +125,16 @@ internal class SkillPlanDetailViewModel(
             }
         }
 
-        for (entry in entries) {
-            loadFlattened(entry.skillTypeId)
+        for (skillTypeId in skillTypeIds) {
+            loadFlattened(skillTypeId)
         }
         val relatedSkillIds = buildSet {
-            addAll(entries.map { it.skillTypeId })
+            addAll(skillTypeIds)
             flattenedBySkill.values.forEach { addAll(it.keys) }
         }
         for (skillTypeId in relatedSkillIds) {
             loadFlattened(skillTypeId)
             loadDirect(skillTypeId)
         }
-
-        return SkillPlanLevelStepExpander.expand(
-            entries = entries,
-            flattenedPrerequisitesFor = { flattenedBySkill[it].orEmpty() },
-            directPrerequisitesFor = { directBySkill[it].orEmpty() },
-        )
     }
 }

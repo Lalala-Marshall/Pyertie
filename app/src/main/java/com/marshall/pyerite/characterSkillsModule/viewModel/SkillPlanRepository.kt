@@ -38,36 +38,41 @@ class SkillPlanRepository internal constructor(
     }
 
     /**
-     * Merges [levelsBySkillTypeId] into the plan: new skills are appended; existing skills
-     * keep the higher of current and incoming target levels.
+     * Merges [orderedIncoming] into the plan: existing skills keep position and the
+     * higher target level; new skills are appended in [orderedIncoming] order.
      */
-    fun mergePlanEntries(planId: Long, levelsBySkillTypeId: Map<Int, Int>) {
-        if (levelsBySkillTypeId.isEmpty()) return
+    fun mergePlanEntries(planId: Long, orderedIncoming: List<SkillPlanEntry>) {
+        if (orderedIncoming.isEmpty()) return
         _plans.update { current ->
             val index = current.indexOfFirst { it.id == planId }
             if (index < 0) return@update current
             val plan = current[index]
-            val incoming = levelsBySkillTypeId.mapNotNull { (typeId, level) ->
-                if (level <= 0) return@mapNotNull null
-                typeId to level.coerceIn(1, SkillCatalogConfig.MAX_SKILL_LEVEL)
-            }.toMap()
-            if (incoming.isEmpty()) return@update current
+            val incomingById = linkedMapOf<Int, Int>()
+            for (entry in orderedIncoming) {
+                if (entry.targetLevel <= 0) continue
+                val target = entry.targetLevel.coerceIn(1, SkillCatalogConfig.MAX_SKILL_LEVEL)
+                incomingById[entry.skillTypeId] = maxOf(
+                    incomingById[entry.skillTypeId] ?: 0,
+                    target,
+                )
+            }
+            if (incomingById.isEmpty()) return@update current
 
-            val existingIds = plan.entries.map { it.skillTypeId }
-            val existingIdSet = existingIds.toSet()
+            val existingIdSet = plan.entries.map { it.skillTypeId }.toSet()
             val updatedExisting = plan.entries.map { entry ->
-                val raised = incoming[entry.skillTypeId] ?: return@map entry
+                val raised = incomingById[entry.skillTypeId] ?: return@map entry
                 if (raised > entry.targetLevel) {
                     entry.copy(targetLevel = raised)
                 } else {
                     entry
                 }
             }
-            val appended = incoming
-                .filterKeys { it !in existingIdSet }
-                .map { (typeId, targetLevel) ->
-                    SkillPlanEntry(skillTypeId = typeId, targetLevel = targetLevel)
-                }
+            val appended = orderedIncoming.mapNotNull { entry ->
+                val typeId = entry.skillTypeId
+                if (typeId in existingIdSet) return@mapNotNull null
+                val target = incomingById[typeId] ?: return@mapNotNull null
+                SkillPlanEntry(skillTypeId = typeId, targetLevel = target)
+            }.distinctBy { it.skillTypeId }
             val next = current.toMutableList()
             next[index] = plan.copy(entries = updatedExisting + appended)
             store.savePlans(next)

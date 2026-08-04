@@ -78,6 +78,7 @@ import org.koin.compose.koinInject
 @Composable
 internal fun SkillPlanAddSkillBottomSheet(
     catalogGroups: List<SkillCatalogGroup>,
+    initialPlannedLevels: Map<Int, Int>,
     onDismiss: () -> Unit,
     onConfirm: (Map<Int, Int>) -> Unit,
 ) {
@@ -87,7 +88,14 @@ internal fun SkillPlanAddSkillBottomSheet(
     val coroutineScope = rememberCoroutineScope()
     var selectedGroupId by rememberSaveable { mutableStateOf<Int?>(null) }
     var searchQuery by rememberSaveable { mutableStateOf("") }
-    val plannedLevels = remember { mutableStateMapOf<Int, Int>() }
+    val plannedLevels = remember {
+        mutableStateMapOf<Int, Int>().apply {
+            initialPlannedLevels.forEach { (typeId, level) ->
+                val capped = level.coerceIn(0, SkillCatalogConfig.MAX_SKILL_LEVEL)
+                if (capped > 0) put(typeId, capped)
+            }
+        }
+    }
     var isConfirming by remember { mutableStateOf(false) }
     val sheetCorner = dimensionResource(R.dimen.skill_plan_add_skill_sheet_corner)
     val sheetBackground = colorResource(R.color.search_field_idle_background)
@@ -152,6 +160,7 @@ internal fun SkillPlanAddSkillBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
+        sheetGesturesEnabled = false,
         shape = RoundedCornerShape(topStart = sheetCorner, topEnd = sheetCorner),
         containerColor = sheetBackground,
         scrimColor = colorResource(R.color.search_scrim),
