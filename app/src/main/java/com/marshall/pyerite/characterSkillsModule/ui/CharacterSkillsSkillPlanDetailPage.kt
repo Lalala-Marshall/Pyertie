@@ -179,6 +179,15 @@ internal fun CharacterSkillsSkillPlanDetailPage(
             Spacer(modifier = Modifier.height(sectionGap))
             SkillPlanSpSection(summary = summary)
             Spacer(modifier = Modifier.height(sectionGap))
+            CharacterSkillsInjectorsSection(
+                requiredSp = summary.needLearnSp,
+                skillPoints = skillsUiState.skillPoints,
+                localeController = localeController,
+                onInjectorClick = { typeId ->
+                    navController.navigate(DatabaseRoute.TypeDetail.create(typeId))
+                },
+            )
+            Spacer(modifier = Modifier.height(sectionGap))
             SkillPlanEntriesSection(
                 stepCount = levelSteps.size,
                 visibleEntries = visibleEntries,

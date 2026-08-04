@@ -1,5 +1,6 @@
 package com.marshall.pyerite.characterSkillsModule.ui
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,6 +37,31 @@ internal fun CharacterSkillsQueueInjectorsSection(
     nowMs: Long,
     localeController: LocaleController,
     onInjectorClick: (Int) -> Unit,
+) {
+    val requiredSp = remember(status.queuedEntries, nowMs) {
+        SkillQueueInjectorNeeds.remainingQueueSp(
+            entries = status.queuedEntries,
+            nowMs = nowMs,
+        )
+    }
+    CharacterSkillsInjectorsSection(
+        requiredSp = requiredSp,
+        skillPoints = skillPoints,
+        localeController = localeController,
+        onInjectorClick = onInjectorClick,
+    )
+}
+
+/**
+ * Large/Small injector mix to cover [requiredSp] (e.g. queue remaining or plan need-learn SP).
+ */
+@Composable
+internal fun CharacterSkillsInjectorsSection(
+    requiredSp: Long,
+    skillPoints: CharacterSkillPoints,
+    localeController: LocaleController,
+    onInjectorClick: (Int) -> Unit,
+    @StringRes sectionTitleRes: Int = R.string.character_skills_queue_injectors_section,
     roomProvider: RoomProvider = koinInject(),
 ) {
     val largeType by produceState<TypeEntity?>(
@@ -57,13 +83,6 @@ internal fun CharacterSkillsQueueInjectorsSection(
         }
     }
 
-    // Nexus: estimated SP = raw queue remaining (do not subtract unallocated).
-    val requiredSp = remember(status.queuedEntries, nowMs) {
-        SkillQueueInjectorNeeds.remainingQueueSp(
-            entries = status.queuedEntries,
-            nowMs = nowMs,
-        )
-    }
     val injectorTierSp = skillPoints.totalSpIncludingUnallocated
     val mix = remember(requiredSp, injectorTierSp) {
         SkillQueueInjectorNeeds.injectorMixNeeded(
@@ -89,7 +108,7 @@ internal fun CharacterSkillsQueueInjectorsSection(
     )
 
     BaseContainer(
-        title = stringResource(R.string.character_skills_queue_injectors_section),
+        title = stringResource(sectionTitleRes),
         useSystemBarsPadding = false,
     ) {
         if (mix.largeCount > 0) {
