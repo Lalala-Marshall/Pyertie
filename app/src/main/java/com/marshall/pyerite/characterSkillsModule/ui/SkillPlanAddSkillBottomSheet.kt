@@ -620,6 +620,6 @@ private fun SkillPlanAddSkillLevelStepper(
     }
 }
 
-private object SkillPlanAddSkillSheetConfig {
+internal object SkillPlanAddSkillSheetConfig {
     const val HEIGHT_FRACTION = 0.94f
 }

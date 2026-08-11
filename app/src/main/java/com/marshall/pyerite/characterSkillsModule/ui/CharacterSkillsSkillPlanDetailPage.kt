@@ -84,6 +84,7 @@ internal fun CharacterSkillsSkillPlanDetailPage(
     val bottomPadding = dimensionResource(R.dimen.type_detail_bottom_padding)
     val localeController = koinInject<LocaleController>()
     var showAddSkillSheet by rememberSaveable { mutableStateOf(false) }
+    var showAddItemSheet by rememberSaveable { mutableStateOf(false) }
     val addContentDescription = stringResource(R.string.character_skills_skill_plan_add_content)
     val addSkillLabel = stringResource(R.string.character_skills_skill_plan_add_skill)
     val addItemLabel = stringResource(R.string.character_skills_skill_plan_add_item)
@@ -102,9 +103,7 @@ internal fun CharacterSkillsSkillPlanDetailPage(
                     label = addItemLabel,
                     iconRes = R.drawable.ic_skill_plan_add_item,
                     tintIcon = false,
-                    onClick = {
-                        // Item picker — not wired yet.
-                    },
+                    onClick = { showAddItemSheet = true },
                 ),
             ),
         ),
@@ -130,6 +129,16 @@ internal fun CharacterSkillsSkillPlanDetailPage(
             onConfirm = { levels ->
                 planViewModel.addSkills(levels)
                 showAddSkillSheet = false
+            },
+        )
+    }
+
+    if (showAddItemSheet) {
+        SkillPlanAddItemBottomSheet(
+            onDismiss = { showAddItemSheet = false },
+            onConfirm = { levels ->
+                planViewModel.addSkills(levels)
+                showAddItemSheet = false
             },
         )
     }
