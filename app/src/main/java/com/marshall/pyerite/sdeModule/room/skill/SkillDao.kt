@@ -315,4 +315,22 @@ interface SkillDao {
         skillsCategoryId: Int,
         limit: Int,
     ): List<TypeEntity>
+
+    /**
+     * Published skill types in [categoryId] with bilingual names for plan import/export.
+     */
+    @Query(
+        """
+        SELECT
+            type_id AS typeId,
+            zh_name AS zhName,
+            en_name AS enName,
+            name AS name
+        FROM types
+        WHERE categoryID = :categoryId
+          AND published = 1
+        ORDER BY type_id
+        """,
+    )
+    suspend fun getSkillNameRows(categoryId: Int): List<SkillNameRow>
 }

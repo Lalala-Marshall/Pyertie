@@ -3,6 +3,7 @@ package com.marshall.pyerite.characterSkillsModule
 import com.marshall.pyerite.characterSkillsModule.data.CharacterSkillsCache
 import com.marshall.pyerite.characterSkillsModule.data.CharacterSkillsLoader
 import com.marshall.pyerite.characterSkillsModule.data.SkillPlanItemCatalogLoader
+import com.marshall.pyerite.characterSkillsModule.data.SkillPlanSkillNameIndex
 import com.marshall.pyerite.characterSkillsModule.data.SkillPlanStore
 import com.marshall.pyerite.characterSkillsModule.data.SkillPrerequisiteResolver
 import com.marshall.pyerite.characterSkillsModule.viewModel.CharacterSkillsRepository
@@ -21,6 +22,7 @@ val characterSkillsModule = module {
     singleOf(::CharacterSkillsLoader)
     singleOf(::SkillPrerequisiteResolver)
     singleOf(::SkillPlanItemCatalogLoader)
+    singleOf(::SkillPlanSkillNameIndex)
     singleOf(::CharacterSkillsRepository)
     singleOf(::SkillPlanRepository)
     viewModelOf(::CharacterSkillsViewModel)

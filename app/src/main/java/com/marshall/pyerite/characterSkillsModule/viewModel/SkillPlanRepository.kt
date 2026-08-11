@@ -94,6 +94,27 @@ class SkillPlanRepository internal constructor(
         }
     }
 
+    /** Replaces all entries for [planId] (e.g. clipboard import). */
+    fun setPlanEntries(planId: Long, entries: List<SkillPlanEntry>) {
+        _plans.update { current ->
+            val index = current.indexOfFirst { it.id == planId }
+            if (index < 0) return@update current
+            val normalized = entries.mapNotNull { entry ->
+                if (entry.targetLevel <= 0) return@mapNotNull null
+                entry.copy(
+                    targetLevel = entry.targetLevel.coerceIn(
+                        1,
+                        SkillCatalogConfig.MAX_SKILL_LEVEL,
+                    ),
+                )
+            }
+            val next = current.toMutableList()
+            next[index] = current[index].copy(entries = normalized)
+            store.savePlans(next)
+            next
+        }
+    }
+
     fun setShowCompleted(showCompleted: Boolean) {
         if (_showCompleted.value == showCompleted) return
         _showCompleted.value = showCompleted

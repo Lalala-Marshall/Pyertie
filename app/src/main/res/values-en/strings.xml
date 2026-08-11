@@ -51,6 +51,15 @@
     <string name="character_skills_skill_plan_entry_level">Level %1$d</string>
     <string name="character_skills_skill_plan_all_completed">All completed</string>
     <string name="character_skills_skill_plan_clear_queue">Clear Queue</string>
+    <string name="character_skills_skill_plan_import_export">Import / Export</string>
+    <string name="character_skills_skill_plan_import">Import</string>
+    <string name="character_skills_skill_plan_export">Export</string>
+    <string name="character_skills_skill_plan_export_zh">Export Chinese</string>
+    <string name="character_skills_skill_plan_export_en">Export English</string>
+    <string name="character_skills_skill_plan_export_empty">Skill plan is empty and cannot be exported</string>
+    <string name="character_skills_skill_plan_clipboard_empty">Clipboard is empty</string>
+    <string name="character_skills_skill_plan_clipboard_parse_failed">Failed to parse clipboard. Check the format.</string>
+    <string name="character_skills_skill_plan_dialog_ok">OK</string>
     <string name="character_skills_catalog_filter_all">All</string>
     <string name="character_skills_catalog_filter_completed">Completed</string>
     <string name="character_skills_catalog_filter_untrained">Untrained</string>

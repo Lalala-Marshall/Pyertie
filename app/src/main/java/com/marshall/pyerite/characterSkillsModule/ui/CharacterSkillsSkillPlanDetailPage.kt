@@ -1,26 +1,34 @@
 package com.marshall.pyerite.characterSkillsModule.ui
 
+import android.content.ClipData
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.ImportExport
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,11 +36,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -40,12 +52,18 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.characterSkillsModule.model.CharacterAttributes
 import com.marshall.pyerite.characterSkillsModule.model.SkillCatalogSkill
 import com.marshall.pyerite.characterSkillsModule.model.SkillPlanEntry
+import com.marshall.pyerite.characterSkillsModule.model.SkillPlanExportLanguage
+import com.marshall.pyerite.characterSkillsModule.model.SkillPlanExportResult
+import com.marshall.pyerite.characterSkillsModule.model.SkillPlanImportResult
 import com.marshall.pyerite.characterSkillsModule.model.SkillPlanProgressCalculator
 import com.marshall.pyerite.characterSkillsModule.model.SkillPlanProgressSummary
 import com.marshall.pyerite.characterSkillsModule.viewModel.CharacterSkillsViewModel
@@ -61,9 +79,11 @@ import com.marshall.pyerite.ui.golbalComponents.PyeriteTopBarActionItem
 import com.marshall.pyerite.ui.golbalComponents.PyeriteTopBarMenuItem
 import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
 import com.marshall.pyerite.ui.golbalComponents.rememberScrollTitleCollapsed
+import com.marshall.pyerite.ui.golbalComponents.topBarActionSurface
 import com.marshall.pyerite.util.DurationDisplayFormatter
 import com.marshall.pyerite.util.NumberDisplayFormatter
 import com.marshall.pyerite.util.formatDurationDisplay
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
@@ -83,12 +103,85 @@ internal fun CharacterSkillsSkillPlanDetailPage(
     val sectionGap = dimensionResource(R.dimen.type_detail_section_gap)
     val bottomPadding = dimensionResource(R.dimen.type_detail_bottom_padding)
     val localeController = koinInject<LocaleController>()
+    val clipboard = LocalClipboard.current
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var showAddSkillSheet by rememberSaveable { mutableStateOf(false) }
     var showAddItemSheet by rememberSaveable { mutableStateOf(false) }
+    var messageDialogRes by remember { mutableStateOf<Int?>(null) }
+    var showExportLanguageDialog by remember { mutableStateOf(false) }
     val addContentDescription = stringResource(R.string.character_skills_skill_plan_add_content)
     val addSkillLabel = stringResource(R.string.character_skills_skill_plan_add_skill)
     val addItemLabel = stringResource(R.string.character_skills_skill_plan_add_item)
+    val importExportDescription =
+        stringResource(R.string.character_skills_skill_plan_import_export)
+    val importLabel = stringResource(R.string.character_skills_skill_plan_import)
+    val exportLabel = stringResource(R.string.character_skills_skill_plan_export)
+    val exportZhLabel = stringResource(R.string.character_skills_skill_plan_export_zh)
+    val exportEnLabel = stringResource(R.string.character_skills_skill_plan_export_en)
+
+    fun runExport(language: SkillPlanExportLanguage) {
+        showExportLanguageDialog = false
+        coroutineScope.launch {
+            when (val result = planViewModel.exportToClipboardText(language)) {
+                is SkillPlanExportResult.Success -> {
+                    clipboard.setClipEntry(
+                        ClipEntry(
+                            ClipData.newPlainText(importExportDescription, result.text),
+                        ),
+                    )
+                }
+                SkillPlanExportResult.EmptyPlan -> {
+                    messageDialogRes = R.string.character_skills_skill_plan_export_empty
+                }
+            }
+        }
+    }
+
+    fun runImport() {
+        coroutineScope.launch {
+            val clipEntry = clipboard.getClipEntry()
+            val raw = clipEntry?.clipData
+                ?.takeIf { it.itemCount > 0 }
+                ?.getItemAt(0)
+                ?.coerceToText(context)
+                ?.toString()
+            when (planViewModel.importFromClipboardText(raw)) {
+                SkillPlanImportResult.Success -> Unit
+                SkillPlanImportResult.ClipboardEmpty -> {
+                    messageDialogRes = R.string.character_skills_skill_plan_clipboard_empty
+                }
+                SkillPlanImportResult.ParseFailed -> {
+                    messageDialogRes = R.string.character_skills_skill_plan_clipboard_parse_failed
+                }
+            }
+        }
+    }
+
     val endActions = listOf(
+        PyeriteTopBarActionItem(
+            onClick = {},
+            icon = Icons.Default.ImportExport,
+            contentDescription = importExportDescription,
+            menuItems = listOf(
+                PyeriteTopBarMenuItem(
+                    label = importLabel,
+                    icon = Icons.Default.Download,
+                    onClick = ::runImport,
+                ),
+                PyeriteTopBarMenuItem(
+                    label = exportLabel,
+                    icon = Icons.Default.Upload,
+                    onClick = {
+                        if (plan?.entries.isNullOrEmpty()) {
+                            messageDialogRes = R.string.character_skills_skill_plan_export_empty
+                        } else {
+                            showExportLanguageDialog = true
+                        }
+                    },
+                ),
+            ),
+        ),
         PyeriteTopBarActionItem(
             onClick = {},
             icon = Icons.Default.Add,
@@ -140,6 +233,23 @@ internal fun CharacterSkillsSkillPlanDetailPage(
                 planViewModel.addSkills(levels)
                 showAddItemSheet = false
             },
+        )
+    }
+
+    messageDialogRes?.let { resId ->
+        SkillPlanMessageDialog(
+            message = stringResource(resId),
+            onDismiss = { messageDialogRes = null },
+        )
+    }
+
+    if (showExportLanguageDialog) {
+        SkillPlanExportLanguageDialog(
+            zhLabel = exportZhLabel,
+            enLabel = exportEnLabel,
+            onExportZh = { runExport(SkillPlanExportLanguage.CHINESE) },
+            onExportEn = { runExport(SkillPlanExportLanguage.ENGLISH) },
+            onDismiss = { showExportLanguageDialog = false },
         )
     }
 
@@ -456,6 +566,117 @@ private fun SkillPlanShowCompletedToggle(
             color = labelColor,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
+        )
+    }
+}
+
+@Composable
+private fun SkillPlanMessageDialog(
+    message: String,
+    onDismiss: () -> Unit,
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = colorResource(R.color.main_background),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = message,
+                    color = colorResource(R.color.text_primary),
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center,
+                )
+                SkillPlanDialogActionButton(
+                    label = stringResource(R.string.character_skills_skill_plan_dialog_ok),
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 20.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SkillPlanExportLanguageDialog(
+    zhLabel: String,
+    enLabel: String,
+    onExportZh: () -> Unit,
+    onExportEn: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = colorResource(R.color.main_background),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.character_skills_skill_plan_export),
+                    color = colorResource(R.color.text_primary),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center,
+                )
+                SkillPlanDialogActionButton(
+                    label = zhLabel,
+                    onClick = onExportZh,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                SkillPlanDialogActionButton(
+                    label = enLabel,
+                    onClick = onExportEn,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                SkillPlanDialogActionButton(
+                    label = stringResource(R.string.character_skills_skill_plan_cancel),
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SkillPlanDialogActionButton(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val pillShape = RoundedCornerShape(percent = 50)
+    val buttonHeight = dimensionResource(R.dimen.top_bar_back_button_size)
+    Box(
+        modifier = modifier
+            .height(buttonHeight)
+            .topBarActionSurface(pillShape)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            )
+            .semantics { role = Role.Button }
+            .padding(horizontal = 12.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            color = colorResource(R.color.text_primary),
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 14.sp,
         )
     }
 }

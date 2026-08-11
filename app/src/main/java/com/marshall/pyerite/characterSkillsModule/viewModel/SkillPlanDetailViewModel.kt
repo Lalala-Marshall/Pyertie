@@ -3,8 +3,14 @@ package com.marshall.pyerite.characterSkillsModule.viewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.marshall.pyerite.characterSkillsModule.data.SkillPlanSkillNameIndex
 import com.marshall.pyerite.characterSkillsModule.data.SkillPrerequisiteResolver
 import com.marshall.pyerite.characterSkillsModule.model.SkillPlanEntry
+import com.marshall.pyerite.characterSkillsModule.model.SkillPlanExportLanguage
+import com.marshall.pyerite.characterSkillsModule.model.SkillPlanExportResult
+import com.marshall.pyerite.characterSkillsModule.model.SkillPlanImportExport
+import com.marshall.pyerite.characterSkillsModule.model.SkillPlanImportFormatException
+import com.marshall.pyerite.characterSkillsModule.model.SkillPlanImportResult
 import com.marshall.pyerite.characterSkillsModule.model.SkillPlanLevelStepExpander
 import com.marshall.pyerite.characterSkillsModule.model.SkillPlanListItem
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,6 +28,7 @@ internal class SkillPlanDetailViewModel(
     savedStateHandle: SavedStateHandle,
     private val repository: SkillPlanRepository,
     private val prerequisiteResolver: SkillPrerequisiteResolver,
+    private val skillNameIndex: SkillPlanSkillNameIndex,
 ) : ViewModel() {
 
     val characterId: Long = checkNotNull(savedStateHandle[SkillPlanViewModel.NAV_ARG_CHARACTER_ID]) {
@@ -71,6 +78,34 @@ internal class SkillPlanDetailViewModel(
     /** Removes every skill entry from this plan. */
     fun clearSkills() {
         repository.clearPlanEntries(planId)
+    }
+
+    suspend fun exportToClipboardText(language: SkillPlanExportLanguage): SkillPlanExportResult {
+        val steps = levelSteps.value
+        if (steps.isEmpty()) return SkillPlanExportResult.EmptyPlan
+        val contentLanguage = language.toContentLanguage()
+        val names = skillNameIndex.snapshot()
+        val text = SkillPlanImportExport.format(steps) { typeId ->
+            names.displayName(typeId, contentLanguage)
+        }
+        if (text.isBlank()) return SkillPlanExportResult.EmptyPlan
+        return SkillPlanExportResult.Success(text)
+    }
+
+    suspend fun importFromClipboardText(raw: String?): SkillPlanImportResult {
+        val text = raw?.trim().orEmpty()
+        if (text.isEmpty()) return SkillPlanImportResult.ClipboardEmpty
+        return try {
+            val names = skillNameIndex.snapshot()
+            val entries = SkillPlanImportExport.parse(text) { name ->
+                names.resolveTypeId(name)
+            }
+            if (entries.isEmpty()) return SkillPlanImportResult.ParseFailed
+            repository.setPlanEntries(planId, entries)
+            SkillPlanImportResult.Success
+        } catch (_: SkillPlanImportFormatException) {
+            SkillPlanImportResult.ParseFailed
+        }
     }
 
     private suspend fun orderCompactForMerge(
