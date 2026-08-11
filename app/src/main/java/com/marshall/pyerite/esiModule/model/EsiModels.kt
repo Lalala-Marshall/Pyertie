@@ -29,6 +29,8 @@ internal data class EsiCharacterSkillsDto(
 internal data class EsiCharacterSkillDto(
     @SerialName("skill_id") val skillId: Int,
     @SerialName("active_skill_level") val activeSkillLevel: Int = 0,
+    @SerialName("trained_skill_level") val trainedSkillLevel: Int = 0,
+    @SerialName("skillpoints_in_skill") val skillpointsInSkill: Long = 0L,
 )
 
 @Serializable
@@ -64,6 +66,18 @@ internal data class EsiSkillQueueEntryDto(
     @SerialName("training_start_sp") val trainingStartSp: Long? = null,
     @SerialName("level_end_sp") val levelEndSp: Long? = null,
     @SerialName("level_start_sp") val levelStartSp: Long? = null,
+)
+
+@Serializable
+internal data class EsiCharacterAttributesDto(
+    val perception: Int = 0,
+    val memory: Int = 0,
+    val willpower: Int = 0,
+    val intelligence: Int = 0,
+    val charisma: Int = 0,
+    @SerialName("bonus_remaps") val bonusRemaps: Int = 0,
+    @SerialName("last_remap_date") val lastRemapDate: String? = null,
+    @SerialName("accrued_remap_cooldown_date") val accruedRemapCooldownDate: String? = null,
 )
 
 @Serializable

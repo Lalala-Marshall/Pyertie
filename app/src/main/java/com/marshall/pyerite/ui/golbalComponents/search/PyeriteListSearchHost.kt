@@ -1,4 +1,4 @@
-package com.marshall.pyerite.databaseHierarchyModule.search
+package com.marshall.pyerite.ui.golbalComponents.search
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -20,34 +20,33 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.zIndex
 import com.marshall.pyerite.R
-import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
 import com.marshall.pyerite.ui.golbalComponents.PyeriteTopBar
 import com.marshall.pyerite.ui.golbalComponents.PyeriteTopBarActionItem
 import com.marshall.pyerite.ui.golbalComponents.rememberLazyListSearchPinned
 import com.marshall.pyerite.ui.golbalComponents.rememberLazyListTitleCollapsed
 import com.marshall.pyerite.ui.golbalComponents.rememberTopBarTotalHeight
 
+/**
+ * List page shell with pinned search chrome (idle bar, active field, dismiss scrim).
+ * Feature pages supply [searchState] and callbacks; content is built via [listContent].
+ */
 @Composable
-fun DatabaseListSearchHost(
-    pageKey: String,
-    viewModel: DatabaseViewModel,
+fun PyeriteListSearchHost(
+    searchState: ListSearchState,
+    onActivateSearch: () -> Unit,
+    onQueryChange: (String) -> Unit,
+    onCancelSearch: () -> Unit,
     listState: LazyListState,
     navTitle: String,
     modifier: Modifier = Modifier,
@@ -56,7 +55,6 @@ fun DatabaseListSearchHost(
     title: @Composable () -> Unit,
     listContent: LazyListScope.(query: String) -> Unit,
 ) {
-    val searchState by remember(pageKey) { viewModel.searchState(pageKey) }.collectAsState()
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
     val searchRowHeight = rememberSearchRowHeight()
@@ -73,12 +71,8 @@ fun DatabaseListSearchHost(
     val showDismissScrim = searchState.isActive && searchState.query.isBlank()
 
     val cancelSearch: () -> Unit = {
-        viewModel.cancelSearch(pageKey)
+        onCancelSearch()
         keyboardController?.hide()
-    }
-
-    val activateSearch: () -> Unit = {
-        viewModel.setSearchActive(pageKey, true)
     }
 
     LaunchedEffect(searchState.isActive) {
@@ -121,7 +115,7 @@ fun DatabaseListSearchHost(
                                 .height(searchRowHeight),
                         )
                     } else {
-                        DatabaseSearchIdleBar(onActivate = activateSearch)
+                        PyeriteSearchIdleBar(onActivate = onActivateSearch)
                     }
                 }
 
@@ -129,7 +123,6 @@ fun DatabaseListSearchHost(
             }
         }
 
-        val showDismissScrim = searchState.isActive && searchState.query.isBlank()
         val showTopBarScrim = showCollapsedTitle || searchState.isActive
         val showTopBarTitle = showCollapsedTitle || searchState.isActive
         val topBarOnBack = if (searchState.isActive) cancelSearch else onBack
@@ -143,18 +136,18 @@ fun DatabaseListSearchHost(
             pinnedSearch = when {
                 searchState.isActive -> {
                     {
-                        DatabaseSearchActiveBar(
+                        PyeriteSearchActiveBar(
                             query = searchState.query,
-                            onQueryChange = { viewModel.setSearchQuery(pageKey, it) },
-                            onClearQuery = { viewModel.setSearchQuery(pageKey, "") },
+                            onQueryChange = onQueryChange,
+                            onClearQuery = { onQueryChange("") },
                             focusRequester = focusRequester,
                         )
                     }
                 }
                 isSearchPinned -> {
                     {
-                        DatabaseSearchIdleBar(
-                            onActivate = activateSearch,
+                        PyeriteSearchIdleBar(
+                            onActivate = onActivateSearch,
                             transparentContainer = true,
                         )
                     }
@@ -168,7 +161,7 @@ fun DatabaseListSearchHost(
         )
 
         if (showDismissScrim) {
-            DatabaseSearchDismissScrim(
+            ListSearchDismissScrim(
                 topOffset = topBarTotalHeight + searchRowHeight,
                 onDismiss = cancelSearch,
             )
@@ -177,8 +170,8 @@ fun DatabaseListSearchHost(
 }
 
 @Composable
-private fun DatabaseSearchDismissScrim(
-    topOffset: androidx.compose.ui.unit.Dp,
+private fun ListSearchDismissScrim(
+    topOffset: Dp,
     onDismiss: () -> Unit,
 ) {
     val scrimColor = colorResource(R.color.search_scrim)
@@ -201,37 +194,4 @@ private fun DatabaseSearchDismissScrim(
                 ),
         )
     }
-}
-
-@Composable
-fun SearchNoResultsItem(modifier: Modifier = Modifier) {
-    Text(
-        text = stringResource(R.string.search_no_results),
-        modifier = modifier.padding(
-            start = dimensionResource(R.dimen.type_detail_page_title_start_padding),
-            top = dimensionResource(R.dimen.type_detail_section_gap),
-            end = dimensionResource(R.dimen.detail_card_horizontal_padding),
-        ),
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Normal,
-        color = colorResource(R.color.hint_text),
-    )
-}
-
-@Composable
-fun SearchResultsTruncatedItem(
-    message: String,
-    modifier: Modifier = Modifier,
-) {
-    Text(
-        text = message,
-        modifier = modifier.padding(
-            start = dimensionResource(R.dimen.type_detail_page_title_start_padding),
-            top = dimensionResource(R.dimen.type_detail_section_gap),
-            end = dimensionResource(R.dimen.detail_card_horizontal_padding),
-        ),
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Normal,
-        color = colorResource(R.color.hint_text),
-    )
 }

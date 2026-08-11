@@ -29,9 +29,9 @@ import com.marshall.pyerite.iconModule.manager.IconManager
 import com.marshall.pyerite.databaseHierarchyModule.navHost.DatabaseRoute
 import com.marshall.pyerite.databaseHierarchyModule.navHost.rememberDatabaseRootBackStackEntry
 import com.marshall.pyerite.sdeModule.room.industry.TypeBlueprintDetail
-import com.marshall.pyerite.databaseHierarchyModule.search.DatabaseListSearchHost
-import com.marshall.pyerite.databaseHierarchyModule.search.SearchNoResultsItem
-import com.marshall.pyerite.databaseHierarchyModule.search.matchesSearchQuery
+import com.marshall.pyerite.ui.golbalComponents.search.PyeriteListSearchHost
+import com.marshall.pyerite.ui.golbalComponents.search.SearchNoResultsItem
+import com.marshall.pyerite.ui.golbalComponents.search.matchesSearchQuery
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
@@ -83,9 +83,11 @@ fun TypeApplicableBlueprintsPage(
     val pageTitle = stringResource(R.string.type_detail_applicable_to)
     val onBack = navController.rememberNavigateUpAction()
 
-    DatabaseListSearchHost(
-        pageKey = pageKey,
-        viewModel = viewModel,
+    PyeriteListSearchHost(
+        searchState = searchState,
+        onActivateSearch = { viewModel.setSearchActive(pageKey, true) },
+        onQueryChange = { viewModel.setSearchQuery(pageKey, it) },
+        onCancelSearch = { viewModel.cancelSearch(pageKey) },
         listState = listState,
         navTitle = pageTitle,
         modifier = Modifier.fillMaxSize(),

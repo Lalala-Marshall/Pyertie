@@ -117,6 +117,20 @@ fun BaseLazyColumnItem(
     titleLeadingContent: (@Composable () -> Unit)? = null,
     /** Trailing content on the title row (e.g. status tag next to the name). */
     titleTrailingContent: (@Composable () -> Unit)? = null,
+    /**
+     * Custom trailing slot before the chevron. When set, replaces [BaseLazyColumnItemModel.trailingValue].
+     */
+    trailingContent: (@Composable () -> Unit)? = null,
+    /**
+     * Drawn under the main row, still inside the clickable / press ripple bounds
+     * (e.g. skill-queue training progress).
+     */
+    belowContent: (@Composable () -> Unit)? = null,
+    /**
+     * When true, drops the bottom content padding so [belowContent] can sit flush
+     * under the hint line.
+     */
+    omitContentBottomPadding: Boolean = false,
     iconManager: IconManager = koinInject(),
 ) {
     val hints = model.resolvedHints()
@@ -128,6 +142,11 @@ fun BaseLazyColumnItem(
             R.dimen.detail_row_vertical_padding_single_line
         },
     )
+    val textBottomPadding = if (omitContentBottomPadding) {
+        0.dp
+    } else {
+        textVerticalPadding
+    }
     val iconVerticalPadding = dimensionResource(
         if (hasSecondaryLine) {
             R.dimen.detail_row_icon_vertical_padding
@@ -158,7 +177,7 @@ fun BaseLazyColumnItem(
     val showHintLeadingColumn = titleLeadingContent != null ||
         hints.any { !it.iconUrl.isNullOrBlank() || it.iconRes != null }
 
-    val rowModifier = modifier
+    val rootModifier = modifier
         .fillMaxWidth()
         .then(
             if (model.onClick != null) {
@@ -167,160 +186,176 @@ fun BaseLazyColumnItem(
                 Modifier
             },
         )
-        .padding(horizontal = rowHorizontalPadding)
 
-    Row(
-        modifier = rowModifier,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (model.leadingIndent) {
-            Spacer(modifier = Modifier.width(leadingIndentWidth))
-        }
-
-        if (leadingContent != null) {
-            Box(
-                modifier = Modifier
-                    .padding(vertical = iconVerticalPadding)
-                    .clip(PyeriteIconShape.shape),
-            ) {
-                leadingContent(iconSize)
+    Column(modifier = rootModifier) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = rowHorizontalPadding),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (model.leadingIndent) {
+                Spacer(modifier = Modifier.width(leadingIndentWidth))
             }
-            Spacer(modifier = Modifier.width(iconGap))
-        } else if (model.showLeadingIcon) {
-            BaseLazyColumnItemLeadingIcon(
-                model = model,
-                iconSize = iconSize,
-                iconVerticalPadding = iconVerticalPadding,
-                iconManager = iconManager,
-            )
-            Spacer(modifier = Modifier.width(iconGap))
-        }
 
-        Column(modifier = Modifier.weight(1f)) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = textVerticalPadding),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(hintSpacing),
+            if (leadingContent != null) {
+                Box(
+                    modifier = Modifier
+                        .padding(vertical = iconVerticalPadding)
+                        .clip(PyeriteIconShape.shape),
                 ) {
-                    Row(verticalAlignment = Alignment.Top) {
-                        if (showHintLeadingColumn) {
-                            Box(
-                                modifier = Modifier.size(hintIconSize),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                titleLeadingContent?.invoke()
-                            }
-                            Spacer(modifier = Modifier.width(hintIconGap))
-                        }
-                        val nameAnnotated = model.itemNameAnnotated
-                        if (nameAnnotated != null) {
-                            Text(
-                                text = nameAnnotated,
-                                fontWeight = if (model.itemNameBold) {
-                                    FontWeight.Bold
-                                } else {
-                                    FontWeight.Normal
-                                },
-                                fontSize = titleTextSize,
-                                lineHeight = titleLineHeight,
-                                modifier = Modifier.weight(1f),
-                            )
-                        } else {
-                            Text(
-                                text = model.itemName,
-                                color = titleColor,
-                                fontWeight = if (model.itemNameBold) {
-                                    FontWeight.Bold
-                                } else {
-                                    FontWeight.Normal
-                                },
-                                fontSize = titleTextSize,
-                                lineHeight = titleLineHeight,
-                                modifier = Modifier.weight(1f),
-                            )
-                        }
-                        if (titleTrailingContent != null) {
-                            Spacer(modifier = Modifier.width(trailingGap))
-                            titleTrailingContent()
-                        }
-                    }
-                    hints.forEach { hint ->
-                        Row(verticalAlignment = Alignment.Top) {
+                    leadingContent(iconSize)
+                }
+                Spacer(modifier = Modifier.width(iconGap))
+            } else if (model.showLeadingIcon) {
+                BaseLazyColumnItemLeadingIcon(
+                    model = model,
+                    iconSize = iconSize,
+                    iconVerticalPadding = iconVerticalPadding,
+                    iconManager = iconManager,
+                )
+                Spacer(modifier = Modifier.width(iconGap))
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = textVerticalPadding, bottom = textBottomPadding),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(hintSpacing),
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             if (showHintLeadingColumn) {
                                 Box(
                                     modifier = Modifier.size(hintIconSize),
                                     contentAlignment = Alignment.Center,
                                 ) {
-                                    BaseLazyColumnItemHintIcon(
-                                        iconUrl = hint.iconUrl,
-                                        iconRes = hint.iconRes,
-                                        size = hintIconSize,
-                                    )
+                                    titleLeadingContent?.invoke()
                                 }
                                 Spacer(modifier = Modifier.width(hintIconGap))
                             }
-                            val annotated = hint.annotatedText
-                            if (annotated != null) {
+                            val nameAnnotated = model.itemNameAnnotated
+                            if (nameAnnotated != null) {
                                 Text(
-                                    text = annotated,
-                                    fontSize = hintTextSize,
-                                    lineHeight = hintLineHeight,
-                                    modifier = Modifier.weight(1f),
+                                    text = nameAnnotated,
+                                    fontWeight = if (model.itemNameBold) {
+                                        FontWeight.Bold
+                                    } else {
+                                        FontWeight.Normal
+                                    },
+                                    fontSize = titleTextSize,
+                                    lineHeight = titleLineHeight,
+                                    modifier = Modifier.weight(1f, fill = false),
                                 )
                             } else {
                                 Text(
-                                    text = hint.text,
-                                    color = hint.color ?: defaultHintColor,
-                                    fontSize = hintTextSize,
-                                    lineHeight = hintLineHeight,
-                                    modifier = Modifier.weight(1f),
+                                    text = model.itemName,
+                                    color = titleColor,
+                                    fontWeight = if (model.itemNameBold) {
+                                        FontWeight.Bold
+                                    } else {
+                                        FontWeight.Normal
+                                    },
+                                    fontSize = titleTextSize,
+                                    lineHeight = titleLineHeight,
+                                    modifier = Modifier.weight(1f, fill = false),
                                 )
+                            }
+                            if (titleTrailingContent != null) {
+                                Spacer(modifier = Modifier.width(trailingGap))
+                                titleTrailingContent()
+                            }
+                        }
+                        hints.forEach { hint ->
+                            Row(verticalAlignment = Alignment.Top) {
+                                if (showHintLeadingColumn) {
+                                    Box(
+                                        modifier = Modifier.size(hintIconSize),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        BaseLazyColumnItemHintIcon(
+                                            iconUrl = hint.iconUrl,
+                                            iconRes = hint.iconRes,
+                                            size = hintIconSize,
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(hintIconGap))
+                                }
+                                val annotated = hint.annotatedText
+                                if (annotated != null) {
+                                    Text(
+                                        text = annotated,
+                                        fontSize = hintTextSize,
+                                        lineHeight = hintLineHeight,
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                } else {
+                                    Text(
+                                        text = hint.text,
+                                        color = hint.color ?: defaultHintColor,
+                                        fontSize = hintTextSize,
+                                        lineHeight = hintLineHeight,
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                }
                             }
                         }
                     }
+
+                    if (trailingContent != null) {
+                        Spacer(modifier = Modifier.width(titleValueGap))
+                        trailingContent()
+                    } else if (model.trailingValue.isNotEmpty()) {
+                        Spacer(modifier = Modifier.width(titleValueGap))
+                        Text(
+                            text = model.trailingValue,
+                            color = trailingColor,
+                            fontSize = valueTextSize,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+
+                    if (model.showChevron) {
+                        Spacer(modifier = Modifier.width(trailingGap))
+                        Icon(
+                            modifier = Modifier.size(chevronSize),
+                            imageVector = if (model.chevronExpanded) {
+                                Icons.Filled.KeyboardArrowDown
+                            } else {
+                                Icons.AutoMirrored.Filled.KeyboardArrowRight
+                            },
+                            contentDescription = null,
+                            tint = if (model.chevronExpanded) {
+                                colorResource(R.color.text_primary)
+                            } else {
+                                colorResource(R.color.hint_text)
+                            },
+                        )
+                    }
                 }
 
-                if (model.trailingValue.isNotEmpty()) {
-                    Spacer(modifier = Modifier.width(titleValueGap))
-                    Text(
-                        text = model.trailingValue,
-                        color = trailingColor,
-                        fontSize = valueTextSize,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-
-                if (model.showChevron) {
-                    Spacer(modifier = Modifier.width(trailingGap))
-                    Icon(
-                        modifier = Modifier.size(chevronSize),
-                        imageVector = if (model.chevronExpanded) {
-                            Icons.Filled.KeyboardArrowDown
-                        } else {
-                            Icons.AutoMirrored.Filled.KeyboardArrowRight
-                        },
-                        contentDescription = null,
-                        tint = if (model.chevronExpanded) {
-                            colorResource(R.color.text_primary)
-                        } else {
-                            colorResource(R.color.hint_text)
-                        },
+                // Inset divider (under text column) when there is no full-width belowContent.
+                if (showDivider && belowContent == null) {
+                    HorizontalDivider(
+                        thickness = dimensionResource(R.dimen.detail_divider_thickness),
+                        color = colorResource(R.color.border),
                     )
                 }
             }
+        }
 
-            if (showDivider) {
-                HorizontalDivider(
-                    thickness = dimensionResource(R.dimen.detail_divider_thickness),
-                    color = colorResource(R.color.border),
-                )
-            }
+        belowContent?.invoke()
+
+        if (showDivider && belowContent != null) {
+            HorizontalDivider(
+                thickness = dimensionResource(R.dimen.detail_divider_thickness),
+                color = colorResource(R.color.border),
+            )
         }
     }
 }

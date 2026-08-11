@@ -1,0 +1,452 @@
+package com.marshall.pyerite.characterSkillsModule.model
+
+import androidx.annotation.DrawableRes
+import com.marshall.pyerite.R
+import com.marshall.pyerite.localization.LocalizableName
+import kotlin.math.ceil
+import kotlin.math.pow
+
+/**
+ * Main-page / skills summary for a character's ESI skill queue.
+ */
+enum class CharacterSkillQueueState {
+    /** Empty queue from ESI. */
+    IDLE,
+
+    /** Queue present but start/finish dates omitted (training paused). */
+    PAUSED,
+
+    /** At least one entry has a projected finish time. */
+    TRAINING,
+}
+
+internal object CharacterSkillQueueConfig {
+    const val UI_TICK_MS = 1_000L
+    const val MILLIS_PER_SECOND = 1_000L
+    const val PROGRESS_SHIMMER_DURATION_MS = 2_400
+    const val PROGRESS_SHIMMER_WIDTH_FRACTION = 0.4f
+    const val PROGRESS_SHIMMER_PEAK_ALPHA = 0.55f
+}
+
+/**
+ * ESI head-of-queue entry fields for live SP / remaining-time on the skills page.
+ */
+data class SkillQueueHeadTraining(
+    val skillId: Int,
+    val finishedLevel: Int,
+    val trainingStartSp: Long? = null,
+    val levelStartSp: Long? = null,
+    val levelEndSp: Long? = null,
+    val startAtEpochMs: Long? = null,
+    val finishAtEpochMs: Long? = null,
+) {
+    /**
+     * Interpolated current SP for this queue entry at [nowMs]; frozen when dates missing.
+     *
+     * Uses second-granularity **floor** division (same discrete ticks as the client),
+     * not float truncation of the gained portion — that could read 1–2 SP high.
+     */
+    fun currentSpAt(nowMs: Long): Long? {
+        val trainingStart = trainingStartSp ?: return null
+        val levelEnd = levelEndSp ?: return trainingStart
+        val finishMs = finishAtEpochMs ?: return trainingStart
+        val startMs = startAtEpochMs ?: return trainingStart
+        if (levelEnd < trainingStart) return trainingStart
+        if (finishMs <= startMs) return trainingStart
+        if (nowMs <= startMs) return trainingStart
+        if (nowMs >= finishMs) return levelEnd
+        val durationSeconds =
+            (finishMs - startMs) / CharacterSkillQueueConfig.MILLIS_PER_SECOND
+        if (durationSeconds <= 0L) return trainingStart
+        val elapsedSeconds =
+            ((nowMs - startMs) / CharacterSkillQueueConfig.MILLIS_PER_SECOND)
+                .coerceAtMost(durationSeconds)
+        return trainingStart +
+            (levelEnd - trainingStart) * elapsedSeconds / durationSeconds
+    }
+
+    fun remainingSecondsAt(nowMs: Long): Long? {
+        val finishMs = finishAtEpochMs ?: return null
+        val deltaMs = finishMs - nowMs
+        if (deltaMs <= 0L) return 0L
+        return deltaMs / CharacterSkillQueueConfig.MILLIS_PER_SECOND
+    }
+
+    /** True when ESI gave a window and [nowMs] falls inside it (actively training). */
+    fun isActivelyTrainingAt(nowMs: Long): Boolean {
+        val startMs = startAtEpochMs ?: return false
+        val finishMs = finishAtEpochMs ?: return false
+        return nowMs >= startMs && nowMs <= finishMs
+    }
+
+    /**
+     * Progress within the level being trained (0…1), from [levelStartSp]→[levelEndSp]
+     * using live floor [currentSpAt]; falls back to time fraction of this queue entry.
+     */
+    fun levelProgressAt(nowMs: Long): Float {
+        val levelStart = levelStartSp
+        val levelEnd = levelEndSp
+        val currentSp = currentSpAt(nowMs)
+        if (levelStart != null &&
+            levelEnd != null &&
+            levelEnd > levelStart &&
+            currentSp != null
+        ) {
+            return ((currentSp - levelStart).toDouble() / (levelEnd - levelStart).toDouble())
+                .toFloat()
+                .coerceIn(SkillCatalogConfig.PROGRESS_MIN, SkillCatalogConfig.PROGRESS_MAX)
+        }
+        val finishMs = finishAtEpochMs ?: return SkillCatalogConfig.PROGRESS_MIN
+        val startMs = startAtEpochMs ?: return SkillCatalogConfig.PROGRESS_MIN
+        if (finishMs <= startMs) return SkillCatalogConfig.PROGRESS_MIN
+        if (nowMs <= startMs) return SkillCatalogConfig.PROGRESS_MIN
+        if (nowMs >= finishMs) return SkillCatalogConfig.PROGRESS_MAX
+        return ((nowMs - startMs).toDouble() / (finishMs - startMs).toDouble())
+            .toFloat()
+            .coerceIn(SkillCatalogConfig.PROGRESS_MIN, SkillCatalogConfig.PROGRESS_MAX)
+    }
+}
+
+/**
+ * Compact skill-queue status for the home-page row (and future skills page seed).
+ *
+ * When [state] is [CharacterSkillQueueState.TRAINING], [trainingFinishAtEpochMs] holds
+ * each queued skill's finish time (ESI order). The UI filters by `now` for live count
+ * and remaining duration. [pausedSkillCount] is used when paused.
+ */
+data class CharacterSkillQueueStatus(
+    val characterId: Long,
+    val state: CharacterSkillQueueState,
+    val trainingFinishAtEpochMs: List<Long> = emptyList(),
+    val pausedSkillCount: Int = 0,
+    /** Optional static remaining-seconds estimate while paused (no live countdown). */
+    val pausedRemainingSeconds: Long? = null,
+    /**
+     * ESI skill queue targets: skill type id → highest `finished_level` in queue.
+     * Example: L1 done, queueing L2/L3/L4 → map value is 4.
+     * Used by catalog filters / group highlights (not the skills-page queue list).
+     */
+    val queuedTargetLevelsBySkillId: Map<Int, Int> = emptyMap(),
+    /**
+     * Every ESI queue entry in order (not deduplicated). Same skill queued for
+     * L1…L5 appears five times. Used by the skills-page queue section.
+     */
+    val queuedEntries: List<SkillQueueHeadTraining> = emptyList(),
+    /** First ESI queue entry; same as [queuedEntries].firstOrNull(). */
+    val queueHead: SkillQueueHeadTraining? = null,
+    /**
+     * Head of the ESI skill queue while [state] is [CharacterSkillQueueState.TRAINING]:
+     * skill type id + `finished_level` currently being trained. Null when idle / paused.
+     */
+    val activeTrainingSkillId: Int? = null,
+    val activeTrainingLevel: Int? = null,
+) {
+    companion object {
+        fun empty(characterId: Long): CharacterSkillQueueStatus = CharacterSkillQueueStatus(
+            characterId = characterId,
+            state = CharacterSkillQueueState.IDLE,
+        )
+    }
+}
+
+/**
+ * Character neural attributes from ESI `/characters/{id}/attributes`.
+ *
+ * [nextRemapAvailableEpochMs] comes from `accrued_remap_cooldown_date`
+ * (`null` = unknown / never remapped cooldown; `<= now` = remap available).
+ */
+data class CharacterAttributes(
+    val characterId: Long,
+    val perception: Int,
+    val memory: Int,
+    val willpower: Int,
+    val intelligence: Int,
+    val charisma: Int,
+    val bonusRemaps: Int,
+    val lastRemapEpochMs: Long? = null,
+    val nextRemapAvailableEpochMs: Long? = null,
+) {
+    /** Points for an EVE attribute type id (`primaryAttribute` / `secondaryAttribute` value). */
+    fun pointsForAttributeTypeId(attributeTypeId: Int): Int? = when (attributeTypeId) {
+        SkillCatalogConfig.ATTR_TYPE_CHARISMA -> charisma
+        SkillCatalogConfig.ATTR_TYPE_INTELLIGENCE -> intelligence
+        SkillCatalogConfig.ATTR_TYPE_MEMORY -> memory
+        SkillCatalogConfig.ATTR_TYPE_PERCEPTION -> perception
+        SkillCatalogConfig.ATTR_TYPE_WILLPOWER -> willpower
+        else -> null
+    }
+
+    companion object {
+        fun empty(characterId: Long): CharacterAttributes = CharacterAttributes(
+            characterId = characterId,
+            perception = 0,
+            memory = 0,
+            willpower = 0,
+            intelligence = 0,
+            charisma = 0,
+            bonusRemaps = 0,
+        )
+    }
+}
+
+/** Filter chips on the skill catalog details page. */
+enum class SkillCatalogFilter {
+    ALL,
+    COMPLETED,
+    UNTRAINED,
+    TRAINABLE,
+}
+
+/**
+ * SDE / ESI constants for the Skills category catalog.
+ * EVE SDE `categories.category_id` for Skills is 16.
+ */
+internal object SkillCatalogConfig {
+    const val SKILLS_CATEGORY_ID = 16
+    const val MAX_SKILL_LEVEL = 5
+    const val SP_BASE = 250.0
+    const val SP_LEVEL_BASE = 32.0
+    const val PROGRESS_MIN = 0f
+    const val PROGRESS_MAX = 1f
+    const val SECONDS_PER_MINUTE = 60L
+
+    /** EVE attribute type ids (dogma `primaryAttribute` / `secondaryAttribute` values). */
+    const val ATTR_TYPE_CHARISMA = 164
+    const val ATTR_TYPE_INTELLIGENCE = 165
+    const val ATTR_TYPE_MEMORY = 166
+    const val ATTR_TYPE_PERCEPTION = 167
+    const val ATTR_TYPE_WILLPOWER = 168
+
+    /** Queue training-segment blink (gray cell). */
+    const val QUEUE_LEVEL_BLINK_PERIOD_MS = 1_100
+    const val QUEUE_LEVEL_BLINK_ALPHA_MIN = 0.2f
+    const val QUEUE_LEVEL_BLINK_ALPHA_MAX = 1f
+
+    /**
+     * Total SP required to reach [level] (EVE formula is already cumulative):
+     * `250 × skillTimeConstant × 32^((level - 1) / 2)`.
+     */
+    fun cumulativeSpToLevel(skillTimeConstant: Double, level: Int): Long {
+        if (skillTimeConstant <= 0.0 || level < 1) return 0L
+        return (
+            SP_BASE * skillTimeConstant *
+                SP_LEVEL_BASE.pow((level - 1) / 2.0)
+            ).toLong()
+    }
+
+    fun cumulativeSpToMax(skillTimeConstant: Double): Long =
+        cumulativeSpToLevel(skillTimeConstant, MAX_SKILL_LEVEL)
+
+    /**
+     * Seconds to finish the next level from current [trainedSp].
+     * Omega rate: `SP/minute = primary + secondary / 2` (ESI attributes include implants).
+     * Rounded up to whole minutes (same as the in-game skill UI), returned as seconds.
+     * Null when already V or inputs missing.
+     */
+    fun secondsToTrainNextLevel(
+        skillTimeConstant: Double,
+        trainedLevel: Int,
+        trainedSp: Long,
+        primaryAttributeTypeId: Int?,
+        secondaryAttributeTypeId: Int?,
+        attributes: CharacterAttributes,
+    ): Long? {
+        if (trainedLevel >= MAX_SKILL_LEVEL) return null
+        val primaryId = primaryAttributeTypeId ?: return null
+        val secondaryId = secondaryAttributeTypeId ?: return null
+        val primary = attributes.pointsForAttributeTypeId(primaryId) ?: return null
+        val secondary = attributes.pointsForAttributeTypeId(secondaryId) ?: return null
+        val spPerMinute = primary + secondary / 2.0
+        if (spPerMinute <= 0.0) return null
+        val nextLevel = trainedLevel + 1
+        val targetSp = cumulativeSpToLevel(skillTimeConstant, nextLevel)
+        val spNeeded = (targetSp - trainedSp).coerceAtLeast(0L)
+        if (spNeeded <= 0L) return 0L
+        val minutesNeeded = ceil(spNeeded / spPerMinute).toLong().coerceAtLeast(1L)
+        return minutesNeeded * SECONDS_PER_MINUTE
+    }
+}
+
+/**
+ * Skill-group sidebar icons (same asset names / groupId map as Tritanium
+ * `SkillGroupIconManager`). Drawables live under `res/drawable/skill_group_*.png`.
+ */
+internal object SkillGroupIcons {
+    private val byGroupId: Map<Int, Int> = mapOf(
+        255 to R.drawable.skill_group_gunnery,
+        256 to R.drawable.skill_group_missiles,
+        257 to R.drawable.skill_group_spaceshipcmd,
+        258 to R.drawable.skill_group_fleetsupport,
+        266 to R.drawable.skill_group_corpmgmt,
+        268 to R.drawable.skill_group_production,
+        269 to R.drawable.skill_group_rigging,
+        270 to R.drawable.skill_group_science,
+        272 to R.drawable.skill_group_electronicsystems,
+        273 to R.drawable.skill_group_drones,
+        274 to R.drawable.skill_group_trade,
+        275 to R.drawable.skill_group_navigation,
+        278 to R.drawable.skill_group_social,
+        1209 to R.drawable.skill_group_shields,
+        1210 to R.drawable.skill_group_armor,
+        1213 to R.drawable.skill_group_targeting,
+        1216 to R.drawable.skill_group_engineering,
+        1217 to R.drawable.skill_group_scanning,
+        1218 to R.drawable.skill_group_resourceprocessing,
+        1220 to R.drawable.skill_group_neuralenhancement,
+        1240 to R.drawable.skill_group_subsystems,
+        1241 to R.drawable.skill_group_planetmgmt,
+        1545 to R.drawable.skill_group_structuremgmt,
+        4734 to R.drawable.skill_group_skinsequencing,
+    )
+
+    @DrawableRes
+    fun drawableRes(groupId: Int): Int =
+        byGroupId[groupId] ?: R.drawable.ic_character_skills
+}
+
+/**
+ * One skill type inside a catalog group (per-skill SP / level for filter / hint counts).
+ */
+data class SkillCatalogSkill(
+    val typeId: Int,
+    override val name: String?,
+    override val zhName: String?,
+    override val enName: String?,
+    val trainedSp: Long,
+    val maxSp: Long,
+    /** ESI `trained_skill_level` (0 when not present / not trained). */
+    val trainedLevel: Int,
+    /** Dogma `skillTimeConstant` (rank) for SP-to-level calculations. */
+    val skillTimeConstant: Double,
+    /** Dogma `primaryAttribute` value (attribute type id). */
+    val primaryAttributeTypeId: Int? = null,
+    /** Dogma `secondaryAttribute` value (attribute type id). */
+    val secondaryAttributeTypeId: Int? = null,
+    /**
+     * True when this skill appears in ESI `/characters/{id}/skills`
+     * (skillbook injected / absorbed onto the character).
+     */
+    val isInjected: Boolean,
+    val iconFilename: String? = null,
+) : LocalizableName {
+    val isCompleted: Boolean
+        get() = isInjected && trainedLevel >= SkillCatalogConfig.MAX_SKILL_LEVEL
+
+    /** Never injected — 未吸收. */
+    val isUninjected: Boolean
+        get() = !isInjected
+
+    fun secondsToTrainNextLevel(attributes: CharacterAttributes): Long? =
+        SkillCatalogConfig.secondsToTrainNextLevel(
+            skillTimeConstant = skillTimeConstant,
+            trainedLevel = trainedLevel,
+            trainedSp = trainedSp,
+            primaryAttributeTypeId = primaryAttributeTypeId,
+            secondaryAttributeTypeId = secondaryAttributeTypeId,
+            attributes = attributes,
+        )
+}
+
+/**
+ * One skill-group row on the catalog details page.
+ * [trainedSp] is the sum of ESI `skillpoints_in_skill` for skills in the group.
+ * Filters match when **any** skill in [skills] has that status.
+ */
+data class SkillCatalogGroup(
+    val groupId: Int,
+    override val name: String?,
+    override val zhName: String?,
+    override val enName: String?,
+    val trainedSp: Long,
+    val maxSp: Long,
+    val skills: List<SkillCatalogSkill> = emptyList(),
+) : LocalizableName {
+    val skillCount: Int
+        get() = skills.size
+
+    /** Whole group finished (every skill trained to V). */
+    val isCompleted: Boolean
+        get() = skills.isNotEmpty() && skills.all { it.isCompleted }
+
+    fun matchesFilter(
+        filter: SkillCatalogFilter,
+        queuedTargetLevelsBySkillId: Map<Int, Int> = emptyMap(),
+    ): Boolean =
+        when (filter) {
+            SkillCatalogFilter.ALL -> true
+            else -> skillsMatching(filter, queuedTargetLevelsBySkillId).isNotEmpty()
+        }
+
+    /**
+     * Skills for the active catalog filter.
+     * - 未吸收: never injected (not in ESI skills); queue entries are treated as injected
+     * - 可训练: injected (or queued) but not at level V
+     */
+    fun skillsMatching(
+        filter: SkillCatalogFilter,
+        queuedTargetLevelsBySkillId: Map<Int, Int> = emptyMap(),
+    ): List<SkillCatalogSkill> {
+        val queuedIds = queuedTargetLevelsBySkillId.keys
+        return when (filter) {
+            SkillCatalogFilter.ALL -> skills
+            SkillCatalogFilter.COMPLETED -> skills.filter { it.isCompleted }
+            SkillCatalogFilter.UNTRAINED -> skills.filter {
+                it.isUninjected && it.typeId !in queuedIds
+            }
+            SkillCatalogFilter.TRAINABLE -> skills.filter {
+                !it.isCompleted && (it.isInjected || it.typeId in queuedIds)
+            }
+        }
+    }
+
+    fun matchingSkillCount(
+        filter: SkillCatalogFilter,
+        queuedTargetLevelsBySkillId: Map<Int, Int> = emptyMap(),
+    ): Int = skillsMatching(filter, queuedTargetLevelsBySkillId).size
+
+    fun matchingTrainedSp(
+        filter: SkillCatalogFilter,
+        queuedTargetLevelsBySkillId: Map<Int, Int> = emptyMap(),
+    ): Long = skillsMatching(filter, queuedTargetLevelsBySkillId).sumOf { it.trainedSp }
+
+    /** Distinct matching skills that also appear in the training queue. */
+    fun queuedMatchingSkillCount(
+        filter: SkillCatalogFilter,
+        queuedTargetLevelsBySkillId: Map<Int, Int>,
+    ): Int {
+        if (filter == SkillCatalogFilter.UNTRAINED || queuedTargetLevelsBySkillId.isEmpty()) {
+            return 0
+        }
+        return skillsMatching(filter, queuedTargetLevelsBySkillId)
+            .count { it.typeId in queuedTargetLevelsBySkillId }
+    }
+
+    /**
+     * SP required to reach each matching queued skill's highest queued level
+     * (cumulative 1→N), summed for the sky-blue progress segment.
+     */
+    fun queuedMatchingRequiredSp(
+        filter: SkillCatalogFilter,
+        queuedTargetLevelsBySkillId: Map<Int, Int>,
+    ): Long {
+        if (filter == SkillCatalogFilter.UNTRAINED || queuedTargetLevelsBySkillId.isEmpty()) {
+            return 0L
+        }
+        return skillsMatching(filter, queuedTargetLevelsBySkillId).sumOf { skill ->
+            val targetLevel = queuedTargetLevelsBySkillId[skill.typeId] ?: return@sumOf 0L
+            SkillCatalogConfig.cumulativeSpToLevel(skill.skillTimeConstant, targetLevel)
+        }
+    }
+
+    /** Trained SP of skills that are not part of the sky-blue queue segment. */
+    fun learnedSpExcludingQueued(
+        filter: SkillCatalogFilter,
+        queuedTargetLevelsBySkillId: Map<Int, Int>,
+    ): Long {
+        val skyIds = skillsMatching(filter, queuedTargetLevelsBySkillId)
+            .map { it.typeId }
+            .filter { it in queuedTargetLevelsBySkillId }
+            .toSet()
+        return skills.filter { it.typeId !in skyIds }.sumOf { it.trainedSp }
+    }
+}

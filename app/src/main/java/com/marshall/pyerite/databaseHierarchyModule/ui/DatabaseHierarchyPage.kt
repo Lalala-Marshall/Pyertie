@@ -44,11 +44,11 @@ import com.marshall.pyerite.sdeModule.room.catalog.GroupEntity
 import com.marshall.pyerite.sdeModule.room.catalog.MetaGroupEntity
 import com.marshall.pyerite.sdeModule.room.type.TypeEntity
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.DatabaseViewModel
-import com.marshall.pyerite.databaseHierarchyModule.search.DatabaseListSearchHost
-import com.marshall.pyerite.databaseHierarchyModule.search.SearchNoResultsItem
-import com.marshall.pyerite.databaseHierarchyModule.search.SearchResultsTruncatedItem
 import com.marshall.pyerite.databaseHierarchyModule.search.TypeSearchUiState
-import com.marshall.pyerite.databaseHierarchyModule.search.matchingSearch
+import com.marshall.pyerite.ui.golbalComponents.search.PyeriteListSearchHost
+import com.marshall.pyerite.ui.golbalComponents.search.SearchNoResultsItem
+import com.marshall.pyerite.ui.golbalComponents.search.SearchResultsTruncatedItem
+import com.marshall.pyerite.ui.golbalComponents.search.matchingSearch
 import com.marshall.pyerite.databaseHierarchyModule.viewModel.HierarchyScrollPosition
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
@@ -208,9 +208,11 @@ fun DatabaseHierarchyPage(
     val searchResultsTruncatedHint = stringResource(R.string.search_results_truncated)
     val onBack = navController.rememberNavigateUpAction()
 
-    DatabaseListSearchHost(
-        pageKey = scrollKey,
-        viewModel = viewModel,
+    PyeriteListSearchHost(
+        searchState = searchState,
+        onActivateSearch = { viewModel.setSearchActive(scrollKey, true) },
+        onQueryChange = { viewModel.setSearchQuery(scrollKey, it) },
+        onCancelSearch = { viewModel.cancelSearch(scrollKey) },
         listState = listState,
         navTitle = title,
         modifier = Modifier.fillMaxSize(),

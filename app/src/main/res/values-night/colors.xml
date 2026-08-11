@@ -3,6 +3,7 @@
 
     <color name="main_background">#1E1E1E</color>
     <color name="second_background">#2A2A2A</color>
+    <color name="skill_plan_dialog_button_background">#3A3A3A</color>
 
     <color name="border">#353535</color>
 
@@ -35,6 +36,13 @@
     <color name="character_skill_progress_paused">#9E9E9E</color>
     <color name="character_skill_progress_track">#353535</color>
     <color name="character_skill_progress_shimmer">#FFFFFF</color>
+    <color name="character_skills_catalog_progress_partial">#1A3A5C</color>
+    <color name="character_skills_catalog_progress_complete">#1B3D24</color>
+    <color name="character_skills_catalog_filter_selected">#2A2A2A</color>
+    <color name="character_skills_catalog_queue_text">#40C4FF</color>
+    <color name="character_skills_catalog_queue_background">#0A3A55</color>
+    <color name="skill_queue_training_progress_fill">#1E88E5</color>
+    <color name="skill_level_queue_segment">@color/character_skills_catalog_queue_text</color>
     <color name="character_delete">#EF5350</color>
     <color name="character_org_badge_background">#000000</color>
     <color name="character_status_positive">#34A853</color>

@@ -27,7 +27,7 @@ import com.marshall.pyerite.sdeModule.room.skill.SkillLevelSpRow
 import com.marshall.pyerite.sdeModule.room.skill.SkillUnlockTypeRow
 import com.marshall.pyerite.sdeModule.room.type.TypeSkillMiscRow
 import com.marshall.pyerite.sdeModule.room.dogma.TypeTraitDetail
-import com.marshall.pyerite.databaseHierarchyModule.search.HierarchySearchState
+import com.marshall.pyerite.ui.golbalComponents.search.ListSearchState
 import com.marshall.pyerite.databaseHierarchyModule.search.TypeSearchUiState
 import com.marshall.pyerite.sdeModule.update.SdeUpdateRepository
 import com.marshall.pyerite.localization.ContentLanguage
@@ -540,12 +540,12 @@ class DatabaseViewModel(
         hierarchyScrollPositions[scrollKey] = HierarchyScrollPosition(index, offset)
     }
 
-    private val hierarchySearchStateFlows = mutableMapOf<String, MutableStateFlow<HierarchySearchState>>()
+    private val hierarchySearchStateFlows = mutableMapOf<String, MutableStateFlow<ListSearchState>>()
 
-    private fun hierarchySearchStateFlow(pageKey: String): MutableStateFlow<HierarchySearchState> =
-        hierarchySearchStateFlows.getOrPut(pageKey) { MutableStateFlow(HierarchySearchState()) }
+    private fun hierarchySearchStateFlow(pageKey: String): MutableStateFlow<ListSearchState> =
+        hierarchySearchStateFlows.getOrPut(pageKey) { MutableStateFlow(ListSearchState()) }
 
-    fun searchState(pageKey: String): StateFlow<HierarchySearchState> =
+    fun searchState(pageKey: String): StateFlow<ListSearchState> =
         hierarchySearchStateFlow(pageKey)
 
     fun setSearchActive(pageKey: String, active: Boolean) {
@@ -559,7 +559,7 @@ class DatabaseViewModel(
     }
 
     fun cancelSearch(pageKey: String) {
-        hierarchySearchStateFlow(pageKey).value = HierarchySearchState()
+        hierarchySearchStateFlow(pageKey).value = ListSearchState()
     }
 }
 

@@ -33,6 +33,9 @@ import com.marshall.pyerite.characterClonesModule.ui.MainPageCloneStatusItem
 import com.marshall.pyerite.characterClonesModule.viewModel.CharacterClonesViewModel
 import com.marshall.pyerite.characterSheetModule.navHost.CharacterSheetRoute
 import com.marshall.pyerite.characterSheetModule.ui.MainPageCharacterSheetItem
+import com.marshall.pyerite.characterSkillsModule.navHost.CharacterSkillsRoute
+import com.marshall.pyerite.characterSkillsModule.ui.MainPageSkillQueueItem
+import com.marshall.pyerite.characterSkillsModule.viewModel.CharacterSkillsViewModel
 import com.marshall.pyerite.charactersListModule.navHost.CharacterRoute
 import com.marshall.pyerite.charactersListModule.ui.MainPageCharacterCard
 import com.marshall.pyerite.charactersListModule.viewModel.CharacterViewModel
@@ -57,29 +60,40 @@ fun MainPage(
     sdeUpdateViewModel: SdeUpdateViewModel = koinViewModel(),
     characterViewModel: CharacterViewModel = koinViewModel(),
     characterClonesViewModel: CharacterClonesViewModel = koinViewModel(),
+    characterSkillsViewModel: CharacterSkillsViewModel = koinViewModel(),
 ) {
     val uiState by sdeUpdateViewModel.uiState.collectAsState()
     val currentCharacter by characterViewModel.currentCharacter.collectAsState()
     val loggedInCharacters by characterViewModel.loggedInCharacters.collectAsState()
     val isCharacterRefreshing by characterViewModel.isRefreshing.collectAsState()
     val clonesUiState by characterClonesViewModel.uiState.collectAsState()
+    val skillsUiState by characterSkillsViewModel.uiState.collectAsState()
     val isUpdateCheckInFlight by sdeUpdateViewModel.isUpdateCheckInFlight.collectAsState()
-    val isRefreshing = isCharacterRefreshing || clonesUiState.isLoading || isUpdateCheckInFlight
+    val isRefreshing =
+        isCharacterRefreshing || clonesUiState.isLoading || skillsUiState.isLoading || isUpdateCheckInFlight
     val refreshFailed by characterViewModel.refreshFailed.collectAsState()
     val listState = rememberLazyListState()
     val showCollapsedTitle = rememberLazyListTitleCollapsed(listState)
     val nextCloneJumpEpochMs = clonesUiState.status.nextCloneJumpEpochMs
+    val skillQueueStatus = skillsUiState.status
 
-    val onPullToRefresh = remember(characterViewModel, characterClonesViewModel, sdeUpdateViewModel) {
+    val onPullToRefresh = remember(
+        characterViewModel,
+        characterClonesViewModel,
+        characterSkillsViewModel,
+        sdeUpdateViewModel,
+    ) {
         {
             characterViewModel.refreshLoggedInCharacters()
             characterClonesViewModel.refresh()
+            characterSkillsViewModel.refresh()
             sdeUpdateViewModel.refreshUpdateCheck()
         }
     }
 
     LaunchedEffect(currentCharacter?.characterId) {
         characterClonesViewModel.setCharacterId(currentCharacter?.characterId)
+        characterSkillsViewModel.setCharacterId(currentCharacter?.characterId)
     }
 
     val currentTotalSp = remember(currentCharacter?.characterId, loggedInCharacters) {
@@ -175,11 +189,23 @@ fun MainPage(
                         )
                         MainPageCloneStatusItem(
                             nextCloneJumpEpochMs = nextCloneJumpEpochMs,
+                            showDivider = true,
                             onClick = {
                                 val characterId = currentCharacter?.characterId
                                     ?: return@MainPageCloneStatusItem
                                 navController.navigate(
                                     CharacterClonesRoute.Status.create(characterId),
+                                )
+                            },
+                        )
+                        MainPageSkillQueueItem(
+                            status = skillQueueStatus,
+                            detailsReady = skillsUiState.detailsReady,
+                            onClick = {
+                                val characterId = currentCharacter?.characterId
+                                    ?: return@MainPageSkillQueueItem
+                                navController.navigate(
+                                    CharacterSkillsRoute.Queue.create(characterId),
                                 )
                             },
                         )
