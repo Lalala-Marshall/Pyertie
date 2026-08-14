@@ -158,6 +158,43 @@ internal data class EsiCharacterPublic(
     val securityStatus: Double? = null,
 )
 
+@Serializable
+internal data class EsiMailHeaderDto(
+    @SerialName("mail_id") val mailId: Long,
+    val subject: String? = null,
+    val from: Long? = null,
+    val timestamp: String? = null,
+    @SerialName("is_read") val isRead: Boolean? = null,
+    val labels: List<Int> = emptyList(),
+    val recipients: List<EsiMailRecipientDto> = emptyList(),
+)
+
+@Serializable
+internal data class EsiMailRecipientDto(
+    @SerialName("recipient_id") val recipientId: Long,
+    @SerialName("recipient_type") val recipientType: String,
+)
+
+@Serializable
+internal data class EsiMailingListDto(
+    @SerialName("mailing_list_id") val mailingListId: Long,
+    val name: String,
+)
+
+@Serializable
+internal data class EsiUniverseNameDto(
+    val id: Long,
+    val name: String,
+    val category: String,
+)
+
+/** Wire `category` values from POST `/universe/names`. */
+internal object EsiUniverseNameCategory {
+    const val CHARACTER = "character"
+    const val CORPORATION = "corporation"
+    const val ALLIANCE = "alliance"
+}
+
 internal data class EsiOrganization(
     val id: Long,
     val name: String,

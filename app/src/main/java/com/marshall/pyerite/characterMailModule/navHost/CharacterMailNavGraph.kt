@@ -7,11 +7,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.marshall.pyerite.characterMailModule.ui.CharacterMailAllPage
 import com.marshall.pyerite.characterMailModule.ui.CharacterMailPage
+import com.marshall.pyerite.characterMailModule.viewModel.CharacterMailViewModel
 
 fun NavGraphBuilder.characterMailNavGraph(
     navController: NavController,
 ) {
-    val characterIdArgument = navArgument(CharacterMailRoute.ARG_CHARACTER_ID) {
+    val characterIdArgument = navArgument(CharacterMailViewModel.NAV_ARG_CHARACTER_ID) {
         type = NavType.LongType
     }
     composable(
@@ -19,9 +20,9 @@ fun NavGraphBuilder.characterMailNavGraph(
         arguments = listOf(characterIdArgument),
     ) { entry ->
         val characterId = checkNotNull(
-            entry.arguments?.getLong(CharacterMailRoute.ARG_CHARACTER_ID),
+            entry.arguments?.getLong(CharacterMailViewModel.NAV_ARG_CHARACTER_ID),
         ) {
-            "Missing ${CharacterMailRoute.ARG_CHARACTER_ID}"
+            "Missing ${CharacterMailViewModel.NAV_ARG_CHARACTER_ID}"
         }
         CharacterMailPage(
             navController = navController,

@@ -85,6 +85,8 @@ data class BaseLazyColumnItemModel(
     val itemNameAnnotated: AnnotatedString? = null,
     val itemNameColor: Color? = null,
     val itemNameBold: Boolean = false,
+    /** When set, title is clamped to this many lines with ellipsis. Null wraps. */
+    val itemNameMaxLines: Int? = null,
     /** Prefer this over [itemHint] when multiple lines or custom colors are needed. */
     val itemHints: List<BaseLazyColumnItemHint> = emptyList(),
     /** Single hint shorthand; used only when [itemHints] is empty. */
@@ -239,6 +241,12 @@ fun BaseLazyColumnItem(
                                 Spacer(modifier = Modifier.width(hintIconGap))
                             }
                             val nameAnnotated = model.itemNameAnnotated
+                            val titleMaxLines = model.itemNameMaxLines
+                            val titleModifier = if (titleMaxLines != null) {
+                                Modifier.weight(1f)
+                            } else {
+                                Modifier.weight(1f, fill = false)
+                            }
                             if (nameAnnotated != null) {
                                 Text(
                                     text = nameAnnotated,
@@ -249,7 +257,13 @@ fun BaseLazyColumnItem(
                                     },
                                     fontSize = titleTextSize,
                                     lineHeight = titleLineHeight,
-                                    modifier = Modifier.weight(1f, fill = false),
+                                    maxLines = titleMaxLines ?: Int.MAX_VALUE,
+                                    overflow = if (titleMaxLines != null) {
+                                        TextOverflow.Ellipsis
+                                    } else {
+                                        TextOverflow.Clip
+                                    },
+                                    modifier = titleModifier,
                                 )
                             } else {
                                 Text(
@@ -262,7 +276,13 @@ fun BaseLazyColumnItem(
                                     },
                                     fontSize = titleTextSize,
                                     lineHeight = titleLineHeight,
-                                    modifier = Modifier.weight(1f, fill = false),
+                                    maxLines = titleMaxLines ?: Int.MAX_VALUE,
+                                    overflow = if (titleMaxLines != null) {
+                                        TextOverflow.Ellipsis
+                                    } else {
+                                        TextOverflow.Clip
+                                    },
+                                    modifier = titleModifier,
                                 )
                             }
                             if (titleTrailingContent != null) {

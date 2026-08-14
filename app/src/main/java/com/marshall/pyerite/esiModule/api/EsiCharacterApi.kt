@@ -9,6 +9,8 @@ import com.marshall.pyerite.esiModule.model.EsiCharacterMedalDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterOnlineDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterShipDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterSkillsDto
+import com.marshall.pyerite.esiModule.model.EsiMailHeaderDto
+import com.marshall.pyerite.esiModule.model.EsiMailingListDto
 import com.marshall.pyerite.esiModule.model.EsiSkillQueueEntryDto
 import okhttp3.ResponseBody
 import retrofit2.http.GET
@@ -100,4 +102,18 @@ internal interface EsiCharacterApi {
         @Path("character_id") characterId: Long,
         @Header("Authorization") authorization: String,
     ): EsiCharacterOnlineDto
+
+    @Headers("Accept: application/json")
+    @GET("characters/{character_id}/mail")
+    suspend fun fetchMailHeaders(
+        @Path("character_id") characterId: Long,
+        @Header("Authorization") authorization: String,
+    ): List<EsiMailHeaderDto>
+
+    @Headers("Accept: application/json")
+    @GET("characters/{character_id}/mail/lists")
+    suspend fun fetchMailingLists(
+        @Path("character_id") characterId: Long,
+        @Header("Authorization") authorization: String,
+    ): List<EsiMailingListDto>
 }
