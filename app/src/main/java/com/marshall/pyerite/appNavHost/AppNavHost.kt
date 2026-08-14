@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.marshall.pyerite.characterClonesModule.navHost.characterClonesNavGraph
+import com.marshall.pyerite.characterMailModule.navHost.characterMailNavGraph
 import com.marshall.pyerite.characterSheetModule.navHost.characterSheetNavGraph
 import com.marshall.pyerite.characterSkillsModule.navHost.characterSkillsNavGraph
 import com.marshall.pyerite.charactersListModule.navHost.charactersListNavGraph
@@ -25,5 +26,6 @@ fun AppNavHost() {
         characterSheetNavGraph(navController)
         characterClonesNavGraph(navController)
         characterSkillsNavGraph(navController)
+        characterMailNavGraph(navController)
     }
 }

@@ -10,6 +10,8 @@
     <string name="character_sheet_skill_points">%1$s SP</string>
     <string name="character_clone_status">克隆体状态</string>
     <string name="character_skills">技能</string>
+    <string name="character_mail">EVE 邮件</string>
+    <string name="character_mail_all">全部邮件</string>
     <string name="character_skills_hint_idle">空闲：无技能训练队列</string>
     <string name="character_skills_hint_paused">暂停：%1$d个技能（%2$s）</string>
     <string name="character_skills_hint_training">训练中：%1$d个技能（%2$s）</string>
