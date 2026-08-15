@@ -3,7 +3,7 @@ package com.marshall.pyerite.characterMailModule.viewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.marshall.pyerite.characterMailModule.model.CharacterMailInbox
+import com.marshall.pyerite.characterMailModule.model.CharacterMailDetail
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,17 +11,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-internal class CharacterMailViewModel(
+internal class CharacterMailDetailViewModel(
     savedStateHandle: SavedStateHandle,
     private val repository: CharacterMailRepository,
 ) : ViewModel() {
 
-    val characterId: Long = checkNotNull(savedStateHandle[NAV_ARG_CHARACTER_ID]) {
+    private val characterId: Long = checkNotNull(savedStateHandle[NAV_ARG_CHARACTER_ID]) {
         "Missing $NAV_ARG_CHARACTER_ID"
+    }
+    private val mailId: Long = checkNotNull(savedStateHandle[NAV_ARG_MAIL_ID]) {
+        "Missing $NAV_ARG_MAIL_ID"
     }
 
     private val _uiState = MutableStateFlow(initialUiState())
-    val uiState: StateFlow<CharacterMailUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<CharacterMailDetailUiState> = _uiState.asStateFlow()
 
     private var loadJob: Job? = null
 
@@ -34,18 +37,18 @@ internal class CharacterMailViewModel(
         load(indicateLoading = true)
     }
 
-    private fun initialUiState(): CharacterMailUiState {
-        val cached = repository.cachedInbox(characterId)
+    private fun initialUiState(): CharacterMailDetailUiState {
+        val cached = repository.cachedDetail(characterId, mailId)
         return if (cached != null) {
-            CharacterMailUiState(
-                inbox = cached,
+            CharacterMailDetailUiState(
+                detail = cached,
                 isLoading = false,
                 loadFailed = false,
                 detailsReady = true,
             )
         } else {
-            CharacterMailUiState(
-                inbox = CharacterMailInbox.empty(characterId),
+            CharacterMailDetailUiState(
+                detail = repository.seedDetail(characterId, mailId),
                 isLoading = true,
                 loadFailed = false,
                 detailsReady = false,
@@ -60,12 +63,12 @@ internal class CharacterMailViewModel(
             _uiState.update {
                 it.copy(isLoading = indicateLoading, loadFailed = false)
             }
-            val result = runCatching { repository.loadInbox(characterId) }
+            val result = runCatching { repository.loadDetail(characterId, mailId) }
             _uiState.update { current ->
                 result.fold(
-                    onSuccess = { inbox ->
+                    onSuccess = { detail ->
                         current.copy(
-                            inbox = inbox,
+                            detail = detail,
                             isLoading = false,
                             loadFailed = false,
                             detailsReady = true,
@@ -83,12 +86,13 @@ internal class CharacterMailViewModel(
     }
 
     companion object {
-        const val NAV_ARG_CHARACTER_ID = "characterId"
+        const val NAV_ARG_CHARACTER_ID = CharacterMailViewModel.NAV_ARG_CHARACTER_ID
+        const val NAV_ARG_MAIL_ID = "mailId"
     }
 }
 
-internal data class CharacterMailUiState(
-    val inbox: CharacterMailInbox,
+internal data class CharacterMailDetailUiState(
+    val detail: CharacterMailDetail,
     val isLoading: Boolean,
     val loadFailed: Boolean,
     val detailsReady: Boolean,

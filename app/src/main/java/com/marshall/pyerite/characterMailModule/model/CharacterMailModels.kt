@@ -19,3 +19,34 @@ internal data class CharacterMailHeader(
     val senderPortraitUrl: String?,
     val receivedAtEpochMs: Long?,
 )
+
+internal data class CharacterMailDetail(
+    val mailId: Long,
+    val subject: String,
+    val bodyHtml: String,
+    val senderName: String?,
+    val senderPortraitUrl: String?,
+    val receivedAtEpochMs: Long?,
+    val recipients: List<CharacterMailParticipant>,
+) {
+    companion object {
+        fun seed(
+            mailId: Long,
+            header: CharacterMailHeader?,
+        ) = CharacterMailDetail(
+            mailId = mailId,
+            subject = header?.subject.orEmpty(),
+            bodyHtml = "",
+            senderName = header?.senderName,
+            senderPortraitUrl = header?.senderPortraitUrl,
+            receivedAtEpochMs = header?.receivedAtEpochMs,
+            recipients = emptyList(),
+        )
+    }
+}
+
+internal data class CharacterMailParticipant(
+    val id: Long,
+    val name: String?,
+    val portraitUrl: String?,
+)

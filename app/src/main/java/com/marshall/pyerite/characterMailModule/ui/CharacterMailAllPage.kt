@@ -11,18 +11,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.characterMailModule.model.CharacterMailHeader
+import com.marshall.pyerite.characterMailModule.navHost.CharacterMailRoute
 import com.marshall.pyerite.characterMailModule.viewModel.CharacterMailViewModel
-import com.marshall.pyerite.esiModule.model.EsiDateTimeConfig
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemHint
@@ -35,10 +30,6 @@ import com.marshall.pyerite.ui.golbalComponents.PyeritePullToRefreshBox
 import com.marshall.pyerite.ui.golbalComponents.pyeritePullRefreshTopBarAction
 import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
 import com.marshall.pyerite.ui.golbalComponents.rememberScrollTitleCollapsed
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.TimeZone
 import org.koin.androidx.compose.koinViewModel
 
 private object CharacterMailListItemLayout {
@@ -91,6 +82,11 @@ internal fun CharacterMailAllPage(
                     detailsPending = !uiState.detailsReady,
                     loadFailed = uiState.loadFailed,
                     placeholder = placeholder,
+                    onMailClick = { mailId ->
+                        navController.navigate(
+                            CharacterMailRoute.Detail.create(viewModel.characterId, mailId),
+                        )
+                    },
                 )
             }
         }
@@ -103,6 +99,7 @@ private fun CharacterMailAllListSection(
     detailsPending: Boolean,
     loadFailed: Boolean,
     placeholder: String,
+    onMailClick: (mailId: Long) -> Unit,
 ) {
     BaseContainer(
         title = null,
@@ -149,6 +146,7 @@ private fun CharacterMailAllListSection(
                             mail = mail,
                             placeholder = placeholder,
                             showDivider = index != mails.lastIndex,
+                            onClick = { onMailClick(mail.mailId) },
                         )
                     }
                 }
@@ -162,6 +160,7 @@ private fun CharacterMailListItem(
     mail: CharacterMailHeader,
     placeholder: String,
     showDivider: Boolean,
+    onClick: () -> Unit,
 ) {
     val subject = mail.subject.takeIf { it.isNotBlank() } ?: placeholder
     val senderName = mail.senderName?.takeIf { it.isNotBlank() } ?: placeholder
@@ -178,7 +177,7 @@ private fun CharacterMailListItem(
                 BaseLazyColumnItemHint(text = receivedText),
             ),
             showChevron = true,
-            onClick = null,
+            onClick = onClick,
         ),
         showDivider = showDivider,
         leadingContent = { iconSize ->
@@ -189,26 +188,4 @@ private fun CharacterMailListItem(
             )
         },
     )
-}
-
-@Composable
-private fun mailSenderHint(senderName: String) = buildAnnotatedString {
-    val hintColor = colorResource(R.color.hint_text)
-    withStyle(SpanStyle(color = hintColor, fontWeight = FontWeight.Bold)) {
-        append(stringResource(R.string.character_mail_sender_label))
-    }
-    withStyle(SpanStyle(color = hintColor)) {
-        append(stringResource(R.string.character_mail_sender_separator))
-        append(senderName)
-    }
-}
-
-/** ESI timestamps are UTC; show them in the device local timezone. */
-private fun formatMailReceivedAt(epochMs: Long): String {
-    return SimpleDateFormat(
-        EsiDateTimeConfig.DISPLAY_DATE_TIME_PATTERN,
-        Locale.US,
-    ).apply {
-        timeZone = TimeZone.getDefault()
-    }.format(Date(epochMs))
 }

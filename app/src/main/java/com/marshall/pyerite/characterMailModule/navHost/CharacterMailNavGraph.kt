@@ -6,7 +6,9 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.marshall.pyerite.characterMailModule.ui.CharacterMailAllPage
+import com.marshall.pyerite.characterMailModule.ui.CharacterMailDetailPage
 import com.marshall.pyerite.characterMailModule.ui.CharacterMailPage
+import com.marshall.pyerite.characterMailModule.viewModel.CharacterMailDetailViewModel
 import com.marshall.pyerite.characterMailModule.viewModel.CharacterMailViewModel
 
 fun NavGraphBuilder.characterMailNavGraph(
@@ -34,5 +36,16 @@ fun NavGraphBuilder.characterMailNavGraph(
         arguments = listOf(characterIdArgument),
     ) {
         CharacterMailAllPage(navController = navController)
+    }
+    composable(
+        route = CharacterMailRoute.Detail.route,
+        arguments = listOf(
+            characterIdArgument,
+            navArgument(CharacterMailDetailViewModel.NAV_ARG_MAIL_ID) {
+                type = NavType.LongType
+            },
+        ),
+    ) {
+        CharacterMailDetailPage(navController = navController)
     }
 }

@@ -190,4 +190,10 @@
     <dimen name="character_sheet_status_tag_vertical_padding">2dp</dimen>
     <dimen name="character_sheet_status_tag_gap">8dp</dimen>
     <dimen name="character_sheet_status_tag_text_size">11sp</dimen>
+
+    <!-- Mail detail header -->
+    <dimen name="character_mail_detail_sender_avatar_size">40dp</dimen>
+    <dimen name="character_mail_detail_expand_icon_size">16dp</dimen>
+    <dimen name="character_mail_detail_header_gap">12dp</dimen>
+    <dimen name="character_mail_detail_meta_gap">8dp</dimen>
 </resources>

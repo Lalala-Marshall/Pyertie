@@ -170,6 +170,17 @@ internal data class EsiMailHeaderDto(
 )
 
 @Serializable
+internal data class EsiMailBodyDto(
+    val body: String? = null,
+    val from: Long? = null,
+    val labels: List<Int> = emptyList(),
+    val read: Boolean? = null,
+    val recipients: List<EsiMailRecipientDto> = emptyList(),
+    val subject: String? = null,
+    val timestamp: String? = null,
+)
+
+@Serializable
 internal data class EsiMailRecipientDto(
     @SerialName("recipient_id") val recipientId: Long,
     @SerialName("recipient_type") val recipientType: String,
@@ -193,6 +204,11 @@ internal object EsiUniverseNameCategory {
     const val CHARACTER = "character"
     const val CORPORATION = "corporation"
     const val ALLIANCE = "alliance"
+}
+
+/** Wire `recipient_type` values from ESI mail headers / bodies that are not universe name categories. */
+internal object EsiMailRecipientType {
+    const val MAILING_LIST = "mailing_list"
 }
 
 internal data class EsiOrganization(

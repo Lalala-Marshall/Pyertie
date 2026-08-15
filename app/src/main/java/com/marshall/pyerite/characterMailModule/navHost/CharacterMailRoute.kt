@@ -9,4 +9,8 @@ sealed class CharacterMailRoute(val route: String) {
     object All : CharacterMailRoute("character/mail/{characterId}/all") {
         fun create(characterId: Long) = "character/mail/$characterId/all"
     }
+
+    object Detail : CharacterMailRoute("character/mail/{characterId}/mail/{mailId}") {
+        fun create(characterId: Long, mailId: Long) = "character/mail/$characterId/mail/$mailId"
+    }
 }
