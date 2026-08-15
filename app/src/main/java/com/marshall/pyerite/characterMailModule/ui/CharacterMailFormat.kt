@@ -14,7 +14,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.core.text.HtmlCompat
 import com.marshall.pyerite.R
+import com.marshall.pyerite.characterMailModule.model.CharacterMailMailbox
 import com.marshall.pyerite.esiModule.model.EsiDateTimeConfig
+import com.marshall.pyerite.esiModule.model.EsiMailLabelId
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -38,6 +40,21 @@ internal fun mailSenderHint(senderName: String): AnnotatedString {
 internal fun mailRecipientsLabel(): String {
     return stringResource(R.string.character_mail_recipients_label) +
         stringResource(R.string.character_mail_recipients_separator)
+}
+
+@Composable
+internal fun mailboxDisplayName(
+    mailbox: CharacterMailMailbox,
+    placeholder: String,
+): String {
+    val localized = when (mailbox.labelId) {
+        EsiMailLabelId.INBOX -> stringResource(R.string.character_mail_label_inbox)
+        EsiMailLabelId.SENT -> stringResource(R.string.character_mail_label_sent)
+        EsiMailLabelId.CORPORATION -> stringResource(R.string.character_mail_label_corporation)
+        EsiMailLabelId.ALLIANCE -> stringResource(R.string.character_mail_label_alliance)
+        else -> null
+    }
+    return localized ?: mailbox.name?.takeIf { it.isNotBlank() } ?: placeholder
 }
 
 /** ESI timestamps are UTC; show them in the device local timezone. */

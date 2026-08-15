@@ -37,18 +37,20 @@ private object CharacterMailListItemLayout {
 }
 
 @Composable
-internal fun CharacterMailAllPage(
+internal fun CharacterMailListPage(
     navController: NavController,
     viewModel: CharacterMailViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
-    val pageTitle = stringResource(R.string.character_mail_all)
+    val placeholder = stringResource(R.string.character_sheet_value_placeholder)
+    val pageTitle = viewModel.mailbox?.let { mailbox ->
+        mailboxDisplayName(mailbox, placeholder)
+    } ?: stringResource(R.string.character_mail_all)
     val onBack = navController.rememberNavigateUpAction()
     val showCollapsedTitle = rememberScrollTitleCollapsed(scrollState)
     val sectionGap = dimensionResource(R.dimen.type_detail_section_gap)
     val bottomPadding = dimensionResource(R.dimen.type_detail_bottom_padding)
-    val placeholder = stringResource(R.string.character_sheet_value_placeholder)
     val endActions = listOfNotNull(
         pyeritePullRefreshTopBarAction(
             isRefreshing = uiState.isLoading,
@@ -77,7 +79,7 @@ internal fun CharacterMailAllPage(
             ) {
                 PageTitle(text = pageTitle)
                 Spacer(modifier = Modifier.height(sectionGap))
-                CharacterMailAllListSection(
+                CharacterMailListSection(
                     mails = uiState.inbox.mails,
                     detailsPending = !uiState.detailsReady,
                     loadFailed = uiState.loadFailed,
@@ -94,7 +96,7 @@ internal fun CharacterMailAllPage(
 }
 
 @Composable
-private fun CharacterMailAllListSection(
+private fun CharacterMailListSection(
     mails: List<CharacterMailHeader>,
     detailsPending: Boolean,
     loadFailed: Boolean,

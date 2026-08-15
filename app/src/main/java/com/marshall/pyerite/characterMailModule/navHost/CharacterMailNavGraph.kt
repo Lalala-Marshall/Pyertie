@@ -5,8 +5,8 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.marshall.pyerite.characterMailModule.ui.CharacterMailAllPage
 import com.marshall.pyerite.characterMailModule.ui.CharacterMailDetailPage
+import com.marshall.pyerite.characterMailModule.ui.CharacterMailListPage
 import com.marshall.pyerite.characterMailModule.ui.CharacterMailPage
 import com.marshall.pyerite.characterMailModule.viewModel.CharacterMailDetailViewModel
 import com.marshall.pyerite.characterMailModule.viewModel.CharacterMailViewModel
@@ -20,22 +20,22 @@ fun NavGraphBuilder.characterMailNavGraph(
     composable(
         route = CharacterMailRoute.Root.route,
         arguments = listOf(characterIdArgument),
-    ) { entry ->
-        val characterId = checkNotNull(
-            entry.arguments?.getLong(CharacterMailViewModel.NAV_ARG_CHARACTER_ID),
-        ) {
-            "Missing ${CharacterMailViewModel.NAV_ARG_CHARACTER_ID}"
-        }
+    ) {
         CharacterMailPage(
             navController = navController,
-            characterId = characterId,
         )
     }
     composable(
-        route = CharacterMailRoute.All.route,
-        arguments = listOf(characterIdArgument),
+        route = CharacterMailRoute.List.route,
+        arguments = listOf(
+            characterIdArgument,
+            navArgument(CharacterMailViewModel.NAV_ARG_LABEL_ID) {
+                type = NavType.IntType
+                defaultValue = CharacterMailViewModel.NAV_LABEL_ID_UNFILTERED
+            },
+        ),
     ) {
-        CharacterMailAllPage(navController = navController)
+        CharacterMailListPage(navController = navController)
     }
     composable(
         route = CharacterMailRoute.Detail.route,

@@ -193,6 +193,30 @@ internal data class EsiMailingListDto(
 )
 
 @Serializable
+internal data class EsiMailLabelsDto(
+    val labels: List<EsiMailLabelDto> = emptyList(),
+)
+
+@Serializable
+internal data class EsiMailLabelDto(
+    @SerialName("label_id") val labelId: Int,
+    val name: String? = null,
+)
+
+/** System mail label IDs returned by ESI `/mail/labels`. */
+internal object EsiMailLabelId {
+    const val INBOX = 1
+    const val SENT = 2
+    const val CORPORATION = 4
+    const val ALLIANCE = 8
+}
+
+/** Query parameter names for ESI mail list routes. */
+internal object EsiMailQuery {
+    const val LABELS = "labels"
+}
+
+@Serializable
 internal data class EsiUniverseNameDto(
     val id: Long,
     val name: String,

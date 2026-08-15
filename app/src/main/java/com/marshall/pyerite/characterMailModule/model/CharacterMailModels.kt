@@ -2,11 +2,13 @@ package com.marshall.pyerite.characterMailModule.model
 
 internal data class CharacterMailInbox(
     val characterId: Long,
+    val labelId: Int? = null,
     val mails: List<CharacterMailHeader>,
 ) {
     companion object {
-        fun empty(characterId: Long) = CharacterMailInbox(
+        fun empty(characterId: Long, labelId: Int? = null) = CharacterMailInbox(
             characterId = characterId,
+            labelId = labelId,
             mails = emptyList(),
         )
     }
@@ -49,4 +51,21 @@ internal data class CharacterMailParticipant(
     val id: Long,
     val name: String?,
     val portraitUrl: String?,
+)
+
+internal data class CharacterMailMailboxes(
+    val characterId: Long,
+    val mailboxes: List<CharacterMailMailbox>,
+) {
+    companion object {
+        fun empty(characterId: Long) = CharacterMailMailboxes(
+            characterId = characterId,
+            mailboxes = emptyList(),
+        )
+    }
+}
+
+internal data class CharacterMailMailbox(
+    val labelId: Int,
+    val name: String?,
 )

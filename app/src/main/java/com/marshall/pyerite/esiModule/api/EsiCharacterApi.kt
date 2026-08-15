@@ -11,13 +11,16 @@ import com.marshall.pyerite.esiModule.model.EsiCharacterShipDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterSkillsDto
 import com.marshall.pyerite.esiModule.model.EsiMailBodyDto
 import com.marshall.pyerite.esiModule.model.EsiMailHeaderDto
+import com.marshall.pyerite.esiModule.model.EsiMailLabelsDto
 import com.marshall.pyerite.esiModule.model.EsiMailingListDto
+import com.marshall.pyerite.esiModule.model.EsiMailQuery
 import com.marshall.pyerite.esiModule.model.EsiSkillQueueEntryDto
 import okhttp3.ResponseBody
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Headers
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 /**
  * ESI `/characters/...` routes (OpenAPI 3.1, no `/latest`, no trailing slash).
@@ -109,7 +112,15 @@ internal interface EsiCharacterApi {
     suspend fun fetchMailHeaders(
         @Path("character_id") characterId: Long,
         @Header("Authorization") authorization: String,
+        @Query(EsiMailQuery.LABELS) labels: List<Int>? = null,
     ): List<EsiMailHeaderDto>
+
+    @Headers("Accept: application/json")
+    @GET("characters/{character_id}/mail/labels")
+    suspend fun fetchMailLabels(
+        @Path("character_id") characterId: Long,
+        @Header("Authorization") authorization: String,
+    ): EsiMailLabelsDto
 
     @Headers("Accept: application/json")
     @GET("characters/{character_id}/mail/lists")

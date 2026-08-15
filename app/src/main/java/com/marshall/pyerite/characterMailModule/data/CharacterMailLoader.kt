@@ -3,6 +3,8 @@ package com.marshall.pyerite.characterMailModule.data
 import com.marshall.pyerite.characterMailModule.model.CharacterMailDetail
 import com.marshall.pyerite.characterMailModule.model.CharacterMailHeader
 import com.marshall.pyerite.characterMailModule.model.CharacterMailInbox
+import com.marshall.pyerite.characterMailModule.model.CharacterMailMailbox
+import com.marshall.pyerite.characterMailModule.model.CharacterMailMailboxes
 import com.marshall.pyerite.characterMailModule.model.CharacterMailParticipant
 import com.marshall.pyerite.esiModule.api.EsiCharacterApi
 import com.marshall.pyerite.esiModule.api.EsiUniverseApi
@@ -27,11 +29,18 @@ internal class CharacterMailLoader(
     private val characterApi: EsiCharacterApi,
     private val universeApi: EsiUniverseApi,
 ) {
-    suspend fun load(characterId: Long): CharacterMailInbox = withContext(Dispatchers.IO) {
+    suspend fun load(
+        characterId: Long,
+        labelId: Int? = null,
+    ): CharacterMailInbox = withContext(Dispatchers.IO) {
         coroutineScope {
             val headersDeferred = async {
                 tokenManager.executeWithAuthRetry(characterId) { auth ->
-                    characterApi.fetchMailHeaders(characterId, auth)
+                    characterApi.fetchMailHeaders(
+                        characterId,
+                        auth,
+                        labels = labelId?.let { listOf(it) },
+                    )
                 }
             }
             val listsDeferred = async {
@@ -50,6 +59,7 @@ internal class CharacterMailLoader(
 
             CharacterMailInbox(
                 characterId = characterId,
+                labelId = labelId,
                 mails = headers.map { header ->
                     val sender = resolveParty(header.from, recipientType = null, mailingLists, namesById)
                     CharacterMailHeader(
@@ -63,6 +73,22 @@ internal class CharacterMailLoader(
             )
         }
     }
+
+    suspend fun loadMailboxes(characterId: Long): CharacterMailMailboxes =
+        withContext(Dispatchers.IO) {
+            val dto = tokenManager.executeWithAuthRetry(characterId) { auth ->
+                characterApi.fetchMailLabels(characterId, auth)
+            }
+            CharacterMailMailboxes(
+                characterId = characterId,
+                mailboxes = dto.labels.map { label ->
+                    CharacterMailMailbox(
+                        labelId = label.labelId,
+                        name = label.name?.takeIf { it.isNotBlank() },
+                    )
+                },
+            )
+        }
 
     suspend fun loadDetail(
         characterId: Long,

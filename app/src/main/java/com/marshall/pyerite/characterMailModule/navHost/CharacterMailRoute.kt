@@ -6,8 +6,17 @@ sealed class CharacterMailRoute(val route: String) {
         fun create(characterId: Long) = "character/mail/$characterId"
     }
 
-    object All : CharacterMailRoute("character/mail/{characterId}/all") {
-        fun create(characterId: Long) = "character/mail/$characterId/all"
+    object List : CharacterMailRoute(
+        "character/mail/{characterId}/list?labelId={labelId}",
+    ) {
+        fun create(characterId: Long, labelId: Int? = null): String {
+            val path = "character/mail/$characterId/list"
+            return if (labelId == null) {
+                path
+            } else {
+                "$path?labelId=$labelId"
+            }
+        }
     }
 
     object Detail : CharacterMailRoute("character/mail/{characterId}/mail/{mailId}") {

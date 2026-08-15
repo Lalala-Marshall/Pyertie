@@ -12,6 +12,12 @@
     <string name="character_mail">EVE Mail</string>
     <string name="character_mail_all">All Mail</string>
     <string name="character_mail_all_empty">No mail</string>
+    <string name="character_mail_mailboxes">All Mailboxes</string>
+    <string name="character_mail_mailboxes_empty">No mailboxes</string>
+    <string name="character_mail_label_inbox">Inbox</string>
+    <string name="character_mail_label_sent">Sent</string>
+    <string name="character_mail_label_corporation">Corporation Mailbox</string>
+    <string name="character_mail_label_alliance">Alliance Mailbox</string>
     <string name="character_mail_sender_label">From</string>
     <string name="character_mail_sender_separator">: </string>
     <string name="character_mail_recipients_label">To</string>

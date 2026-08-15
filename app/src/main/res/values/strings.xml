@@ -13,6 +13,12 @@
     <string name="character_mail">EVE 邮件</string>
     <string name="character_mail_all">全部邮件</string>
     <string name="character_mail_all_empty">暂无邮件</string>
+    <string name="character_mail_mailboxes">所有邮箱</string>
+    <string name="character_mail_mailboxes_empty">暂无邮箱</string>
+    <string name="character_mail_label_inbox">收件箱</string>
+    <string name="character_mail_label_sent">已发送</string>
+    <string name="character_mail_label_corporation">军团邮箱</string>
+    <string name="character_mail_label_alliance">联盟邮箱</string>
     <string name="character_mail_sender_label">发件人</string>
     <string name="character_mail_sender_separator">：</string>
     <string name="character_mail_recipients_label">收件人</string>
