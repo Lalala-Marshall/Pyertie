@@ -6,6 +6,7 @@ import com.marshall.pyerite.characterMailModule.model.CharacterMailHeader
 import com.marshall.pyerite.characterMailModule.model.CharacterMailInbox
 import com.marshall.pyerite.characterMailModule.model.CharacterMailMailbox
 import com.marshall.pyerite.characterMailModule.model.CharacterMailMailboxes
+import com.marshall.pyerite.characterMailModule.model.MailComposeRecipient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
@@ -16,6 +17,8 @@ internal class CharacterMailRepository(
     private val inboxByKey = ConcurrentHashMap<MailListKey, CharacterMailInbox>()
     private val mailboxesByCharacterId = ConcurrentHashMap<Long, CharacterMailMailboxes>()
     private val detailByKey = ConcurrentHashMap<MailDetailKey, CharacterMailDetail>()
+    private val recentContactsByCharacterId = ConcurrentHashMap<Long, List<MailComposeRecipient>>()
+    private val mailingListsByCharacterId = ConcurrentHashMap<Long, List<MailComposeRecipient>>()
 
     fun cachedInbox(characterId: Long, labelId: Int? = null): CharacterMailInbox? =
         inboxByKey[MailListKey(characterId, labelId)]
@@ -60,6 +63,42 @@ internal class CharacterMailRepository(
             detailByKey[MailDetailKey(characterId, mailId)] = loaded
             loaded
         }
+
+    suspend fun loadRecentMailContacts(characterId: Long): List<MailComposeRecipient> =
+        withContext(Dispatchers.IO) {
+            recentContactsByCharacterId[characterId]?.let { return@withContext it }
+            mailLoader.loadRecentMailContacts(characterId).also { loaded ->
+                recentContactsByCharacterId[characterId] = loaded
+            }
+        }
+
+    suspend fun loadSubscribedMailingLists(characterId: Long): List<MailComposeRecipient> =
+        withContext(Dispatchers.IO) {
+            mailingListsByCharacterId[characterId]?.let { return@withContext it }
+            mailLoader.loadSubscribedMailingLists(characterId).also { loaded ->
+                mailingListsByCharacterId[characterId] = loaded
+            }
+        }
+
+    suspend fun searchUniverseRecipients(query: String): List<MailComposeRecipient> =
+        mailLoader.searchUniverseRecipients(query)
+
+    suspend fun sendMail(
+        characterId: Long,
+        recipients: List<MailComposeRecipient>,
+        subject: String,
+        body: String,
+    ) = withContext(Dispatchers.IO) {
+        mailLoader.sendMail(characterId, recipients, subject, body)
+        invalidateAfterSend(characterId)
+    }
+
+    private fun invalidateAfterSend(characterId: Long) {
+        inboxByKey.keys.filter { key -> key.characterId == characterId }.forEach { key ->
+            inboxByKey.remove(key)
+        }
+        recentContactsByCharacterId.remove(characterId)
+    }
 
     private fun findHeader(characterId: Long, mailId: Long): CharacterMailHeader? {
         inboxByKey.values.forEach { inbox ->

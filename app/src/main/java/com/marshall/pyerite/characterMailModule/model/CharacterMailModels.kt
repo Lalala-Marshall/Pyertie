@@ -69,3 +69,17 @@ internal data class CharacterMailMailbox(
     val labelId: Int,
     val name: String?,
 )
+
+internal enum class MailRecipientKind {
+    CHARACTER,
+    CORPORATION,
+    ALLIANCE,
+    MAILING_LIST,
+}
+
+internal data class MailComposeRecipient(
+    val id: Long,
+    val name: String?,
+    val portraitUrl: String?,
+    val kind: MailRecipientKind,
+)

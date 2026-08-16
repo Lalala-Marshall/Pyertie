@@ -16,4 +16,8 @@ object EsiConfig {
         const val PORTRAIT_SIZE = 128
         const val LOGO_SIZE = 64
     }
+
+    object HttpStatus {
+        const val NOT_FOUND = 404
+    }
 }

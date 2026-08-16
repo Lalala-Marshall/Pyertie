@@ -7,9 +7,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
@@ -27,6 +32,7 @@ import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
 import com.marshall.pyerite.ui.golbalComponents.PageTitle
 import com.marshall.pyerite.ui.golbalComponents.PyeritePageScaffold
 import com.marshall.pyerite.ui.golbalComponents.PyeritePullToRefreshBox
+import com.marshall.pyerite.ui.golbalComponents.PyeriteTopBarActionItem
 import com.marshall.pyerite.ui.golbalComponents.pyeritePullRefreshTopBarAction
 import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
 import com.marshall.pyerite.ui.golbalComponents.rememberScrollTitleCollapsed
@@ -45,11 +51,18 @@ internal fun CharacterMailPage(
     val sectionGap = dimensionResource(R.dimen.type_detail_section_gap)
     val bottomPadding = dimensionResource(R.dimen.type_detail_bottom_padding)
     val placeholder = stringResource(R.string.character_sheet_value_placeholder)
+    var showComposeSheet by rememberSaveable { mutableStateOf(false) }
+    val composeDescription = stringResource(R.string.character_mail_compose)
     val endActions = listOfNotNull(
         pyeritePullRefreshTopBarAction(
             isRefreshing = uiState.isLoading,
             refreshFailed = uiState.loadFailed,
             onRefresh = viewModel::refresh,
+        ),
+        PyeriteTopBarActionItem(
+            onClick = { showComposeSheet = true },
+            icon = Icons.Outlined.Edit,
+            contentDescription = composeDescription,
         ),
     )
 
@@ -94,6 +107,12 @@ internal fun CharacterMailPage(
                 )
             }
         }
+    }
+
+    if (showComposeSheet) {
+        CharacterMailComposeBottomSheet(
+            onDismiss = { showComposeSheet = false },
+        )
     }
 }
 

@@ -14,11 +14,14 @@ import com.marshall.pyerite.esiModule.model.EsiMailHeaderDto
 import com.marshall.pyerite.esiModule.model.EsiMailLabelsDto
 import com.marshall.pyerite.esiModule.model.EsiMailingListDto
 import com.marshall.pyerite.esiModule.model.EsiMailQuery
+import com.marshall.pyerite.esiModule.model.EsiSendMailRequestDto
 import com.marshall.pyerite.esiModule.model.EsiSkillQueueEntryDto
 import okhttp3.ResponseBody
+import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Headers
+import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -136,4 +139,12 @@ internal interface EsiCharacterApi {
         @Path("mail_id") mailId: Long,
         @Header("Authorization") authorization: String,
     ): EsiMailBodyDto
+
+    @Headers("Accept: application/json", "Content-Type: application/json")
+    @POST("characters/{character_id}/mail")
+    suspend fun sendMail(
+        @Path("character_id") characterId: Long,
+        @Header("Authorization") authorization: String,
+        @Body mail: EsiSendMailRequestDto,
+    ): ResponseBody
 }

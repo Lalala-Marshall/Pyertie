@@ -1,5 +1,6 @@
 package com.marshall.pyerite.esiModule.api
 
+import com.marshall.pyerite.esiModule.model.EsiUniverseIdsDto
 import com.marshall.pyerite.esiModule.model.EsiUniverseNameDto
 import com.marshall.pyerite.esiModule.model.EsiUniverseStarDto
 import com.marshall.pyerite.esiModule.model.EsiUniverseStationDto
@@ -45,4 +46,10 @@ internal interface EsiUniverseApi {
     suspend fun fetchUniverseNames(
         @Body ids: List<Long>,
     ): List<EsiUniverseNameDto>
+
+    @Headers("Accept: application/json")
+    @POST("universe/ids")
+    suspend fun fetchUniverseIds(
+        @Body names: List<String>,
+    ): EsiUniverseIdsDto
 }

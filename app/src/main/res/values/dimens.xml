@@ -196,4 +196,14 @@
     <dimen name="character_mail_detail_expand_icon_size">16dp</dimen>
     <dimen name="character_mail_detail_header_gap">12dp</dimen>
     <dimen name="character_mail_detail_meta_gap">8dp</dimen>
+    <!-- Mail compose sheet -->
+    <dimen name="character_mail_compose_sheet_corner">28dp</dimen>
+    <dimen name="character_mail_compose_sheet_horizontal_padding">16dp</dimen>
+    <dimen name="character_mail_compose_header_top_padding">12dp</dimen>
+    <dimen name="character_mail_compose_header_title_inset">64dp</dimen>
+    <dimen name="character_mail_compose_search_top_gap">12dp</dimen>
+    <dimen name="character_mail_compose_search_bottom_gap">12dp</dimen>
+    <dimen name="character_mail_compose_search_icon_size">20dp</dimen>
+    <dimen name="character_mail_compose_search_icon_gap">8dp</dimen>
+    <dimen name="character_mail_compose_search_horizontal_padding">12dp</dimen>
 </resources>
