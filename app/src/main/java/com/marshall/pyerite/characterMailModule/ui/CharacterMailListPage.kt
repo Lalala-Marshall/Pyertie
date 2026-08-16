@@ -10,9 +10,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.characterMailModule.model.CharacterMailHeader
@@ -30,10 +32,45 @@ import com.marshall.pyerite.ui.golbalComponents.PyeritePullToRefreshBox
 import com.marshall.pyerite.ui.golbalComponents.pyeritePullRefreshTopBarAction
 import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
 import com.marshall.pyerite.ui.golbalComponents.rememberScrollTitleCollapsed
+import java.util.concurrent.TimeUnit
 import org.koin.androidx.compose.koinViewModel
 
 private object CharacterMailListItemLayout {
     const val SUBJECT_MAX_LINES = 1
+}
+
+private object CharacterMailListRecency {
+    const val MAX_AGE_DAYS = 7L
+    val maxAgeMs: Long = TimeUnit.DAYS.toMillis(MAX_AGE_DAYS)
+}
+
+private data class GroupedMailsByRecency(
+    val recent: List<CharacterMailHeader>,
+    val older: List<CharacterMailHeader>,
+)
+
+private fun groupMailsByRecency(
+    mails: List<CharacterMailHeader>,
+    nowEpochMs: Long,
+): GroupedMailsByRecency {
+    val cutoffEpochMs = nowEpochMs - CharacterMailListRecency.maxAgeMs
+    val newestFirst = compareByDescending<CharacterMailHeader> { mail ->
+        mail.receivedAtEpochMs ?: Long.MIN_VALUE
+    }
+    val recent = mutableListOf<CharacterMailHeader>()
+    val older = mutableListOf<CharacterMailHeader>()
+    for (mail in mails) {
+        val receivedAt = mail.receivedAtEpochMs
+        if (receivedAt != null && receivedAt >= cutoffEpochMs) {
+            recent += mail
+        } else {
+            older += mail
+        }
+    }
+    return GroupedMailsByRecency(
+        recent = recent.sortedWith(newestFirst),
+        older = older.sortedWith(newestFirst),
+    )
 }
 
 @Composable
@@ -79,11 +116,12 @@ internal fun CharacterMailListPage(
             ) {
                 PageTitle(text = pageTitle)
                 Spacer(modifier = Modifier.height(sectionGap))
-                CharacterMailListSection(
+                CharacterMailListContent(
                     mails = uiState.inbox.mails,
                     detailsPending = !uiState.detailsReady,
                     loadFailed = uiState.loadFailed,
                     placeholder = placeholder,
+                    sectionGap = sectionGap,
                     onMailClick = { mailId ->
                         navController.navigate(
                             CharacterMailRoute.Detail.create(viewModel.characterId, mailId),
@@ -96,61 +134,102 @@ internal fun CharacterMailListPage(
 }
 
 @Composable
-private fun CharacterMailListSection(
+private fun CharacterMailListContent(
     mails: List<CharacterMailHeader>,
     detailsPending: Boolean,
     loadFailed: Boolean,
     placeholder: String,
+    sectionGap: Dp,
+    onMailClick: (mailId: Long) -> Unit,
+) {
+    when {
+        detailsPending -> {
+            CharacterMailListSection(
+                title = null,
+                mails = emptyList(),
+                placeholder = placeholder,
+                statusText = placeholder,
+                onMailClick = onMailClick,
+            )
+        }
+        loadFailed && mails.isEmpty() -> {
+            CharacterMailListSection(
+                title = null,
+                mails = emptyList(),
+                placeholder = placeholder,
+                statusText = stringResource(R.string.character_sheet_load_failed),
+                onMailClick = onMailClick,
+            )
+        }
+        mails.isEmpty() -> {
+            CharacterMailListSection(
+                title = null,
+                mails = emptyList(),
+                placeholder = placeholder,
+                statusText = stringResource(R.string.character_mail_all_empty),
+                onMailClick = onMailClick,
+            )
+        }
+        else -> {
+            val grouped = remember(mails) {
+                groupMailsByRecency(mails, System.currentTimeMillis())
+            }
+            if (grouped.recent.isNotEmpty()) {
+                CharacterMailListSection(
+                    title = stringResource(R.string.character_mail_recent),
+                    mails = grouped.recent,
+                    placeholder = placeholder,
+                    statusText = null,
+                    onMailClick = onMailClick,
+                )
+            }
+            if (grouped.recent.isNotEmpty() && grouped.older.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(sectionGap))
+            }
+            if (grouped.older.isNotEmpty()) {
+                CharacterMailListSection(
+                    title = null,
+                    mails = grouped.older,
+                    placeholder = placeholder,
+                    statusText = null,
+                    onMailClick = onMailClick,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CharacterMailListSection(
+    title: String?,
+    mails: List<CharacterMailHeader>,
+    placeholder: String,
+    statusText: String?,
     onMailClick: (mailId: Long) -> Unit,
 ) {
     BaseContainer(
-        title = null,
+        title = title,
         useSystemBarsPadding = false,
     ) {
-        when {
-            detailsPending -> {
-                BaseLazyColumnItem(
-                    model = BaseLazyColumnItemModel(
-                        showLeadingIcon = false,
-                        itemName = placeholder,
-                        showChevron = false,
-                        onClick = null,
-                    ),
-                    showDivider = false,
-                )
-            }
-            loadFailed && mails.isEmpty() -> {
-                BaseLazyColumnItem(
-                    model = BaseLazyColumnItemModel(
-                        showLeadingIcon = false,
-                        itemName = stringResource(R.string.character_sheet_load_failed),
-                        showChevron = false,
-                        onClick = null,
-                    ),
-                    showDivider = false,
-                )
-            }
-            mails.isEmpty() -> {
-                BaseLazyColumnItem(
-                    model = BaseLazyColumnItemModel(
-                        showLeadingIcon = false,
-                        itemName = stringResource(R.string.character_mail_all_empty),
-                        showChevron = false,
-                        onClick = null,
-                    ),
-                    showDivider = false,
-                )
-            }
-            else -> {
-                Column {
-                    mails.forEachIndexed { index, mail ->
-                        CharacterMailListItem(
-                            mail = mail,
-                            placeholder = placeholder,
-                            showDivider = index != mails.lastIndex,
-                            onClick = { onMailClick(mail.mailId) },
-                        )
-                    }
+        if (statusText != null) {
+            BaseLazyColumnItem(
+                model = BaseLazyColumnItemModel(
+                    showLeadingIcon = false,
+                    itemName = statusText,
+                    showChevron = false,
+                    onClick = null,
+                ),
+                showDivider = false,
+            )
+        } else {
+            Column {
+                mails.forEachIndexed { index, mail ->
+                    CharacterMailListItem(
+                        mail = mail,
+                        placeholder = placeholder,
+                        showDivider = index != mails.lastIndex,
+                        onClick = { onMailClick(mail.mailId) },
+                    )
                 }
             }
         }

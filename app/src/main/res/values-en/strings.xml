@@ -12,6 +12,7 @@
     <string name="character_mail">EVE Mail</string>
     <string name="character_mail_all">All Mail</string>
     <string name="character_mail_all_empty">No mail</string>
+    <string name="character_mail_recent">Recent</string>
     <string name="character_mail_mailboxes">All Mailboxes</string>
     <string name="character_mail_mailboxes_empty">No mailboxes</string>
     <string name="character_mail_label_inbox">Inbox</string>

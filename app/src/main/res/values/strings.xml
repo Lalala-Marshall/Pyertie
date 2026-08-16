@@ -13,6 +13,7 @@
     <string name="character_mail">EVE 邮件</string>
     <string name="character_mail_all">全部邮件</string>
     <string name="character_mail_all_empty">暂无邮件</string>
+    <string name="character_mail_recent">近期</string>
     <string name="character_mail_mailboxes">所有邮箱</string>
     <string name="character_mail_mailboxes_empty">暂无邮箱</string>
     <string name="character_mail_label_inbox">收件箱</string>
