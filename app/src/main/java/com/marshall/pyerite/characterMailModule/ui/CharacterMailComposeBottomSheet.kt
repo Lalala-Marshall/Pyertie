@@ -33,6 +33,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.sp
 import com.marshall.pyerite.R
+import com.marshall.pyerite.characterMailModule.model.CharacterMailComposeDraft
 import com.marshall.pyerite.characterMailModule.model.MailComposeRecipient
 import com.marshall.pyerite.characterMailModule.viewModel.CharacterMailComposeViewModel
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
@@ -43,6 +44,8 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 internal fun CharacterMailComposeBottomSheet(
     onDismiss: () -> Unit,
+    title: String = stringResource(R.string.character_mail_compose),
+    draft: CharacterMailComposeDraft = CharacterMailComposeDraft(),
     viewModel: CharacterMailComposeViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -52,9 +55,13 @@ internal fun CharacterMailComposeBottomSheet(
     val sectionGap = dimensionResource(R.dimen.type_detail_section_gap)
     val bottomPadding = dimensionResource(R.dimen.type_detail_bottom_padding)
     val bodyFocusRequester = remember { FocusRequester() }
-    var subject by rememberSaveable { mutableStateOf("") }
-    var body by rememberSaveable { mutableStateOf("") }
-    val selectedRecipients = remember { mutableStateListOf<MailComposeRecipient>() }
+    var subject by rememberSaveable { mutableStateOf(draft.subject) }
+    var body by rememberSaveable { mutableStateOf(draft.body) }
+    val selectedRecipients = remember {
+        mutableStateListOf<MailComposeRecipient>().also { selected ->
+            selected.addAll(draft.recipients)
+        }
+    }
     var showRecipientPicker by rememberSaveable { mutableStateOf(false) }
     var showMailingListPicker by rememberSaveable { mutableStateOf(false) }
     val canSend = selectedRecipients.isNotEmpty() &&
@@ -80,7 +87,7 @@ internal fun CharacterMailComposeBottomSheet(
         onDismiss = { if (!uiState.isSending) onDismiss() },
         header = {
             CharacterMailSheetHeader(
-                title = stringResource(R.string.character_mail_compose),
+                title = title,
                 startLabel = stringResource(R.string.character_mail_compose_cancel),
                 startEnabled = !uiState.isSending,
                 onStart = { if (!uiState.isSending) onDismiss() },

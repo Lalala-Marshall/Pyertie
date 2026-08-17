@@ -26,6 +26,9 @@
     <string name="character_mail_recipients_separator">：</string>
     <string name="character_mail_show_more">显示更多</string>
     <string name="character_mail_show_less">收起</string>
+    <string name="character_mail_reply">回复</string>
+    <string name="character_mail_reply_all">回复全体</string>
+    <string name="character_mail_forward">转发</string>
     <string name="character_mail_compose">新邮件</string>
     <string name="character_mail_compose_cancel">取消</string>
     <string name="character_mail_compose_send">发送</string>

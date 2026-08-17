@@ -70,7 +70,10 @@ internal fun formatMailReceivedAt(epochMs: Long): String {
 /** Parse ESI mail HTML; drop link/font color and underlines so the body matches page text. */
 internal fun mailBodyWithoutLinkStyling(html: String): CharSequence {
     val spannable = SpannableString(
-        HtmlCompat.fromHtml(html, HtmlCompat.FROM_HTML_MODE_COMPACT),
+        HtmlCompat.fromHtml(
+            htmlWithPreservedLineBreaks(html),
+            HtmlCompat.FROM_HTML_MODE_COMPACT,
+        ),
     )
     spannable.getSpans(0, spannable.length, ForegroundColorSpan::class.java)
         .forEach(spannable::removeSpan)
@@ -79,4 +82,30 @@ internal fun mailBodyWithoutLinkStyling(html: String): CharSequence {
     spannable.getSpans(0, spannable.length, URLSpan::class.java)
         .forEach(spannable::removeSpan)
     return spannable
+}
+
+internal fun mailBodyPlainText(html: String): String {
+    if (html.isBlank()) return ""
+    return HtmlCompat.fromHtml(
+        htmlWithPreservedLineBreaks(html),
+        HtmlCompat.FROM_HTML_MODE_COMPACT,
+    )
+        .toString()
+        .trim()
+}
+
+/** ESI / in-game mail often uses raw newlines instead of {@code <br>}; HTML parsing would collapse them. */
+private fun htmlWithPreservedLineBreaks(html: String): String {
+    if (html.isEmpty()) return html
+    val normalized = html
+        .replace(MailBodyHtml.CRLF, MailBodyHtml.NEWLINE)
+        .replace(MailBodyHtml.CARRIAGE_RETURN, MailBodyHtml.NEWLINE)
+    return normalized.replace(MailBodyHtml.NEWLINE, MailBodyHtml.BREAK_TAG)
+}
+
+private object MailBodyHtml {
+    const val BREAK_TAG = "<br>"
+    const val NEWLINE = "\n"
+    const val CARRIAGE_RETURN = "\r"
+    const val CRLF = "\r\n"
 }

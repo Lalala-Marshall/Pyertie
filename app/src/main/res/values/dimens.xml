@@ -196,6 +196,9 @@
     <dimen name="character_mail_detail_expand_icon_size">16dp</dimen>
     <dimen name="character_mail_detail_header_gap">12dp</dimen>
     <dimen name="character_mail_detail_meta_gap">8dp</dimen>
+    <dimen name="character_mail_detail_action_bar_height">56dp</dimen>
+    <dimen name="character_mail_detail_action_icon_size">24dp</dimen>
+    <dimen name="character_mail_detail_action_icon_text_gap">4dp</dimen>
     <!-- Mail compose sheet -->
     <dimen name="character_mail_compose_sheet_corner">28dp</dimen>
     <dimen name="character_mail_compose_sheet_horizontal_padding">16dp</dimen>

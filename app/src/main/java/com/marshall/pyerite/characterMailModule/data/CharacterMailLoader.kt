@@ -114,7 +114,7 @@ internal class CharacterMailLoader(
         }.getOrElse { emptyList() }.associateBy { it.mailingListId }
         val fromId = dto.from
         val idsForNames = buildList {
-            if (cachedHeader == null && fromId != null && fromId !in lists) {
+            if (fromId != null && fromId !in lists) {
                 add(fromId)
             }
             dto.recipients.forEach { recipient ->
@@ -124,20 +124,23 @@ internal class CharacterMailLoader(
             }
         }.distinct()
         val namesById = resolveUniverseNames(idsForNames)
+        val resolvedSender = resolveParty(fromId, recipientType = null, lists, namesById)
         val sender = if (cachedHeader != null) {
-            ResolvedMailParty(
-                name = cachedHeader.senderName,
-                portraitUrl = cachedHeader.senderPortraitUrl,
+            resolvedSender.copy(
+                name = cachedHeader.senderName ?: resolvedSender.name,
+                portraitUrl = cachedHeader.senderPortraitUrl ?: resolvedSender.portraitUrl,
             )
         } else {
-            resolveParty(fromId, recipientType = null, lists, namesById)
+            resolvedSender
         }
         CharacterMailDetail(
             mailId = mailId,
             subject = dto.subject?.takeIf { it.isNotBlank() } ?: cachedHeader?.subject.orEmpty(),
             bodyHtml = dto.body.orEmpty(),
+            senderId = fromId,
             senderName = sender.name,
             senderPortraitUrl = sender.portraitUrl,
+            senderKind = sender.kind,
             receivedAtEpochMs = parseEsiDateMillis(dto.timestamp) ?: cachedHeader?.receivedAtEpochMs,
             recipients = dto.recipients.map { recipient ->
                 resolveParty(
@@ -273,13 +276,17 @@ internal class CharacterMailLoader(
     ): ResolvedMailParty {
         if (id == null) return ResolvedMailParty()
         mailingLists[id]?.let { list ->
-            return ResolvedMailParty(name = list.name.takeIf { it.isNotBlank() })
+            return ResolvedMailParty(
+                name = list.name.takeIf { it.isNotBlank() },
+                kind = MailRecipientKind.MAILING_LIST,
+            )
         }
         val named = namesById[id]
         val category = named?.category ?: recipientType
         return ResolvedMailParty(
             name = named?.name?.takeIf { it.isNotBlank() },
             portraitUrl = portraitUrlForCategory(id, category),
+            kind = mailRecipientKindFor(category),
         )
     }
 
@@ -294,12 +301,14 @@ internal class CharacterMailLoader(
 private data class ResolvedMailParty(
     val name: String? = null,
     val portraitUrl: String? = null,
+    val kind: MailRecipientKind? = null,
 )
 
 private fun ResolvedMailParty.toParticipant(id: Long) = CharacterMailParticipant(
     id = id,
     name = name,
     portraitUrl = portraitUrl,
+    kind = kind ?: MailRecipientKind.CHARACTER,
 )
 
 private fun isMailPartyRecipientType(type: String): Boolean = when (type) {
@@ -311,7 +320,7 @@ private fun isMailPartyRecipientType(type: String): Boolean = when (type) {
 }
 
 private fun EsiUniverseNameDto.toComposeRecipient(): MailComposeRecipient? {
-    val kind = mailRecipientKindForCategory(category) ?: return null
+    val kind = mailRecipientKindFor(category) ?: return null
     return MailComposeRecipient(
         id = id,
         name = name.takeIf { it.isNotBlank() },
@@ -337,10 +346,11 @@ private fun List<EsiUniverseIdNameDto>.toComposeRecipients(
     )
 }
 
-private fun mailRecipientKindForCategory(category: String): MailRecipientKind? = when (category) {
+private fun mailRecipientKindFor(categoryOrType: String?): MailRecipientKind? = when (categoryOrType) {
     EsiUniverseNameCategory.CHARACTER -> MailRecipientKind.CHARACTER
     EsiUniverseNameCategory.CORPORATION -> MailRecipientKind.CORPORATION
     EsiUniverseNameCategory.ALLIANCE -> MailRecipientKind.ALLIANCE
+    EsiMailRecipientType.MAILING_LIST -> MailRecipientKind.MAILING_LIST
     else -> null
 }
 

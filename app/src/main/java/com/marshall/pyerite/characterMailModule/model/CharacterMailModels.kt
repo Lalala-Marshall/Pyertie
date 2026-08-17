@@ -26,8 +26,10 @@ internal data class CharacterMailDetail(
     val mailId: Long,
     val subject: String,
     val bodyHtml: String,
+    val senderId: Long?,
     val senderName: String?,
     val senderPortraitUrl: String?,
+    val senderKind: MailRecipientKind?,
     val receivedAtEpochMs: Long?,
     val recipients: List<CharacterMailParticipant>,
 ) {
@@ -39,8 +41,10 @@ internal data class CharacterMailDetail(
             mailId = mailId,
             subject = header?.subject.orEmpty(),
             bodyHtml = "",
+            senderId = null,
             senderName = header?.senderName,
             senderPortraitUrl = header?.senderPortraitUrl,
+            senderKind = null,
             receivedAtEpochMs = header?.receivedAtEpochMs,
             recipients = emptyList(),
         )
@@ -51,6 +55,7 @@ internal data class CharacterMailParticipant(
     val id: Long,
     val name: String?,
     val portraitUrl: String?,
+    val kind: MailRecipientKind,
 )
 
 internal data class CharacterMailMailboxes(
@@ -82,4 +87,16 @@ internal data class MailComposeRecipient(
     val name: String?,
     val portraitUrl: String?,
     val kind: MailRecipientKind,
+)
+
+internal enum class MailComposeAction {
+    REPLY,
+    REPLY_ALL,
+    FORWARD,
+}
+
+internal data class CharacterMailComposeDraft(
+    val recipients: List<MailComposeRecipient> = emptyList(),
+    val subject: String = "",
+    val body: String = "",
 )

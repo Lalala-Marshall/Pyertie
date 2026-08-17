@@ -25,6 +25,9 @@
     <string name="character_mail_recipients_separator">: </string>
     <string name="character_mail_show_more">Show more</string>
     <string name="character_mail_show_less">Show less</string>
+    <string name="character_mail_reply">Reply</string>
+    <string name="character_mail_reply_all">Reply All</string>
+    <string name="character_mail_forward">Forward</string>
     <string name="character_mail_compose">New Mail</string>
     <string name="character_mail_compose_cancel">Cancel</string>
     <string name="character_mail_compose_send">Send</string>

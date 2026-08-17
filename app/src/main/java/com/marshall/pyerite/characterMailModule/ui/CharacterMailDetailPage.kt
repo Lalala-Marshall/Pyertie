@@ -1,20 +1,26 @@
 package com.marshall.pyerite.characterMailModule.ui
 
 import android.widget.TextView
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Reply
+import androidx.compose.material.icons.automirrored.outlined.ReplyAll
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.HorizontalDivider
@@ -24,16 +30,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -41,6 +51,7 @@ import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.characterMailModule.model.CharacterMailDetail
 import com.marshall.pyerite.characterMailModule.model.CharacterMailParticipant
+import com.marshall.pyerite.characterMailModule.model.MailComposeAction
 import com.marshall.pyerite.characterMailModule.viewModel.CharacterMailDetailViewModel
 import com.marshall.pyerite.ui.golbalComponents.CharacterAvatar
 import com.marshall.pyerite.ui.golbalComponents.PyeriteIconShape
@@ -53,6 +64,11 @@ import org.koin.androidx.compose.koinViewModel
 
 private object CharacterMailDetailHeaderLayout {
     const val EXPAND_MIN_RECIPIENTS = 2
+}
+
+private object CharacterMailDetailActionIcon {
+    const val HORIZONTAL_FLIP = -1f
+    const val NO_FLIP = 1f
 }
 
 @Composable
@@ -69,6 +85,7 @@ internal fun CharacterMailDetailPage(
     val headerGap = dimensionResource(R.dimen.character_mail_detail_header_gap)
     val bottomPadding = dimensionResource(R.dimen.type_detail_bottom_padding)
     val horizontalPadding = dimensionResource(R.dimen.detail_card_horizontal_padding)
+    var composeAction by rememberSaveable { mutableStateOf<MailComposeAction?>(null) }
     val endActions = listOfNotNull(
         pyeritePullRefreshTopBarAction(
             isRefreshing = uiState.isLoading,
@@ -83,54 +100,196 @@ internal fun CharacterMailDetailPage(
         onBack = onBack,
         endActions = endActions,
     ) { topBarPadding ->
-        PyeritePullToRefreshBox(
-            onRefresh = viewModel::refresh,
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(topBarPadding),
         ) {
-            Column(
+            PyeritePullToRefreshBox(
+                onRefresh = viewModel::refresh,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(horizontal = horizontalPadding)
-                    .padding(bottom = bottomPadding),
+                    .weight(1f)
+                    .fillMaxWidth(),
             ) {
-                MailDetailTitle(text = subject)
-                Spacer(modifier = Modifier.height(headerGap))
-                MailDetailMeta(
-                    detail = uiState.detail,
-                    placeholder = placeholder,
-                )
-                Spacer(modifier = Modifier.height(headerGap))
-                when {
-                    !uiState.detailsReady -> {
-                        Text(
-                            text = placeholder,
-                            color = colorResource(R.color.hint_text),
-                            fontSize = dimensionResource(R.dimen.type_detail_body_text_size).value.sp,
-                        )
-                    }
-                    uiState.loadFailed && uiState.detail.bodyHtml.isBlank() -> {
-                        Text(
-                            text = stringResource(R.string.character_sheet_load_failed),
-                            color = colorResource(R.color.text_primary),
-                            fontSize = dimensionResource(R.dimen.type_detail_body_text_size).value.sp,
-                        )
-                    }
-                    uiState.detail.bodyHtml.isBlank() -> {
-                        Text(
-                            text = placeholder,
-                            color = colorResource(R.color.hint_text),
-                            fontSize = dimensionResource(R.dimen.type_detail_body_text_size).value.sp,
-                        )
-                    }
-                    else -> {
-                        MailDetailBody(html = uiState.detail.bodyHtml)
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .padding(horizontal = horizontalPadding)
+                        .padding(bottom = bottomPadding),
+                ) {
+                    MailDetailTitle(text = subject)
+                    Spacer(modifier = Modifier.height(headerGap))
+                    MailDetailMeta(
+                        detail = uiState.detail,
+                        placeholder = placeholder,
+                    )
+                    Spacer(modifier = Modifier.height(headerGap))
+                    when {
+                        !uiState.detailsReady -> {
+                            Text(
+                                text = placeholder,
+                                color = colorResource(R.color.hint_text),
+                                fontSize = dimensionResource(R.dimen.type_detail_body_text_size).value.sp,
+                            )
+                        }
+                        uiState.loadFailed && uiState.detail.bodyHtml.isBlank() -> {
+                            Text(
+                                text = stringResource(R.string.character_sheet_load_failed),
+                                color = colorResource(R.color.text_primary),
+                                fontSize = dimensionResource(R.dimen.type_detail_body_text_size).value.sp,
+                            )
+                        }
+                        uiState.detail.bodyHtml.isBlank() -> {
+                            Text(
+                                text = placeholder,
+                                color = colorResource(R.color.hint_text),
+                                fontSize = dimensionResource(R.dimen.type_detail_body_text_size).value.sp,
+                            )
+                        }
+                        else -> {
+                            MailDetailBody(html = uiState.detail.bodyHtml)
+                        }
                     }
                 }
             }
+            MailDetailActionBar(
+                enabled = uiState.detailsReady,
+                onReply = { composeAction = MailComposeAction.REPLY },
+                onReplyAll = { composeAction = MailComposeAction.REPLY_ALL },
+                onForward = { composeAction = MailComposeAction.FORWARD },
+            )
         }
+    }
+
+    composeAction?.let { action ->
+        val draft = remember(
+            action,
+            uiState.detail,
+            viewModel.characterId,
+        ) {
+            uiState.detail.toComposeDraft(
+                action = action,
+                selfCharacterId = viewModel.characterId,
+            )
+        }
+        CharacterMailComposeBottomSheet(
+            title = composeActionTitle(action),
+            draft = draft,
+            onDismiss = { composeAction = null },
+        )
+    }
+}
+
+@Composable
+private fun composeActionTitle(action: MailComposeAction): String = when (action) {
+    MailComposeAction.REPLY -> stringResource(R.string.character_mail_reply)
+    MailComposeAction.REPLY_ALL -> stringResource(R.string.character_mail_reply_all)
+    MailComposeAction.FORWARD -> stringResource(R.string.character_mail_forward)
+}
+
+@Composable
+private fun MailDetailActionBar(
+    enabled: Boolean,
+    onReply: () -> Unit,
+    onReplyAll: () -> Unit,
+    onForward: () -> Unit,
+) {
+    val barHeight = dimensionResource(R.dimen.character_mail_detail_action_bar_height)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(colorResource(R.color.second_background))
+            .navigationBarsPadding(),
+    ) {
+        HorizontalDivider(
+            thickness = dimensionResource(R.dimen.detail_divider_thickness),
+            color = colorResource(R.color.border),
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(barHeight),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            MailDetailActionButton(
+                icon = Icons.AutoMirrored.Outlined.Reply,
+                label = stringResource(R.string.character_mail_reply),
+                enabled = enabled,
+                onClick = onReply,
+                modifier = Modifier.weight(1f),
+            )
+            MailDetailActionButton(
+                icon = Icons.AutoMirrored.Outlined.ReplyAll,
+                label = stringResource(R.string.character_mail_reply_all),
+                enabled = enabled,
+                onClick = onReplyAll,
+                modifier = Modifier.weight(1f),
+            )
+            MailDetailActionButton(
+                icon = Icons.AutoMirrored.Outlined.Reply,
+                label = stringResource(R.string.character_mail_forward),
+                enabled = enabled,
+                onClick = onForward,
+                mirrorHorizontally = true,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun MailDetailActionButton(
+    icon: ImageVector,
+    label: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    mirrorHorizontally: Boolean = false,
+) {
+    val contentColor = if (enabled) {
+        colorResource(R.color.text_primary)
+    } else {
+        colorResource(R.color.hint_text)
+    }
+    Column(
+        modifier = modifier
+            .fillMaxHeight()
+            .clickable(
+                enabled = enabled,
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+                role = Role.Button,
+            )
+            .padding(horizontal = dimensionResource(R.dimen.detail_row_horizontal_padding)),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier
+                .size(dimensionResource(R.dimen.character_mail_detail_action_icon_size))
+                .scale(
+                    scaleX = if (mirrorHorizontally) {
+                        CharacterMailDetailActionIcon.HORIZONTAL_FLIP
+                    } else {
+                        CharacterMailDetailActionIcon.NO_FLIP
+                    },
+                    scaleY = CharacterMailDetailActionIcon.NO_FLIP,
+                ),
+            tint = contentColor,
+        )
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.character_mail_detail_action_icon_text_gap)))
+        Text(
+            text = label,
+            color = contentColor,
+            fontSize = dimensionResource(R.dimen.detail_row_label_subtitle_text_size).value.sp,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 

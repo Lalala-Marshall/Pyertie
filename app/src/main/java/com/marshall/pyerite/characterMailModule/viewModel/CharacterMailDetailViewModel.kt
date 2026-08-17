@@ -16,7 +16,7 @@ internal class CharacterMailDetailViewModel(
     private val repository: CharacterMailRepository,
 ) : ViewModel() {
 
-    private val characterId: Long = checkNotNull(savedStateHandle[NAV_ARG_CHARACTER_ID]) {
+    val characterId: Long = checkNotNull(savedStateHandle[NAV_ARG_CHARACTER_ID]) {
         "Missing $NAV_ARG_CHARACTER_ID"
     }
     private val mailId: Long = checkNotNull(savedStateHandle[NAV_ARG_MAIL_ID]) {
