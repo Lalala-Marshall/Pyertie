@@ -158,6 +158,107 @@ internal data class EsiCharacterPublic(
     val securityStatus: Double? = null,
 )
 
+@Serializable
+internal data class EsiMailHeaderDto(
+    @SerialName("mail_id") val mailId: Long,
+    val subject: String? = null,
+    val from: Long? = null,
+    val timestamp: String? = null,
+    @SerialName("is_read") val isRead: Boolean? = null,
+    val labels: List<Int> = emptyList(),
+    val recipients: List<EsiMailRecipientDto> = emptyList(),
+)
+
+@Serializable
+internal data class EsiMailBodyDto(
+    val body: String? = null,
+    val from: Long? = null,
+    val labels: List<Int> = emptyList(),
+    val read: Boolean? = null,
+    val recipients: List<EsiMailRecipientDto> = emptyList(),
+    val subject: String? = null,
+    val timestamp: String? = null,
+)
+
+@Serializable
+internal data class EsiMailRecipientDto(
+    @SerialName("recipient_id") val recipientId: Long,
+    @SerialName("recipient_type") val recipientType: String,
+)
+
+@Serializable
+internal data class EsiSendMailRequestDto(
+    val recipients: List<EsiMailRecipientDto>,
+    val subject: String,
+    val body: String,
+)
+
+@Serializable
+internal data class EsiMailingListDto(
+    @SerialName("mailing_list_id") val mailingListId: Long,
+    val name: String,
+)
+
+@Serializable
+internal data class EsiMailLabelsDto(
+    val labels: List<EsiMailLabelDto> = emptyList(),
+)
+
+@Serializable
+internal data class EsiMailLabelDto(
+    @SerialName("label_id") val labelId: Int,
+    val name: String? = null,
+)
+
+/** System mail label IDs returned by ESI `/mail/labels`. */
+internal object EsiMailLabelId {
+    const val INBOX = 1
+    const val SENT = 2
+    const val CORPORATION = 4
+    const val ALLIANCE = 8
+}
+
+/** Query parameter names for ESI mail list routes. */
+internal object EsiMailQuery {
+    const val LABELS = "labels"
+}
+
+@Serializable
+internal data class EsiUniverseNameDto(
+    val id: Long,
+    val name: String,
+    val category: String,
+)
+
+/** Wire body from POST `/universe/ids`. Other categories are ignored. */
+@Serializable
+internal data class EsiUniverseIdsDto(
+    val alliances: List<EsiUniverseIdNameDto> = emptyList(),
+    val characters: List<EsiUniverseIdNameDto> = emptyList(),
+    val corporations: List<EsiUniverseIdNameDto> = emptyList(),
+)
+
+@Serializable
+internal data class EsiUniverseIdNameDto(
+    val id: Long,
+    val name: String,
+)
+
+/** Wire `category` values from POST `/universe/names`. */
+internal object EsiUniverseNameCategory {
+    const val CHARACTER = "character"
+    const val CORPORATION = "corporation"
+    const val ALLIANCE = "alliance"
+}
+
+/** Wire `recipient_type` values from ESI mail headers / bodies. */
+internal object EsiMailRecipientType {
+    const val CHARACTER = EsiUniverseNameCategory.CHARACTER
+    const val CORPORATION = EsiUniverseNameCategory.CORPORATION
+    const val ALLIANCE = EsiUniverseNameCategory.ALLIANCE
+    const val MAILING_LIST = "mailing_list"
+}
+
 internal data class EsiOrganization(
     val id: Long,
     val name: String,

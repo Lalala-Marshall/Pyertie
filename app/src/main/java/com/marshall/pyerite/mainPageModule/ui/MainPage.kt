@@ -31,6 +31,8 @@ import com.marshall.pyerite.R
 import com.marshall.pyerite.characterClonesModule.navHost.CharacterClonesRoute
 import com.marshall.pyerite.characterClonesModule.ui.MainPageCloneStatusItem
 import com.marshall.pyerite.characterClonesModule.viewModel.CharacterClonesViewModel
+import com.marshall.pyerite.characterMailModule.navHost.CharacterMailRoute
+import com.marshall.pyerite.characterMailModule.ui.MainPageCharacterMailItem
 import com.marshall.pyerite.characterSheetModule.navHost.CharacterSheetRoute
 import com.marshall.pyerite.characterSheetModule.ui.MainPageCharacterSheetItem
 import com.marshall.pyerite.characterSkillsModule.navHost.CharacterSkillsRoute
@@ -201,12 +203,20 @@ fun MainPage(
                         MainPageSkillQueueItem(
                             status = skillQueueStatus,
                             detailsReady = skillsUiState.detailsReady,
+                            showDivider = true,
                             onClick = {
                                 val characterId = currentCharacter?.characterId
                                     ?: return@MainPageSkillQueueItem
                                 navController.navigate(
                                     CharacterSkillsRoute.Queue.create(characterId),
                                 )
+                            },
+                        )
+                        MainPageCharacterMailItem(
+                            onClick = {
+                                val characterId = currentCharacter?.characterId
+                                    ?: return@MainPageCharacterMailItem
+                                navController.navigate(CharacterMailRoute.Root.create(characterId))
                             },
                         )
                     }

@@ -9,12 +9,21 @@ import com.marshall.pyerite.esiModule.model.EsiCharacterMedalDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterOnlineDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterShipDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterSkillsDto
+import com.marshall.pyerite.esiModule.model.EsiMailBodyDto
+import com.marshall.pyerite.esiModule.model.EsiMailHeaderDto
+import com.marshall.pyerite.esiModule.model.EsiMailLabelsDto
+import com.marshall.pyerite.esiModule.model.EsiMailingListDto
+import com.marshall.pyerite.esiModule.model.EsiMailQuery
+import com.marshall.pyerite.esiModule.model.EsiSendMailRequestDto
 import com.marshall.pyerite.esiModule.model.EsiSkillQueueEntryDto
 import okhttp3.ResponseBody
+import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Headers
+import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 /**
  * ESI `/characters/...` routes (OpenAPI 3.1, no `/latest`, no trailing slash).
@@ -100,4 +109,42 @@ internal interface EsiCharacterApi {
         @Path("character_id") characterId: Long,
         @Header("Authorization") authorization: String,
     ): EsiCharacterOnlineDto
+
+    @Headers("Accept: application/json")
+    @GET("characters/{character_id}/mail")
+    suspend fun fetchMailHeaders(
+        @Path("character_id") characterId: Long,
+        @Header("Authorization") authorization: String,
+        @Query(EsiMailQuery.LABELS) labels: List<Int>? = null,
+    ): List<EsiMailHeaderDto>
+
+    @Headers("Accept: application/json")
+    @GET("characters/{character_id}/mail/labels")
+    suspend fun fetchMailLabels(
+        @Path("character_id") characterId: Long,
+        @Header("Authorization") authorization: String,
+    ): EsiMailLabelsDto
+
+    @Headers("Accept: application/json")
+    @GET("characters/{character_id}/mail/lists")
+    suspend fun fetchMailingLists(
+        @Path("character_id") characterId: Long,
+        @Header("Authorization") authorization: String,
+    ): List<EsiMailingListDto>
+
+    @Headers("Accept: application/json")
+    @GET("characters/{character_id}/mail/{mail_id}")
+    suspend fun fetchMail(
+        @Path("character_id") characterId: Long,
+        @Path("mail_id") mailId: Long,
+        @Header("Authorization") authorization: String,
+    ): EsiMailBodyDto
+
+    @Headers("Accept: application/json", "Content-Type: application/json")
+    @POST("characters/{character_id}/mail")
+    suspend fun sendMail(
+        @Path("character_id") characterId: Long,
+        @Header("Authorization") authorization: String,
+        @Body mail: EsiSendMailRequestDto,
+    ): ResponseBody
 }

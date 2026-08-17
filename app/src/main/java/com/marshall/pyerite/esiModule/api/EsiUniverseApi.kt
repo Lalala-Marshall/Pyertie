@@ -1,13 +1,17 @@
 package com.marshall.pyerite.esiModule.api
 
+import com.marshall.pyerite.esiModule.model.EsiUniverseIdsDto
+import com.marshall.pyerite.esiModule.model.EsiUniverseNameDto
 import com.marshall.pyerite.esiModule.model.EsiUniverseStarDto
 import com.marshall.pyerite.esiModule.model.EsiUniverseStationDto
 import com.marshall.pyerite.esiModule.model.EsiUniverseStructureDto
 import com.marshall.pyerite.esiModule.model.EsiUniverseSystemDto
 import com.marshall.pyerite.esiModule.model.EsiUniverseTypeDto
+import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Headers
+import retrofit2.http.POST
 import retrofit2.http.Path
 
 /**
@@ -36,4 +40,16 @@ internal interface EsiUniverseApi {
     @Headers("Accept: application/json")
     @GET("universe/stations/{station_id}")
     suspend fun fetchStation(@Path("station_id") stationId: Long): EsiUniverseStationDto
+
+    @Headers("Accept: application/json")
+    @POST("universe/names")
+    suspend fun fetchUniverseNames(
+        @Body ids: List<Long>,
+    ): List<EsiUniverseNameDto>
+
+    @Headers("Accept: application/json")
+    @POST("universe/ids")
+    suspend fun fetchUniverseIds(
+        @Body names: List<String>,
+    ): EsiUniverseIdsDto
 }
