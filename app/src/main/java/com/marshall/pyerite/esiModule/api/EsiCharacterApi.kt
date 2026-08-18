@@ -9,6 +9,8 @@ import com.marshall.pyerite.esiModule.model.EsiCharacterMedalDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterOnlineDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterShipDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterSkillsDto
+import com.marshall.pyerite.esiModule.model.EsiContactDto
+import com.marshall.pyerite.esiModule.model.EsiCorporationHistoryDto
 import com.marshall.pyerite.esiModule.model.EsiMailBodyDto
 import com.marshall.pyerite.esiModule.model.EsiMailHeaderDto
 import com.marshall.pyerite.esiModule.model.EsiMailLabelsDto
@@ -32,6 +34,19 @@ internal interface EsiCharacterApi {
     @Headers("Accept: application/json")
     @GET("characters/{character_id}")
     suspend fun fetchCharacter(@Path("character_id") characterId: Long): EsiCharacterDto
+
+    @Headers("Accept: application/json")
+    @GET("characters/{character_id}/corporationhistory")
+    suspend fun fetchCorporationHistory(
+        @Path("character_id") characterId: Long,
+    ): List<EsiCorporationHistoryDto>
+
+    @Headers("Accept: application/json")
+    @GET("characters/{character_id}/contacts")
+    suspend fun fetchContacts(
+        @Path("character_id") characterId: Long,
+        @Header("Authorization") authorization: String,
+    ): List<EsiContactDto>
 
     @Headers("Accept: application/json")
     @GET("characters/{character_id}/wallet")

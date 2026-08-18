@@ -10,12 +10,22 @@ internal data class EsiCharacterDto(
     @SerialName("alliance_id") val allianceId: Long? = null,
     val birthday: String? = null,
     @SerialName("security_status") val securityStatus: Double? = null,
+    val description: String? = null,
+    @SerialName("faction_id") val factionId: Long? = null,
+    @SerialName("race_id") val raceId: Int? = null,
 )
 
 @Serializable
 internal data class EsiOrganizationDto(
     val name: String,
     val ticker: String? = null,
+    val description: String? = null,
+    @SerialName("alliance_id") val allianceId: Long? = null,
+    @SerialName("ceo_id") val ceoId: Long? = null,
+    @SerialName("faction_id") val factionId: Long? = null,
+    @SerialName("member_count") val memberCount: Int? = null,
+    @SerialName("date_founded") val dateFounded: String? = null,
+    @SerialName("executor_corporation_id") val executorCorporationId: Long? = null,
 )
 
 @Serializable
@@ -156,6 +166,9 @@ internal data class EsiCharacterPublic(
     val allianceId: Long?,
     val birthday: String? = null,
     val securityStatus: Double? = null,
+    val description: String? = null,
+    val factionId: Long? = null,
+    val raceId: Int? = null,
 )
 
 @Serializable
@@ -251,6 +264,21 @@ internal object EsiUniverseNameCategory {
     const val ALLIANCE = "alliance"
 }
 
+@Serializable
+internal data class EsiContactDto(
+    @SerialName("contact_id") val contactId: Long,
+    @SerialName("contact_type") val contactType: String,
+    val standing: Double = 0.0,
+)
+
+@Serializable
+internal data class EsiCorporationHistoryDto(
+    @SerialName("corporation_id") val corporationId: Long,
+    @SerialName("record_id") val recordId: Long? = null,
+    @SerialName("start_date") val startDate: String? = null,
+    @SerialName("is_deleted") val isDeleted: Boolean = false,
+)
+
 /** Wire `recipient_type` values from ESI mail headers / bodies. */
 internal object EsiMailRecipientType {
     const val CHARACTER = EsiUniverseNameCategory.CHARACTER
@@ -263,4 +291,11 @@ internal data class EsiOrganization(
     val id: Long,
     val name: String,
     val ticker: String?,
+    val description: String? = null,
+    val allianceId: Long? = null,
+    val ceoId: Long? = null,
+    val factionId: Long? = null,
+    val memberCount: Int? = null,
+    val dateFounded: String? = null,
+    val executorCorporationId: Long? = null,
 )

@@ -48,5 +48,8 @@
     <color name="character_status_positive">#34A853</color>
     <color name="character_status_online">#34A853</color>
     <color name="character_status_offline">#EF5350</color>
+    <color name="entity_profile_npc_tag">#CE93D8</color>
+    <color name="entity_profile_tab_selected_background">#F3F3F3</color>
+    <color name="entity_profile_tab_selected_text">#141A42</color>
 
 </resources>

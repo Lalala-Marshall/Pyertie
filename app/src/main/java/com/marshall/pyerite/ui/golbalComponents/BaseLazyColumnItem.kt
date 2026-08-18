@@ -52,6 +52,7 @@ data class BaseLazyColumnItemHint(
     val color: Color? = null,
     val iconUrl: String? = null,
     val iconRes: Int? = null,
+    val onClick: (() -> Unit)? = null,
 )
 
 /**
@@ -87,6 +88,8 @@ data class BaseLazyColumnItemModel(
     val itemNameBold: Boolean = false,
     /** When set, title is clamped to this many lines with ellipsis. Null wraps. */
     val itemNameMaxLines: Int? = null,
+    /** Click on the title text only (not the whole row). */
+    val itemNameOnClick: (() -> Unit)? = null,
     /** Prefer this over [itemHint] when multiple lines or custom colors are needed. */
     val itemHints: List<BaseLazyColumnItemHint> = emptyList(),
     /** Single hint shorthand; used only when [itemHints] is empty. */
@@ -242,11 +245,19 @@ fun BaseLazyColumnItem(
                             }
                             val nameAnnotated = model.itemNameAnnotated
                             val titleMaxLines = model.itemNameMaxLines
-                            val titleModifier = if (titleMaxLines != null) {
-                                Modifier.weight(1f)
-                            } else {
-                                Modifier.weight(1f, fill = false)
-                            }
+                            val nameClick = model.itemNameOnClick
+                            val titleModifier = Modifier
+                                .weight(
+                                    1f,
+                                    fill = titleMaxLines != null && nameClick == null,
+                                )
+                                .then(
+                                    if (nameClick != null) {
+                                        Modifier.clickable(onClick = nameClick)
+                                    } else {
+                                        Modifier
+                                    },
+                                )
                             if (nameAnnotated != null) {
                                 Text(
                                     text = nameAnnotated,
@@ -291,6 +302,7 @@ fun BaseLazyColumnItem(
                             }
                         }
                         hints.forEach { hint ->
+                            val hintClick = hint.onClick
                             Row(verticalAlignment = Alignment.Top) {
                                 if (showHintLeadingColumn) {
                                     Box(
@@ -316,10 +328,25 @@ fun BaseLazyColumnItem(
                                 } else {
                                     Text(
                                         text = hint.text,
-                                        color = hint.color ?: defaultHintColor,
+                                        color = hint.color
+                                            ?: if (hintClick != null) {
+                                                colorResource(R.color.hyperlink_text)
+                                            } else {
+                                                defaultHintColor
+                                            },
                                         fontSize = hintTextSize,
                                         lineHeight = hintLineHeight,
-                                        modifier = Modifier.weight(1f),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier
+                                            .weight(1f, fill = hintClick == null)
+                                            .then(
+                                                if (hintClick != null) {
+                                                    Modifier.clickable(onClick = hintClick)
+                                                } else {
+                                                    Modifier
+                                                },
+                                            ),
                                     )
                                 }
                             }

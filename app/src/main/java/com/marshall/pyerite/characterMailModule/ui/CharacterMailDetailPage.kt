@@ -52,6 +52,7 @@ import com.marshall.pyerite.R
 import com.marshall.pyerite.characterMailModule.model.CharacterMailDetail
 import com.marshall.pyerite.characterMailModule.model.CharacterMailParticipant
 import com.marshall.pyerite.characterMailModule.model.MailComposeAction
+import com.marshall.pyerite.characterMailModule.model.MailRecipientKind
 import com.marshall.pyerite.characterMailModule.viewModel.CharacterMailDetailViewModel
 import com.marshall.pyerite.ui.golbalComponents.CharacterAvatar
 import com.marshall.pyerite.ui.golbalComponents.PyeriteIconShape
@@ -60,6 +61,9 @@ import com.marshall.pyerite.ui.golbalComponents.PyeritePullToRefreshBox
 import com.marshall.pyerite.ui.golbalComponents.pyeritePullRefreshTopBarAction
 import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
 import com.marshall.pyerite.ui.golbalComponents.rememberScrollTitleCollapsed
+import com.marshall.pyerite.ui.golbalComponents.LocalOpenEntityProfile
+import com.marshall.pyerite.ui.golbalComponents.UniverseEntityKind
+import com.marshall.pyerite.ui.golbalComponents.UniverseEntityRef
 import org.koin.androidx.compose.koinViewModel
 
 private object CharacterMailDetailHeaderLayout {
@@ -348,6 +352,8 @@ private fun MailDetailSenderRow(
     val timeTextSize = dimensionResource(R.dimen.detail_row_label_subtitle_text_size).value.sp
     val timeLineHeight = dimensionResource(R.dimen.detail_row_label_subtitle_line_height).value.sp
     val nameTimeGap = dimensionResource(R.dimen.detail_row_label_subtitle_spacing)
+    val openEntityProfile = LocalOpenEntityProfile.current
+    val senderRef = detail.entityRef()
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -361,10 +367,18 @@ private fun MailDetailSenderRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = senderName,
-                color = colorResource(R.color.text_primary),
+                color = colorResource(
+                    if (senderRef != null) R.color.hyperlink_text else R.color.text_primary,
+                ),
                 fontSize = nameTextSize,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                modifier = senderRef?.let { ref ->
+                    Modifier.clickable(
+                        onClick = { openEntityProfile(ref) },
+                        role = Role.Button,
+                    )
+                } ?: Modifier,
             )
             Spacer(modifier = Modifier.height(nameTimeGap))
             Text(
@@ -389,7 +403,9 @@ private fun MailDetailRecipients(
     val extraGap = dimensionResource(R.dimen.detail_row_label_subtitle_spacing)
     val canExpand = recipients.size >= CharacterMailDetailHeaderLayout.EXPAND_MIN_RECIPIENTS
     var expanded by rememberSaveable(mailId) { mutableStateOf(false) }
-    val firstName = recipients.firstOrNull()?.displayName(placeholder) ?: placeholder
+    val first = recipients.firstOrNull()
+    val firstName = first?.displayName(placeholder) ?: placeholder
+    val openEntityProfile = LocalOpenEntityProfile.current
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Top,
@@ -404,15 +420,15 @@ private fun MailDetailRecipients(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = firstName,
-                    color = colorResource(R.color.text_primary),
-                    fontSize = recipientTextSize,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
+                MailDetailRecipientName(
+                    name = firstName,
+                    fontSizeSp = recipientTextSize,
+                    onClick = first?.entityRef()?.let { ref ->
+                        { openEntityProfile(ref) }
+                    },
                 )
                 if (canExpand) {
+                    Spacer(modifier = Modifier.weight(1f))
                     MailDetailRecipientsToggle(
                         expanded = expanded,
                         onClick = { expanded = !expanded },
@@ -425,12 +441,12 @@ private fun MailDetailRecipients(
                     verticalArrangement = Arrangement.spacedBy(extraGap),
                 ) {
                     recipients.drop(1).forEach { recipient ->
-                        Text(
-                            text = recipient.displayName(placeholder),
-                            color = colorResource(R.color.text_primary),
-                            fontSize = recipientTextSize,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
+                        MailDetailRecipientName(
+                            name = recipient.displayName(placeholder),
+                            fontSizeSp = recipientTextSize,
+                            onClick = recipient.entityRef()?.let { ref ->
+                                { openEntityProfile(ref) }
+                            },
                         )
                     }
                 }
@@ -504,3 +520,46 @@ private fun MailDetailBody(html: String) {
 
 private fun CharacterMailParticipant.displayName(placeholder: String): String =
     name?.takeIf { it.isNotBlank() } ?: placeholder
+
+@Composable
+private fun MailDetailRecipientName(
+    name: String,
+    fontSizeSp: androidx.compose.ui.unit.TextUnit,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)?,
+) {
+    Text(
+        text = name,
+        color = colorResource(
+            if (onClick != null) R.color.hyperlink_text else R.color.text_primary,
+        ),
+        fontSize = fontSizeSp,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier.then(
+            if (onClick != null) {
+                Modifier.clickable(onClick = onClick, role = Role.Button)
+            } else {
+                Modifier
+            },
+        ),
+    )
+}
+
+private fun CharacterMailDetail.entityRef(): UniverseEntityRef? {
+    val id = senderId ?: return null
+    val kind = senderKind?.toUniverseEntityKind() ?: return null
+    return UniverseEntityRef(kind, id)
+}
+
+private fun CharacterMailParticipant.entityRef(): UniverseEntityRef? {
+    val kind = kind.toUniverseEntityKind() ?: return null
+    return UniverseEntityRef(kind, id)
+}
+
+private fun MailRecipientKind.toUniverseEntityKind(): UniverseEntityKind? = when (this) {
+    MailRecipientKind.CHARACTER -> UniverseEntityKind.CHARACTER
+    MailRecipientKind.CORPORATION -> UniverseEntityKind.CORPORATION
+    MailRecipientKind.ALLIANCE -> UniverseEntityKind.ALLIANCE
+    MailRecipientKind.MAILING_LIST -> null
+}
