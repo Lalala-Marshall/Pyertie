@@ -47,7 +47,7 @@
     <color name="character_skill_progress_shimmer">#FFFFFF</color>
     <color name="character_skills_catalog_progress_partial">#D6EAF8</color>
     <color name="character_skills_catalog_progress_complete">#C8E6C9</color>
-    <color name="character_skills_catalog_filter_selected">#FFFFFF</color>
+    <color name="segmented_control_selected">#FFFFFF</color>
     <color name="character_skills_catalog_queue_text">#00BFFF</color>
     <color name="character_skills_catalog_queue_background">#B3EFFF</color>
     <color name="skill_queue_training_progress_fill">#1565C0</color>
@@ -57,4 +57,5 @@
     <color name="character_status_positive">#34A853</color>
     <color name="character_status_online">#34A853</color>
     <color name="character_status_offline">#E53935</color>
+    <color name="entity_profile_npc_tag">#7B1FA2</color>
 </resources>

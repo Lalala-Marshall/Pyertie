@@ -74,6 +74,13 @@
     <dimen name="search_bar_height">44dp</dimen>
     <dimen name="search_bar_vertical_padding">8dp</dimen>
     <dimen name="search_bar_cancel_gap">8dp</dimen>
+    <dimen name="segmented_control_outer_vertical_padding">4dp</dimen>
+    <dimen name="segmented_control_outer_horizontal_padding">20dp</dimen>
+    <dimen name="segmented_control_bar_vertical_padding">3dp</dimen>
+    <dimen name="segmented_control_bar_horizontal_padding">4dp</dimen>
+    <dimen name="segmented_control_item_vertical_padding">6dp</dimen>
+    <dimen name="segmented_control_item_horizontal_padding">8dp</dimen>
+    <dimen name="segmented_control_text_size">14sp</dimen>
 
     <!-- Type summary (basic section) -->
     <dimen name="type_detail_summary_icon_size">64dp</dimen>
@@ -139,12 +146,6 @@
     <dimen name="skill_queue_training_progress_height">4dp</dimen>
     <dimen name="skill_queue_training_progress_corner_radius">2dp</dimen>
     <dimen name="skill_queue_training_progress_vertical_padding">2dp</dimen>
-    <dimen name="character_skills_catalog_filter_outer_vertical_padding">4dp</dimen>
-    <dimen name="character_skills_catalog_filter_outer_horizontal_padding">20dp</dimen>
-    <dimen name="character_skills_catalog_filter_bar_vertical_padding">3dp</dimen>
-    <dimen name="character_skills_catalog_filter_bar_horizontal_padding">4dp</dimen>
-    <dimen name="character_skills_catalog_filter_item_vertical_padding">6dp</dimen>
-    <dimen name="character_skills_catalog_filter_item_horizontal_padding">8dp</dimen>
     <dimen name="skill_level_segments_width">56dp</dimen>
     <dimen name="skill_level_segments_height">10dp</dimen>
     <dimen name="skill_level_segments_border">1dp</dimen>
@@ -209,4 +210,30 @@
     <dimen name="character_mail_compose_search_icon_size">20dp</dimen>
     <dimen name="character_mail_compose_search_icon_gap">8dp</dimen>
     <dimen name="character_mail_compose_search_horizontal_padding">12dp</dimen>
+
+    <!-- Entity profile sheet -->
+    <dimen name="entity_profile_header_avatar_size">96dp</dimen>
+    <dimen name="entity_profile_header_name_text_size">18sp</dimen>
+    <dimen name="entity_profile_header_name_gap">4dp</dimen>
+    <dimen name="entity_profile_header_org_gap">4dp</dimen>
+    <dimen name="entity_profile_header_id_top_gap">8dp</dimen>
+    <dimen name="entity_profile_copy_icon_size">16dp</dimen>
+    <dimen name="entity_profile_copy_icon_gap">4dp</dimen>
+    <dimen name="entity_profile_done_pill_horizontal_padding">12dp</dimen>
+    <dimen name="entity_profile_done_pill_vertical_padding">4dp</dimen>
+    <dimen name="entity_profile_done_pill_corner">14dp</dimen>
+    <dimen name="entity_profile_standing_avatar_size">24dp</dimen>
+    <dimen name="entity_profile_standing_name_gap">6dp</dimen>
+    <dimen name="entity_profile_standing_value_horizontal_padding">8dp</dimen>
+    <dimen name="entity_profile_standing_row_vertical_padding">8dp</dimen>
+    <dimen name="entity_profile_section_title_text_size">13sp</dimen>
+    <dimen name="entity_profile_section_title_padding">12dp</dimen>
+    <dimen name="entity_profile_employment_org_gap">4dp</dimen>
+    <dimen name="entity_profile_npc_tag_horizontal_padding">6dp</dimen>
+    <dimen name="entity_profile_npc_tag_vertical_padding">0dp</dimen>
+    <dimen name="entity_profile_npc_tag_corner">4dp</dimen>
+    <dimen name="entity_profile_npc_tag_text_size">10sp</dimen>
+    <dimen name="entity_profile_npc_tag_gap">6dp</dimen>
+    <dimen name="entity_profile_link_icon_size">18dp</dimen>
+    <dimen name="entity_profile_description_padding">12dp</dimen>
 </resources>

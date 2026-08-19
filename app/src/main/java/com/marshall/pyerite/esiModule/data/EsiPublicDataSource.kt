@@ -6,7 +6,9 @@ import com.marshall.pyerite.esiModule.api.EsiCorporationApi
 import com.marshall.pyerite.esiModule.api.EsiUniverseApi
 import com.marshall.pyerite.esiModule.http.EsiConfig
 import com.marshall.pyerite.esiModule.model.EsiCharacterPublic
+import com.marshall.pyerite.esiModule.model.EsiCorporationHistoryDto
 import com.marshall.pyerite.esiModule.model.EsiOrganization
+import com.marshall.pyerite.esiModule.model.EsiOrganizationDto
 import com.marshall.pyerite.esiModule.model.EsiUniverseStationDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -22,6 +24,7 @@ internal class EsiPublicDataSource(
     private val characterCache = ConcurrentHashMap<Long, EsiCharacterPublic>()
     private val corporationCache = ConcurrentHashMap<Long, EsiOrganization>()
     private val allianceCache = ConcurrentHashMap<Long, EsiOrganization>()
+    private val universeNameCache = ConcurrentHashMap<Long, String>()
 
     suspend fun fetchCharacter(characterId: Long): EsiCharacterPublic = withContext(Dispatchers.IO) {
         characterCache[characterId]?.let { return@withContext it }
@@ -33,6 +36,9 @@ internal class EsiPublicDataSource(
             allianceId = dto.allianceId,
             birthday = dto.birthday,
             securityStatus = dto.securityStatus,
+            description = dto.description?.takeIf { it.isNotBlank() },
+            factionId = dto.factionId,
+            raceId = dto.raceId,
         ).also { characterCache[characterId] = it }
     }
 
@@ -40,22 +46,25 @@ internal class EsiPublicDataSource(
     suspend fun fetchCorporation(corporationId: Long): EsiOrganization = withContext(Dispatchers.IO) {
         corporationCache[corporationId]?.let { return@withContext it }
         val dto = getDto { corporationApi.fetchCorporation(corporationId) }
-        EsiOrganization(
-            id = corporationId,
-            name = dto.name,
-            ticker = dto.ticker?.takeIf { it.isNotBlank() },
-        ).also { corporationCache[corporationId] = it }
+        dto.toOrganization(corporationId).also { corporationCache[corporationId] = it }
     }
 
     /** Public alliance name/ticker — character detail only returns alliance_id. */
     suspend fun fetchAlliance(allianceId: Long): EsiOrganization = withContext(Dispatchers.IO) {
         allianceCache[allianceId]?.let { return@withContext it }
         val dto = getDto { allianceApi.fetchAlliance(allianceId) }
-        EsiOrganization(
-            id = allianceId,
-            name = dto.name,
-            ticker = dto.ticker?.takeIf { it.isNotBlank() },
-        ).also { allianceCache[allianceId] = it }
+        dto.toOrganization(allianceId).also { allianceCache[allianceId] = it }
+    }
+
+    suspend fun fetchCorporationHistory(characterId: Long): List<EsiCorporationHistoryDto> =
+        withContext(Dispatchers.IO) {
+            getDto { characterApi.fetchCorporationHistory(characterId) }
+        }
+
+    suspend fun fetchUniverseName(id: Long): String? = withContext(Dispatchers.IO) {
+        universeNameCache[id]?.let { return@withContext it }
+        val names = runCatching { getDto { universeApi.fetchUniverseNames(listOf(id)) } }.getOrNull()
+        names?.firstOrNull()?.name?.takeIf { it.isNotBlank() }?.also { universeNameCache[id] = it }
     }
 
     suspend fun fetchSolarSystemName(systemId: Long): String? = withContext(Dispatchers.IO) {
@@ -92,6 +101,19 @@ internal class EsiPublicDataSource(
         }
     }
 }
+
+private fun EsiOrganizationDto.toOrganization(id: Long): EsiOrganization = EsiOrganization(
+    id = id,
+    name = name,
+    ticker = ticker?.takeIf { it.isNotBlank() },
+    description = description?.takeIf { it.isNotBlank() },
+    allianceId = allianceId,
+    ceoId = ceoId,
+    factionId = factionId,
+    memberCount = memberCount,
+    dateFounded = dateFounded,
+    executorCorporationId = executorCorporationId,
+)
 
 internal fun portraitUrl(characterId: Long, size: Int = EsiConfig.Image.PORTRAIT_SIZE): String =
     "${EsiConfig.IMAGE_BASE_URL}characters/$characterId/portrait?size=$size"

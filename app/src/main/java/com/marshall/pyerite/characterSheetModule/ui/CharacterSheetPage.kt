@@ -53,6 +53,9 @@ import com.marshall.pyerite.ui.golbalComponents.PyeritePullToRefreshBox
 import com.marshall.pyerite.ui.golbalComponents.pyeritePullRefreshTopBarAction
 import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
 import com.marshall.pyerite.ui.golbalComponents.rememberScrollTitleCollapsed
+import com.marshall.pyerite.ui.golbalComponents.LocalOpenEntityProfile
+import com.marshall.pyerite.ui.golbalComponents.UniverseEntityKind
+import com.marshall.pyerite.ui.golbalComponents.UniverseEntityRef
 import com.marshall.pyerite.util.DurationDisplayFormatter
 import com.marshall.pyerite.util.formatDurationDisplay
 import org.koin.androidx.compose.koinViewModel
@@ -163,6 +166,7 @@ private fun CharacterSheetBasicInfoSection(
     val avatarSize = dimensionResource(R.dimen.character_main_avatar_size)
     val onlineDotSize = dimensionResource(R.dimen.character_sheet_online_dot_size)
     val security = sheet.securityStatus
+    val openEntityProfile = LocalOpenEntityProfile.current
 
     BaseContainer(
         title = stringResource(R.string.character_sheet_basic_info),
@@ -180,16 +184,48 @@ private fun CharacterSheetBasicInfoSection(
                                 name = sheet.corporationName,
                                 nonePlaceholder = nonePlaceholder,
                             ),
-                            color = colorResource(R.color.text_primary),
+                            color = colorResource(
+                                if (sheet.corporationId != null) {
+                                    R.color.hyperlink_text
+                                } else {
+                                    R.color.text_primary
+                                },
+                            ),
                             iconUrl = sheet.corporationIconUrl,
+                            onClick = sheet.corporationId?.let { corporationId ->
+                                {
+                                    openEntityProfile(
+                                        UniverseEntityRef(
+                                            UniverseEntityKind.CORPORATION,
+                                            corporationId,
+                                        ),
+                                    )
+                                }
+                            },
                         ),
                         BaseLazyColumnItemHint(
                             text = orgHintText(
                                 name = sheet.allianceName,
                                 nonePlaceholder = nonePlaceholder,
                             ),
-                            color = colorResource(R.color.text_primary),
+                            color = colorResource(
+                                if (sheet.allianceId != null) {
+                                    R.color.hyperlink_text
+                                } else {
+                                    R.color.text_primary
+                                },
+                            ),
                             iconUrl = sheet.allianceIconUrl,
+                            onClick = sheet.allianceId?.let { allianceId ->
+                                {
+                                    openEntityProfile(
+                                        UniverseEntityRef(
+                                            UniverseEntityKind.ALLIANCE,
+                                            allianceId,
+                                        ),
+                                    )
+                                }
+                            },
                         ),
                     ),
                     showChevron = false,

@@ -336,4 +336,26 @@
     <string name="character_sheet_value_placeholder">—</string>
     <string name="character_sheet_online">Online</string>
     <string name="character_sheet_offline">Offline</string>
+
+    <string name="entity_profile_done">Done</string>
+    <string name="entity_profile_back">Back</string>
+    <string name="entity_profile_id">ID: %1$d</string>
+    <string name="entity_profile_copy_id">Copy ID</string>
+    <string name="entity_profile_copy_id_success">ID copied</string>
+    <string name="entity_profile_ceo">CEO</string>
+    <string name="entity_profile_faction">Faction</string>
+    <string name="entity_profile_evewho">Eve Who</string>
+    <string name="entity_profile_zkillboard">zKillboard</string>
+    <string name="entity_profile_open_external">Open external link</string>
+    <string name="entity_profile_description">Bio</string>
+    <string name="entity_profile_tab_standings">Standings</string>
+    <string name="entity_profile_tab_employment">Employment History</string>
+    <string name="entity_profile_standings_personal">Personal Standings</string>
+    <string name="entity_profile_standings_corporation">Corporation Standings</string>
+    <string name="entity_profile_standings_alliance">Alliance Standings</string>
+    <string name="entity_profile_employment_present">Present</string>
+    <string name="entity_profile_employment_range">%1$s - %2$s (%3$s)</string>
+    <string name="entity_profile_npc_tag">NPC</string>
+    <string name="entity_profile_load_failed">Failed to load</string>
+    <string name="entity_profile_retry">Retry</string>
 </resources>

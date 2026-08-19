@@ -338,4 +338,26 @@
     <string name="character_sheet_value_placeholder">—</string>
     <string name="character_sheet_online">在线</string>
     <string name="character_sheet_offline">离线</string>
+
+    <string name="entity_profile_done">完成</string>
+    <string name="entity_profile_back">返回</string>
+    <string name="entity_profile_id">ID: %1$d</string>
+    <string name="entity_profile_copy_id">复制 ID</string>
+    <string name="entity_profile_copy_id_success">已复制 ID</string>
+    <string name="entity_profile_ceo">CEO</string>
+    <string name="entity_profile_faction">所属势力</string>
+    <string name="entity_profile_evewho">Eve Who</string>
+    <string name="entity_profile_zkillboard">zKillboard</string>
+    <string name="entity_profile_open_external">打开外部链接</string>
+    <string name="entity_profile_description">简介</string>
+    <string name="entity_profile_tab_standings">声望</string>
+    <string name="entity_profile_tab_employment">雇佣历史</string>
+    <string name="entity_profile_standings_personal">个人声望</string>
+    <string name="entity_profile_standings_corporation">军团声望</string>
+    <string name="entity_profile_standings_alliance">联盟声望</string>
+    <string name="entity_profile_employment_present">现在</string>
+    <string name="entity_profile_employment_range">%1$s - %2$s (%3$s)</string>
+    <string name="entity_profile_npc_tag">NPC</string>
+    <string name="entity_profile_load_failed">加载失败</string>
+    <string name="entity_profile_retry">重试</string>
 </resources>

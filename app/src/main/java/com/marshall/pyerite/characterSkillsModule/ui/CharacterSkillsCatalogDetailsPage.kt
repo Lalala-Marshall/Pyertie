@@ -1,8 +1,6 @@
 package com.marshall.pyerite.characterSkillsModule.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,7 +25,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
@@ -38,8 +35,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -66,6 +61,8 @@ import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemHint
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
 import com.marshall.pyerite.ui.golbalComponents.PageTitle
 import com.marshall.pyerite.ui.golbalComponents.PyeritePullToRefreshBox
+import com.marshall.pyerite.ui.golbalComponents.PyeriteSegmentedControl
+import com.marshall.pyerite.ui.golbalComponents.PyeriteSegmentedOption
 import com.marshall.pyerite.ui.golbalComponents.pyeritePullRefreshTopBarAction
 import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
 import com.marshall.pyerite.util.NumberDisplayFormatter
@@ -392,7 +389,25 @@ private fun CatalogFilterCard(
             .clip(shape)
             .background(colorResource(R.color.second_background), shape),
     ) {
-        SkillCatalogFilterRow(
+        PyeriteSegmentedControl(
+            options = listOf(
+                PyeriteSegmentedOption(
+                    SkillCatalogFilter.ALL,
+                    stringResource(R.string.character_skills_catalog_filter_all),
+                ),
+                PyeriteSegmentedOption(
+                    SkillCatalogFilter.COMPLETED,
+                    stringResource(R.string.character_skills_catalog_filter_completed),
+                ),
+                PyeriteSegmentedOption(
+                    SkillCatalogFilter.UNTRAINED,
+                    stringResource(R.string.character_skills_catalog_filter_untrained),
+                ),
+                PyeriteSegmentedOption(
+                    SkillCatalogFilter.TRAINABLE,
+                    stringResource(R.string.character_skills_catalog_filter_trainable),
+                ),
+            ),
             selected = selected,
             onSelect = onSelect,
         )
@@ -444,79 +459,6 @@ private fun catalogGroupsItemShape(
         sectionItemCount == 1 || indexInSection == sectionItemCount - 1 ->
             RoundedCornerShape(bottomStart = corner, bottomEnd = corner)
         else -> RectangleShape
-    }
-}
-
-@Composable
-private fun SkillCatalogFilterRow(
-    selected: SkillCatalogFilter,
-    onSelect: (SkillCatalogFilter) -> Unit,
-) {
-    val filters = listOf(
-        SkillCatalogFilter.ALL to R.string.character_skills_catalog_filter_all,
-        SkillCatalogFilter.COMPLETED to R.string.character_skills_catalog_filter_completed,
-        SkillCatalogFilter.UNTRAINED to R.string.character_skills_catalog_filter_untrained,
-        SkillCatalogFilter.TRAINABLE to R.string.character_skills_catalog_filter_trainable,
-    )
-    val barHeight = dimensionResource(R.dimen.search_bar_height)
-    val shape = RoundedCornerShape(barHeight / 2)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = dimensionResource(R.dimen.character_skills_catalog_filter_outer_horizontal_padding),
-                vertical = dimensionResource(R.dimen.character_skills_catalog_filter_outer_vertical_padding),
-            ),
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(shape)
-                .background(colorResource(R.color.search_field_idle_background), shape)
-                .padding(
-                    horizontal = dimensionResource(R.dimen.character_skills_catalog_filter_bar_horizontal_padding),
-                    vertical = dimensionResource(R.dimen.character_skills_catalog_filter_bar_vertical_padding),
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            filters.forEach { (filter, labelRes) ->
-                val isSelected = selected == filter
-                val itemShape = RoundedCornerShape(barHeight / 2)
-                Text(
-                    text = stringResource(labelRes),
-                    color = if (isSelected) {
-                        colorResource(R.color.text_primary)
-                    } else {
-                        colorResource(R.color.hint_text)
-                    },
-                    fontSize = 14.sp,
-                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    softWrap = false,
-                    overflow = TextOverflow.Clip,
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(itemShape)
-                        .then(
-                            if (isSelected) {
-                                Modifier.background(
-                                    colorResource(R.color.character_skills_catalog_filter_selected),
-                                    itemShape,
-                                )
-                            } else {
-                                Modifier
-                            },
-                        )
-                        .clickable(onClick = { onSelect(filter) })
-                        .padding(
-                            horizontal = dimensionResource(R.dimen.character_skills_catalog_filter_item_horizontal_padding),
-                            vertical = dimensionResource(R.dimen.character_skills_catalog_filter_item_vertical_padding),
-                        ),
-                )
-            }
-        }
     }
 }
 

@@ -10,6 +10,7 @@ import com.marshall.pyerite.sdeModule.sdeModule
 import com.marshall.pyerite.characterClonesModule.characterClonesModule
 import com.marshall.pyerite.characterMailModule.characterMailModule
 import com.marshall.pyerite.characterSheetModule.characterSheetModule
+import com.marshall.pyerite.entityProfileModule.entityProfileModule
 import com.marshall.pyerite.characterSkillsModule.characterSkillsModule
 import com.marshall.pyerite.charactersListModule.charactersListModule
 import com.marshall.pyerite.databaseHierarchyModule.databaseHierarchyModule
@@ -52,6 +53,7 @@ class PyeriteApp : Application() {
                 characterClonesModule,
                 characterSkillsModule,
                 characterMailModule,
+                entityProfileModule,
             )
         }
 

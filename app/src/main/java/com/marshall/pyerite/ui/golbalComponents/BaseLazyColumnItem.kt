@@ -52,6 +52,7 @@ data class BaseLazyColumnItemHint(
     val color: Color? = null,
     val iconUrl: String? = null,
     val iconRes: Int? = null,
+    val onClick: (() -> Unit)? = null,
 )
 
 /**
@@ -87,8 +88,16 @@ data class BaseLazyColumnItemModel(
     val itemNameBold: Boolean = false,
     /** When set, title is clamped to this many lines with ellipsis. Null wraps. */
     val itemNameMaxLines: Int? = null,
+    /** Click on the title text only (not the whole row). */
+    val itemNameOnClick: (() -> Unit)? = null,
     /** Prefer this over [itemHint] when multiple lines or custom colors are needed. */
     val itemHints: List<BaseLazyColumnItemHint> = emptyList(),
+    /**
+     * When true, title and hints share a fixed-width leading column so title text
+     * lines up with hint icons. When false, only hint lines that have an icon
+     * draw one — the title is not indented.
+     */
+    val alignHintLeadingColumn: Boolean = true,
     /** Single hint shorthand; used only when [itemHints] is empty. */
     val itemHint: String = "",
     /** Right-side value before the chevron (e.g. "等级 3", dogma units). */
@@ -177,7 +186,8 @@ fun BaseLazyColumnItem(
     val defaultHintColor = colorResource(R.color.hint_text)
     val trailingColor = model.trailingValueColor ?: defaultHintColor
     val showHintLeadingColumn = titleLeadingContent != null ||
-        hints.any { !it.iconUrl.isNullOrBlank() || it.iconRes != null }
+        (model.alignHintLeadingColumn &&
+            hints.any { !it.iconUrl.isNullOrBlank() || it.iconRes != null })
 
     val rootModifier = modifier
         .fillMaxWidth()
@@ -242,11 +252,19 @@ fun BaseLazyColumnItem(
                             }
                             val nameAnnotated = model.itemNameAnnotated
                             val titleMaxLines = model.itemNameMaxLines
-                            val titleModifier = if (titleMaxLines != null) {
-                                Modifier.weight(1f)
-                            } else {
-                                Modifier.weight(1f, fill = false)
-                            }
+                            val nameClick = model.itemNameOnClick
+                            val titleModifier = Modifier
+                                .weight(
+                                    1f,
+                                    fill = titleMaxLines != null && nameClick == null,
+                                )
+                                .then(
+                                    if (nameClick != null) {
+                                        Modifier.clickable(onClick = nameClick)
+                                    } else {
+                                        Modifier
+                                    },
+                                )
                             if (nameAnnotated != null) {
                                 Text(
                                     text = nameAnnotated,
@@ -291,8 +309,10 @@ fun BaseLazyColumnItem(
                             }
                         }
                         hints.forEach { hint ->
+                            val hintClick = hint.onClick
+                            val hintHasIcon = !hint.iconUrl.isNullOrBlank() || hint.iconRes != null
                             Row(verticalAlignment = Alignment.Top) {
-                                if (showHintLeadingColumn) {
+                                if (showHintLeadingColumn || hintHasIcon) {
                                     Box(
                                         modifier = Modifier.size(hintIconSize),
                                         contentAlignment = Alignment.Center,
@@ -316,10 +336,25 @@ fun BaseLazyColumnItem(
                                 } else {
                                     Text(
                                         text = hint.text,
-                                        color = hint.color ?: defaultHintColor,
+                                        color = hint.color
+                                            ?: if (hintClick != null) {
+                                                colorResource(R.color.hyperlink_text)
+                                            } else {
+                                                defaultHintColor
+                                            },
                                         fontSize = hintTextSize,
                                         lineHeight = hintLineHeight,
-                                        modifier = Modifier.weight(1f),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier
+                                            .weight(1f, fill = hintClick == null)
+                                            .then(
+                                                if (hintClick != null) {
+                                                    Modifier.clickable(onClick = hintClick)
+                                                } else {
+                                                    Modifier
+                                                },
+                                            ),
                                     )
                                 }
                             }
