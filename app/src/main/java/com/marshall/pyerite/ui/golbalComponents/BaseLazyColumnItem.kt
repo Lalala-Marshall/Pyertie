@@ -92,6 +92,12 @@ data class BaseLazyColumnItemModel(
     val itemNameOnClick: (() -> Unit)? = null,
     /** Prefer this over [itemHint] when multiple lines or custom colors are needed. */
     val itemHints: List<BaseLazyColumnItemHint> = emptyList(),
+    /**
+     * When true, title and hints share a fixed-width leading column so title text
+     * lines up with hint icons. When false, only hint lines that have an icon
+     * draw one — the title is not indented.
+     */
+    val alignHintLeadingColumn: Boolean = true,
     /** Single hint shorthand; used only when [itemHints] is empty. */
     val itemHint: String = "",
     /** Right-side value before the chevron (e.g. "等级 3", dogma units). */
@@ -180,7 +186,8 @@ fun BaseLazyColumnItem(
     val defaultHintColor = colorResource(R.color.hint_text)
     val trailingColor = model.trailingValueColor ?: defaultHintColor
     val showHintLeadingColumn = titleLeadingContent != null ||
-        hints.any { !it.iconUrl.isNullOrBlank() || it.iconRes != null }
+        (model.alignHintLeadingColumn &&
+            hints.any { !it.iconUrl.isNullOrBlank() || it.iconRes != null })
 
     val rootModifier = modifier
         .fillMaxWidth()
@@ -303,8 +310,9 @@ fun BaseLazyColumnItem(
                         }
                         hints.forEach { hint ->
                             val hintClick = hint.onClick
+                            val hintHasIcon = !hint.iconUrl.isNullOrBlank() || hint.iconRes != null
                             Row(verticalAlignment = Alignment.Top) {
-                                if (showHintLeadingColumn) {
+                                if (showHintLeadingColumn || hintHasIcon) {
                                     Box(
                                         modifier = Modifier.size(hintIconSize),
                                         contentAlignment = Alignment.Center,

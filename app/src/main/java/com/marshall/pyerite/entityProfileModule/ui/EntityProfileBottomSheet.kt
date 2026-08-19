@@ -52,11 +52,14 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -76,6 +79,8 @@ import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemHint
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
 import com.marshall.pyerite.ui.golbalComponents.CharacterAvatar
 import com.marshall.pyerite.ui.golbalComponents.PyeriteIconShape
+import com.marshall.pyerite.ui.golbalComponents.PyeriteSegmentedControl
+import com.marshall.pyerite.ui.golbalComponents.PyeriteSegmentedOption
 import com.marshall.pyerite.ui.golbalComponents.UniverseEntityKind
 import com.marshall.pyerite.ui.golbalComponents.UniverseEntityRef
 import com.marshall.pyerite.util.DurationDisplayFormatter
@@ -252,7 +257,7 @@ private fun ColumnScope.EntityProfileSheetBody(
         }
         val loaded = profile ?: return
         Spacer(modifier = Modifier.height(sectionGap))
-        EntityProfileHeaderCard(
+        EntityProfileHeaderSection(
             profile = loaded,
             onOpenEntity = onOpenEntity,
         )
@@ -296,7 +301,7 @@ private fun EntityProfileLoadFailed(onRetry: () -> Unit) {
 }
 
 @Composable
-private fun EntityProfileHeaderCard(
+private fun EntityProfileHeaderSection(
     profile: EntityProfile,
     onOpenEntity: (UniverseEntityRef) -> Unit,
 ) {
@@ -305,6 +310,10 @@ private fun EntityProfileHeaderCard(
     val copyLabel = stringResource(R.string.entity_profile_copy_id)
     val nonePlaceholder = stringResource(R.string.character_org_none_placeholder)
     val avatarSize = dimensionResource(R.dimen.entity_profile_header_avatar_size)
+    val nameGap = dimensionResource(R.dimen.entity_profile_header_name_gap)
+    val orgGap = dimensionResource(R.dimen.entity_profile_header_org_gap)
+    val showNpcTag = profile.isNpcCorporation &&
+        profile.ref.kind == UniverseEntityKind.CORPORATION
     val corpClick = profile.corporationId
         ?.takeIf { profile.ref.kind != UniverseEntityKind.CORPORATION }
         ?.let { id ->
@@ -316,109 +325,138 @@ private fun EntityProfileHeaderCard(
             { onOpenEntity(UniverseEntityRef(UniverseEntityKind.ALLIANCE, id)) }
         }
 
-    BaseContainer(title = null, useSystemBarsPadding = false) {
-        Column {
-            BaseLazyColumnItem(
-                model = BaseLazyColumnItemModel(
-                    itemName = profile.name,
-                    itemNameBold = true,
-                    itemHints = buildList {
-                        if (profile.isCeo) {
-                            add(
-                                BaseLazyColumnItemHint(
-                                    text = stringResource(R.string.entity_profile_ceo),
-                                    color = colorResource(R.color.text_primary),
-                                ),
-                            )
-                        }
-                        if (profile.ref.kind != UniverseEntityKind.CORPORATION) {
-                            add(
-                                BaseLazyColumnItemHint(
-                                    text = profile.corporationName?.takeIf { it.isNotBlank() }
-                                        ?: nonePlaceholder,
-                                    color = colorResource(
-                                        if (corpClick != null) {
-                                            R.color.hyperlink_text
-                                        } else {
-                                            R.color.text_primary
-                                        },
-                                    ),
-                                    iconUrl = profile.corporationIconUrl,
-                                    onClick = corpClick,
-                                ),
-                            )
-                        }
-                        if (profile.ref.kind != UniverseEntityKind.ALLIANCE &&
-                            (profile.allianceId != null || !profile.allianceName.isNullOrBlank())
-                        ) {
-                            add(
-                                BaseLazyColumnItemHint(
-                                    text = profile.allianceName?.takeIf { it.isNotBlank() }
-                                        ?: nonePlaceholder,
-                                    color = colorResource(
-                                        if (allianceClick != null) {
-                                            R.color.hyperlink_text
-                                        } else {
-                                            R.color.text_primary
-                                        },
-                                    ),
-                                    iconUrl = profile.allianceIconUrl,
-                                    onClick = allianceClick,
-                                ),
-                            )
-                        }
-                    },
-                    showChevron = false,
-                    onClick = null,
-                ),
-                showDivider = false,
-                leadingContent = { _ ->
-                    CharacterAvatar(
-                        portraitUrl = profile.iconUrl,
-                        size = avatarSize,
-                        shape = PyeriteIconShape.shape,
-                    )
-                },
-                titleTrailingContent = if (profile.isNpcCorporation &&
-                    profile.ref.kind == UniverseEntityKind.CORPORATION
-                ) {
-                    { EntityProfileNpcTag() }
-                } else {
-                    null
-                },
-            )
+    Column {
+        BaseContainer(title = null, useSystemBarsPadding = false) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        start = dimensionResource(R.dimen.detail_row_horizontal_padding),
-                        end = dimensionResource(R.dimen.detail_row_horizontal_padding),
-                        bottom = dimensionResource(R.dimen.entity_profile_header_id_top_gap),
+                        horizontal = dimensionResource(R.dimen.detail_row_horizontal_padding),
+                        vertical = dimensionResource(R.dimen.detail_row_vertical_padding_single_line),
                     ),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End,
             ) {
-                Row(
-                    modifier = Modifier.clickable {
-                        copyEntityId(context, profile.ref.id, copyLabel, copySuccess)
-                    },
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = stringResource(R.string.entity_profile_id, profile.ref.id),
-                        color = colorResource(R.color.hyperlink_text),
-                        fontSize = dimensionResource(R.dimen.detail_row_label_subtitle_text_size).value.sp,
-                    )
-                    Spacer(modifier = Modifier.width(dimensionResource(R.dimen.entity_profile_copy_icon_gap)))
-                    Icon(
-                        imageVector = Icons.Outlined.ContentCopy,
-                        contentDescription = copyLabel,
-                        tint = colorResource(R.color.hyperlink_text),
-                        modifier = Modifier.size(dimensionResource(R.dimen.entity_profile_copy_icon_size)),
-                    )
+                CharacterAvatar(
+                    portraitUrl = profile.iconUrl,
+                    size = avatarSize,
+                    shape = PyeriteIconShape.shape,
+                )
+                Spacer(modifier = Modifier.width(dimensionResource(R.dimen.detail_row_icon_gap)))
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = profile.name,
+                            color = colorResource(R.color.text_primary),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = dimensionResource(R.dimen.entity_profile_header_name_text_size).value.sp,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (showNpcTag) {
+                            Spacer(
+                                modifier = Modifier.width(
+                                    dimensionResource(R.dimen.entity_profile_npc_tag_gap),
+                                ),
+                            )
+                            EntityProfileNpcTag()
+                        }
+                    }
+                    if (profile.isCeo) {
+                        Spacer(modifier = Modifier.height(nameGap))
+                        Text(
+                            text = stringResource(R.string.entity_profile_ceo),
+                            color = colorResource(R.color.text_primary),
+                            fontSize = dimensionResource(R.dimen.detail_row_label_subtitle_text_size).value.sp,
+                        )
+                    }
+                    if (profile.ref.kind != UniverseEntityKind.CORPORATION) {
+                        Spacer(modifier = Modifier.height(orgGap))
+                        EntityProfileOrgLine(
+                            name = profile.corporationName?.takeIf { it.isNotBlank() }
+                                ?: nonePlaceholder,
+                            iconUrl = profile.corporationIconUrl,
+                            onClick = corpClick,
+                        )
+                    }
+                    if (profile.ref.kind != UniverseEntityKind.ALLIANCE &&
+                        (profile.allianceId != null || !profile.allianceName.isNullOrBlank())
+                    ) {
+                        Spacer(modifier = Modifier.height(orgGap))
+                        EntityProfileOrgLine(
+                            name = profile.allianceName?.takeIf { it.isNotBlank() }
+                                ?: nonePlaceholder,
+                            iconUrl = profile.allianceIconUrl,
+                            onClick = allianceClick,
+                        )
+                    }
                 }
             }
         }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = dimensionResource(R.dimen.detail_card_horizontal_padding),
+                    end = dimensionResource(R.dimen.detail_card_horizontal_padding),
+                    top = dimensionResource(R.dimen.entity_profile_header_id_top_gap),
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End,
+        ) {
+            Row(
+                modifier = Modifier.clickable {
+                    copyEntityId(context, profile.ref.id, copyLabel, copySuccess)
+                },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.entity_profile_id, profile.ref.id),
+                    color = colorResource(R.color.hyperlink_text),
+                    fontSize = dimensionResource(R.dimen.detail_row_label_subtitle_text_size).value.sp,
+                )
+                Spacer(modifier = Modifier.width(dimensionResource(R.dimen.entity_profile_copy_icon_gap)))
+                Icon(
+                    imageVector = Icons.Outlined.ContentCopy,
+                    contentDescription = copyLabel,
+                    tint = colorResource(R.color.hyperlink_text),
+                    modifier = Modifier.size(dimensionResource(R.dimen.entity_profile_copy_icon_size)),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun EntityProfileOrgLine(
+    name: String,
+    iconUrl: String?,
+    onClick: (() -> Unit)?,
+) {
+    val rowModifier = if (onClick != null) {
+        Modifier.clickable(onClick = onClick)
+    } else {
+        Modifier
+    }
+    Row(
+        modifier = rowModifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        CharacterAvatar(
+            portraitUrl = iconUrl,
+            size = dimensionResource(R.dimen.base_lazy_column_item_hint_icon_size),
+            shape = PyeriteIconShape.shape,
+        )
+        Spacer(modifier = Modifier.width(dimensionResource(R.dimen.base_lazy_column_item_hint_icon_gap)))
+        Text(
+            text = name,
+            color = colorResource(
+                if (onClick != null) R.color.hyperlink_text else R.color.text_primary,
+            ),
+            fontSize = dimensionResource(R.dimen.detail_row_label_subtitle_text_size).value.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
@@ -473,8 +511,7 @@ private fun EntityProfileExternalLinkRow(
             itemName = label,
             itemNameColor = colorResource(R.color.hyperlink_text),
             showChevron = false,
-            onClick = null,
-            itemNameOnClick = { onOpen(url) },
+            onClick = { onOpen(url) },
         ),
         showDivider = showDivider,
         trailingContent = {
@@ -482,9 +519,7 @@ private fun EntityProfileExternalLinkRow(
                 imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
                 contentDescription = stringResource(R.string.entity_profile_open_external),
                 tint = colorResource(R.color.hyperlink_text),
-                modifier = Modifier
-                    .size(dimensionResource(R.dimen.entity_profile_link_icon_size))
-                    .clickable { onOpen(url) },
+                modifier = Modifier.size(dimensionResource(R.dimen.entity_profile_link_icon_size)),
             )
         },
     )
@@ -533,13 +568,19 @@ private fun EntityProfileDetailsCard(
     BaseContainer(title = null, useSystemBarsPadding = false) {
         Column {
             if (showEmployment) {
-                EntityProfileTabRow(
+                PyeriteSegmentedControl(
+                    options = listOf(
+                        PyeriteSegmentedOption(
+                            EntityProfileTab.STANDINGS,
+                            stringResource(R.string.entity_profile_tab_standings),
+                        ),
+                        PyeriteSegmentedOption(
+                            EntityProfileTab.EMPLOYMENT,
+                            stringResource(R.string.entity_profile_tab_employment),
+                        ),
+                    ),
                     selected = selectedTab,
                     onSelect = { selectedTab = it },
-                )
-                HorizontalDivider(
-                    thickness = dimensionResource(R.dimen.detail_divider_thickness),
-                    color = colorResource(R.color.border),
                 )
             }
             when {
@@ -559,64 +600,6 @@ private fun EntityProfileDetailsCard(
             }
         }
     }
-}
-
-@Composable
-private fun EntityProfileTabRow(
-    selected: EntityProfileTab,
-    onSelect: (EntityProfileTab) -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(dimensionResource(R.dimen.entity_profile_section_title_padding)),
-        horizontalArrangement = Arrangement.spacedBy(
-            dimensionResource(R.dimen.entity_profile_tab_row_gap),
-        ),
-    ) {
-        EntityProfileTabChip(
-            label = stringResource(R.string.entity_profile_tab_standings),
-            selected = selected == EntityProfileTab.STANDINGS,
-            onClick = { onSelect(EntityProfileTab.STANDINGS) },
-        )
-        EntityProfileTabChip(
-            label = stringResource(R.string.entity_profile_tab_employment),
-            selected = selected == EntityProfileTab.EMPLOYMENT,
-            onClick = { onSelect(EntityProfileTab.EMPLOYMENT) },
-        )
-    }
-}
-
-@Composable
-private fun EntityProfileTabChip(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    val background = if (selected) {
-        colorResource(R.color.entity_profile_tab_selected_background)
-    } else {
-        colorResource(R.color.search_field_idle_background)
-    }
-    val textColor = if (selected) {
-        colorResource(R.color.entity_profile_tab_selected_text)
-    } else {
-        colorResource(R.color.text_primary)
-    }
-    Text(
-        text = label,
-        color = textColor,
-        fontSize = dimensionResource(R.dimen.entity_profile_tab_text_size).value.sp,
-        fontWeight = FontWeight.SemiBold,
-        modifier = Modifier
-            .clip(RoundedCornerShape(dimensionResource(R.dimen.entity_profile_tab_corner)))
-            .background(background)
-            .clickable(onClick = onClick)
-            .padding(
-                horizontal = dimensionResource(R.dimen.entity_profile_tab_horizontal_padding),
-                vertical = dimensionResource(R.dimen.entity_profile_tab_vertical_padding),
-            ),
-    )
 }
 
 @Composable
@@ -668,6 +651,9 @@ private fun EntityProfileStandingRow(row: EntityStandingRow) {
     val avatarSize = dimensionResource(R.dimen.entity_profile_standing_avatar_size)
     val nameGap = dimensionResource(R.dimen.entity_profile_standing_name_gap)
     val valuePadding = dimensionResource(R.dimen.entity_profile_standing_value_horizontal_padding)
+    val nameTextSize = dimensionResource(R.dimen.detail_row_label_subtitle_text_size).value.sp
+    val nameColor = colorResource(R.color.text_primary)
+    val standingValueTextSize = dimensionResource(R.dimen.sub_menu_value_text_size).value.sp
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -677,69 +663,55 @@ private fun EntityProfileStandingRow(row: EntityStandingRow) {
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        EntityProfileStandingParty(
-            name = row.from.name,
-            iconUrl = row.from.iconUrl,
-            avatarSize = avatarSize,
-            nameGap = nameGap,
-            modifier = Modifier.weight(1f),
-        )
         Text(
-            text = EntityProfileConfig.formatStanding(row.standing),
-            color = standingValueColor(row.standing),
-            fontWeight = FontWeight.SemiBold,
-            fontSize = dimensionResource(R.dimen.sub_menu_value_text_size).value.sp,
-            modifier = Modifier.padding(horizontal = valuePadding),
-        )
-        EntityProfileStandingParty(
-            name = row.toward.name,
-            iconUrl = row.toward.iconUrl,
-            avatarSize = avatarSize,
-            nameGap = nameGap,
-            modifier = Modifier.weight(1f),
-            reverse = true,
-        )
-    }
-}
-
-@Composable
-private fun EntityProfileStandingParty(
-    name: String,
-    iconUrl: String?,
-    avatarSize: Dp,
-    nameGap: Dp,
-    modifier: Modifier = Modifier,
-    reverse: Boolean = false,
-) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = if (reverse) Arrangement.End else Arrangement.Start,
-    ) {
-        if (!reverse) {
-            CharacterAvatar(
-                portraitUrl = iconUrl,
-                size = avatarSize,
-                shape = PyeriteIconShape.shape,
-            )
-            Spacer(modifier = Modifier.width(nameGap))
-        }
-        Text(
-            text = name,
-            color = colorResource(R.color.text_primary),
-            fontSize = dimensionResource(R.dimen.detail_row_label_subtitle_text_size).value.sp,
+            text = row.from.name,
+            color = nameColor,
+            fontSize = nameTextSize,
+            textAlign = TextAlign.End,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f, fill = false),
+            modifier = Modifier.weight(1f),
         )
-        if (reverse) {
-            Spacer(modifier = Modifier.width(nameGap))
-            CharacterAvatar(
-                portraitUrl = iconUrl,
-                size = avatarSize,
-                shape = PyeriteIconShape.shape,
+        Spacer(modifier = Modifier.width(nameGap))
+        CharacterAvatar(
+            portraitUrl = row.from.iconUrl,
+            size = avatarSize,
+            shape = PyeriteIconShape.shape,
+        )
+        Box(
+            modifier = Modifier.padding(horizontal = valuePadding),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = EntityProfileConfig.STANDING_COLUMN_SAMPLE,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = standingValueTextSize,
+                color = Color.Transparent,
+                modifier = Modifier.clearAndSetSemantics { },
+            )
+            Text(
+                text = EntityProfileConfig.formatStanding(row.standing),
+                color = standingValueColor(row.standing),
+                fontWeight = FontWeight.SemiBold,
+                fontSize = standingValueTextSize,
+                textAlign = TextAlign.Center,
             )
         }
+        CharacterAvatar(
+            portraitUrl = row.toward.iconUrl,
+            size = avatarSize,
+            shape = PyeriteIconShape.shape,
+        )
+        Spacer(modifier = Modifier.width(nameGap))
+        Text(
+            text = row.toward.name,
+            color = nameColor,
+            fontSize = nameTextSize,
+            textAlign = TextAlign.Start,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 
@@ -803,6 +775,7 @@ private fun EntityProfileEmploymentRow(
     BaseLazyColumnItem(
         model = BaseLazyColumnItemModel(
             iconUrl = entry.corporationIconUrl,
+            iconSize = dimensionResource(R.dimen.base_lazy_column_item_icon_size),
             itemName = corpName,
             itemNameColor = colorResource(R.color.hyperlink_text),
             itemHints = buildList {
@@ -826,6 +799,7 @@ private fun EntityProfileEmploymentRow(
             },
             showChevron = false,
             onClick = null,
+            alignHintLeadingColumn = false,
             itemNameOnClick = {
                 onOpenEntity(
                     UniverseEntityRef(UniverseEntityKind.CORPORATION, entry.corporationId),
@@ -843,11 +817,19 @@ private fun EntityProfileEmploymentRow(
 
 @Composable
 private fun EntityProfileNpcTag() {
+    val tagTextSize = dimensionResource(R.dimen.entity_profile_npc_tag_text_size).value.sp
     Text(
         text = stringResource(R.string.entity_profile_npc_tag),
         color = colorResource(R.color.white),
-        fontSize = dimensionResource(R.dimen.entity_profile_npc_tag_text_size).value.sp,
+        fontSize = tagTextSize,
+        lineHeight = tagTextSize,
         fontWeight = FontWeight.SemiBold,
+        style = TextStyle(
+            lineHeightStyle = LineHeightStyle(
+                alignment = LineHeightStyle.Alignment.Center,
+                trim = LineHeightStyle.Trim.Both,
+            ),
+        ),
         modifier = Modifier
             .clip(RoundedCornerShape(dimensionResource(R.dimen.entity_profile_npc_tag_corner)))
             .background(colorResource(R.color.entity_profile_npc_tag))

@@ -75,10 +75,7 @@ internal class EntityProfileLoader(
         val alliance = allianceId?.let { id ->
             runCatching { publicEsi.fetchAlliance(id) }.getOrNull()
         }
-        val faction = resolveFaction(
-            explicitFactionId = public.factionId ?: corporation?.factionId,
-            raceId = public.raceId,
-        )
+        val faction = resolveFaction(public.factionId)
         val isCeo = corporation?.ceoId == characterId
         return EntityProfile(
             ref = UniverseEntityRef(UniverseEntityKind.CHARACTER, characterId),
@@ -104,10 +101,9 @@ internal class EntityProfileLoader(
         val alliance = corporation.allianceId?.let { id ->
             runCatching { publicEsi.fetchAlliance(id) }.getOrNull()
         }
-        val faction = resolveFaction(
-            explicitFactionId = corporation.factionId,
-            raceId = null,
-        )
+        val faction = resolveFaction(corporation.factionId?.takeUnless {
+            EntityProfileConfig.isNpcCorporation(corporationId)
+        })
         return EntityProfile(
             ref = UniverseEntityRef(UniverseEntityKind.CORPORATION, corporationId),
             name = corporation.name,
@@ -132,10 +128,7 @@ internal class EntityProfileLoader(
         val executor = executorId?.let { id ->
             runCatching { publicEsi.fetchCorporation(id) }.getOrNull()
         }
-        val faction = resolveFaction(
-            explicitFactionId = alliance.factionId,
-            raceId = null,
-        )
+        val faction = resolveFaction(alliance.factionId)
         return EntityProfile(
             ref = UniverseEntityRef(UniverseEntityKind.ALLIANCE, allianceId),
             name = alliance.name,
@@ -153,11 +146,8 @@ internal class EntityProfileLoader(
         )
     }
 
-    private suspend fun resolveFaction(
-        explicitFactionId: Long?,
-        raceId: Int?,
-    ): ResolvedFaction? {
-        val factionId = EntityProfileConfig.resolvedFactionId(explicitFactionId, raceId) ?: return null
+    private suspend fun resolveFaction(factionId: Long?): ResolvedFaction? {
+        if (factionId == null) return null
         val name = publicEsi.fetchUniverseName(factionId) ?: return null
         return ResolvedFaction(
             id = factionId,
@@ -221,6 +211,20 @@ internal class EntityProfileLoader(
                             ref = UniverseEntityRef(UniverseEntityKind.CORPORATION, corpId),
                             name = header.corporationName.orEmpty(),
                             iconUrl = header.corporationIconUrl,
+                        ),
+                        fromParties = fromParties,
+                        characterContacts = characterContacts,
+                        corporationContacts = corporationContacts,
+                        allianceContacts = allianceContacts,
+                    )
+                }
+                header.allianceId?.let { allianceId ->
+                    sections += standingSection(
+                        kind = EntityStandingSectionKind.ALLIANCE,
+                        target = EntityStandingParty(
+                            ref = UniverseEntityRef(UniverseEntityKind.ALLIANCE, allianceId),
+                            name = header.allianceName.orEmpty(),
+                            iconUrl = header.allianceIconUrl,
                         ),
                         fromParties = fromParties,
                         characterContacts = characterContacts,

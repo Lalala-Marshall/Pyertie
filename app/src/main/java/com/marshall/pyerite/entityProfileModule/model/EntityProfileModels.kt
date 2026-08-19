@@ -14,6 +14,8 @@ internal object EntityProfileConfig {
     const val STANDING_FRACTION_DIGITS = 2
     const val STANDING_FRACTION_SCALE = 100.0
     const val STANDING_HUNDREDTHS_PER_UNIT = 100L
+    /** Layout sample so "0" and "10" keep standing icons aligned. */
+    const val STANDING_COLUMN_SAMPLE = "10"
 
     const val DISPLAY_DATE_PATTERN = "yyyy.MM.dd"
 
@@ -27,28 +29,7 @@ internal object EntityProfileConfig {
     const val ZKILL_ALLIANCE_PATH = "alliance/"
     const val ZKILL_PATH_SUFFIX = "/"
 
-    const val RACE_CALDARI = 1
-    const val RACE_MINMATAR = 2
-    const val RACE_AMARR = 4
-    const val RACE_GALLENTE = 8
-
-    const val FACTION_CALDARI_STATE = 500001L
-    const val FACTION_MINMATAR_REPUBLIC = 500002L
-    const val FACTION_AMARR_EMPIRE = 500003L
-    const val FACTION_GALLENTE_FEDERATION = 500004L
-
     fun isNpcCorporation(corporationId: Long): Boolean = corporationId < NPC_CORPORATION_ID_MAX
-
-    fun factionIdForRace(raceId: Int?): Long? = when (raceId) {
-        RACE_CALDARI -> FACTION_CALDARI_STATE
-        RACE_MINMATAR -> FACTION_MINMATAR_REPUBLIC
-        RACE_AMARR -> FACTION_AMARR_EMPIRE
-        RACE_GALLENTE -> FACTION_GALLENTE_FEDERATION
-        else -> null
-    }
-
-    fun resolvedFactionId(explicitFactionId: Long?, raceId: Int?): Long? =
-        explicitFactionId ?: factionIdForRace(raceId)
 
     fun eveWhoUrl(kind: UniverseEntityKind, id: Long): String =
         EVEWHO_BASE_URL + pathFor(kind, eveWho = true) + id
