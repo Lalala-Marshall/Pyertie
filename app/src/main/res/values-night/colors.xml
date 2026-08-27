@@ -49,5 +49,13 @@
     <color name="character_status_online">#34A853</color>
     <color name="character_status_offline">#EF5350</color>
     <color name="entity_profile_npc_tag">#CE93D8</color>
-
+    <color name="calendar_today_border">#64B5F6</color>
+    <color name="calendar_today_background">#1A3A5C</color>
+    <color name="calendar_today_text">#90CAF9</color>
+    <color name="calendar_selected_border">#1565C0</color>
+    <color name="calendar_selected_text">#90CAF9</color>
+    <color name="calendar_event_count_badge_background">#1565C0</color>
+    <color name="calendar_event_count_badge_text">#FFFFFF</color>
+    <color name="calendar_add_reminder_button">#1565C0</color>
+    <color name="calendar_add_reminder_button_text">#FFFFFF</color>
 </resources>

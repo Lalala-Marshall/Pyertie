@@ -1,5 +1,8 @@
 package com.marshall.pyerite.esiModule.api
 
+import com.marshall.pyerite.esiModule.model.EsiCalendarEventDetailDto
+import com.marshall.pyerite.esiModule.model.EsiCalendarEventSummaryDto
+import com.marshall.pyerite.esiModule.model.EsiCalendarQuery
 import com.marshall.pyerite.esiModule.model.EsiCharacterAttributesDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterClonesDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterDto
@@ -124,6 +127,22 @@ internal interface EsiCharacterApi {
         @Path("character_id") characterId: Long,
         @Header("Authorization") authorization: String,
     ): EsiCharacterOnlineDto
+
+    @Headers("Accept: application/json")
+    @GET("characters/{character_id}/calendar")
+    suspend fun fetchCalendarEvents(
+        @Path("character_id") characterId: Long,
+        @Header("Authorization") authorization: String,
+        @Query(EsiCalendarQuery.FROM_EVENT) fromEvent: Long? = null,
+    ): List<EsiCalendarEventSummaryDto>
+
+    @Headers("Accept: application/json")
+    @GET("characters/{character_id}/calendar/{event_id}")
+    suspend fun fetchCalendarEvent(
+        @Path("character_id") characterId: Long,
+        @Path("event_id") eventId: Long,
+        @Header("Authorization") authorization: String,
+    ): EsiCalendarEventDetailDto
 
     @Headers("Accept: application/json")
     @GET("characters/{character_id}/mail")

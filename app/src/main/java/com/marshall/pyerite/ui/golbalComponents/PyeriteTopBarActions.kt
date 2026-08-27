@@ -12,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -50,6 +51,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,6 +65,11 @@ data class PyeriteTopBarMenuItem(
     @param:DrawableRes val iconRes: Int? = null,
     /** When false, [iconRes] is drawn without tint (bitmaps / multicolor assets). */
     val tintIcon: Boolean = true,
+    val supportingLabel: String? = null,
+    val trailingIcon: ImageVector? = null,
+    val trailingContentDescription: String? = null,
+    val onTrailingClick: (() -> Unit)? = null,
+    val enabled: Boolean = true,
 )
 
 @Immutable
@@ -249,7 +256,11 @@ private fun TopBarActionSegment(
         }
         if (hasMenu) {
             val menuCorner = dimensionResource(R.dimen.top_bar_dropdown_corner)
-            val menuMinWidth = dimensionResource(R.dimen.top_bar_dropdown_min_width)
+            val menuMinWidth = if (action.menuItems.any { !it.supportingLabel.isNullOrBlank() }) {
+                dimensionResource(R.dimen.top_bar_dropdown_wide_min_width)
+            } else {
+                dimensionResource(R.dimen.top_bar_dropdown_min_width)
+            }
             val dividerHorizontalPadding =
                 dimensionResource(R.dimen.top_bar_dropdown_divider_horizontal_padding)
             val menuIconSize = dimensionResource(R.dimen.top_bar_dropdown_item_icon_size)
@@ -262,27 +273,66 @@ private fun TopBarActionSegment(
                 containerColor = colorResource(R.color.second_background),
             ) {
                 action.menuItems.forEachIndexed { index, item ->
+                    val hasLeading = item.icon != null || item.iconRes != null
                     DropdownMenuItem(
                         text = {
-                            Text(
-                                text = item.label,
-                                color = colorResource(R.color.text_primary),
-                                fontSize = 14.sp,
-                                textAlign = TextAlign.Start,
-                                modifier = Modifier.fillMaxWidth(),
-                            )
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Text(
+                                    text = item.label,
+                                    color = colorResource(R.color.text_primary),
+                                    fontSize = 14.sp,
+                                    textAlign = TextAlign.Start,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                                val supporting = item.supportingLabel
+                                if (!supporting.isNullOrBlank()) {
+                                    Text(
+                                        text = supporting,
+                                        color = colorResource(R.color.text_caption),
+                                        fontSize = 12.sp,
+                                        textAlign = TextAlign.Start,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.fillMaxWidth(),
+                                    )
+                                }
+                            }
                         },
-                        leadingIcon = {
-                            TopBarDropdownMenuIcon(
-                                item = item,
-                                size = menuIconSize,
-                                tint = menuIconTint,
-                            )
+                        leadingIcon = if (hasLeading) {
+                            {
+                                TopBarDropdownMenuIcon(
+                                    item = item,
+                                    size = menuIconSize,
+                                    tint = menuIconTint,
+                                )
+                            }
+                        } else {
+                            null
+                        },
+                        trailingIcon = item.trailingIcon?.let { trailing ->
+                            {
+                                Icon(
+                                    imageVector = trailing,
+                                    contentDescription = item.trailingContentDescription,
+                                    tint = menuIconTint,
+                                    modifier = Modifier
+                                        .size(menuIconSize)
+                                        .clickable(
+                                            enabled = item.onTrailingClick != null,
+                                            onClick = {
+                                                item.onTrailingClick?.invoke()
+                                            },
+                                        ),
+                                )
+                            }
                         },
                         onClick = {
                             menuExpanded = false
                             item.onClick()
                         },
+                        enabled = item.enabled,
                         contentPadding = MenuDefaults.DropdownMenuItemContentPadding,
                     )
                     if (index != action.menuItems.lastIndex) {

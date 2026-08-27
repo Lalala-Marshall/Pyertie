@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
+import com.marshall.pyerite.characterCalendarModule.navHost.CharacterCalendarRoute
+import com.marshall.pyerite.characterCalendarModule.ui.MainPageCharacterCalendarItem
 import com.marshall.pyerite.characterClonesModule.navHost.CharacterClonesRoute
 import com.marshall.pyerite.characterClonesModule.ui.MainPageCloneStatusItem
 import com.marshall.pyerite.characterClonesModule.viewModel.CharacterClonesViewModel
@@ -213,10 +215,20 @@ fun MainPage(
                             },
                         )
                         MainPageCharacterMailItem(
+                            showDivider = true,
                             onClick = {
                                 val characterId = currentCharacter?.characterId
                                     ?: return@MainPageCharacterMailItem
                                 navController.navigate(CharacterMailRoute.Root.create(characterId))
+                            },
+                        )
+                        MainPageCharacterCalendarItem(
+                            onClick = {
+                                val characterId = currentCharacter?.characterId
+                                    ?: return@MainPageCharacterCalendarItem
+                                navController.navigate(
+                                    CharacterCalendarRoute.Root.create(characterId),
+                                )
                             },
                         )
                     }
