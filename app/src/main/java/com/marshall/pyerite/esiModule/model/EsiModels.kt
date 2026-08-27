@@ -236,6 +236,52 @@ internal object EsiMailQuery {
     const val LABELS = "labels"
 }
 
+/** Query parameter names for ESI calendar list routes. */
+internal object EsiCalendarQuery {
+    const val FROM_EVENT = "from_event"
+}
+
+/** Wire `event_response` / `response` values from ESI calendar routes. */
+internal object EsiCalendarEventResponseValue {
+    const val ACCEPTED = "accepted"
+    const val DECLINED = "declined"
+    const val NOT_RESPONDED = "not_responded"
+    const val TENTATIVE = "tentative"
+    const val UNDECIDED = "undecided"
+}
+
+/** Wire `owner_type` values from ESI calendar event details. */
+internal object EsiCalendarOwnerTypeValue {
+    const val EVE_SERVER = "eve_server"
+    const val CORPORATION = "corporation"
+    const val FACTION = "faction"
+    const val CHARACTER = "character"
+    const val ALLIANCE = "alliance"
+}
+
+@Serializable
+internal data class EsiCalendarEventSummaryDto(
+    @SerialName("event_id") val eventId: Long,
+    @SerialName("event_date") val eventDate: String? = null,
+    val title: String? = null,
+    val importance: Int = 0,
+    @SerialName("event_response") val eventResponse: String? = null,
+)
+
+@Serializable
+internal data class EsiCalendarEventDetailDto(
+    @SerialName("event_id") val eventId: Long,
+    val date: String? = null,
+    val duration: Long = 0L,
+    val importance: Int = 0,
+    @SerialName("owner_id") val ownerId: Long = 0L,
+    @SerialName("owner_name") val ownerName: String? = null,
+    @SerialName("owner_type") val ownerType: String? = null,
+    val response: String? = null,
+    val text: String? = null,
+    val title: String? = null,
+)
+
 @Serializable
 internal data class EsiUniverseNameDto(
     val id: Long,

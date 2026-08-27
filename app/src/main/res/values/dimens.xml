@@ -236,4 +236,26 @@
     <dimen name="entity_profile_npc_tag_gap">6dp</dimen>
     <dimen name="entity_profile_link_icon_size">18dp</dimen>
     <dimen name="entity_profile_description_padding">12dp</dimen>
+
+    <!-- Character calendar -->
+    <dimen name="character_calendar_day_corner">8dp</dimen>
+    <dimen name="character_calendar_today_border">1.5dp</dimen>
+    <dimen name="character_calendar_selected_border">2.5dp</dimen>
+    <dimen name="character_calendar_idle_border">0dp</dimen>
+    <dimen name="character_calendar_day_cell_inset">2dp</dimen>
+    <dimen name="character_calendar_day_cell_padding">2dp</dimen>
+    <dimen name="character_calendar_day_text_size">14sp</dimen>
+    <dimen name="character_calendar_count_text_size">9sp</dimen>
+    <dimen name="character_calendar_count_badge_size">22dp</dimen>
+    <dimen name="character_calendar_add_reminder_button_height">48dp</dimen>
+    <dimen name="character_calendar_add_reminder_button_corner">12dp</dimen>
+    <dimen name="character_calendar_add_reminder_button_horizontal_padding">16dp</dimen>
+    <dimen name="character_calendar_weekday_text_size">12sp</dimen>
+    <dimen name="character_calendar_weekday_top_gap">8dp</dimen>
+    <dimen name="character_calendar_grid_gap">4dp</dimen>
+    <dimen name="character_calendar_month_nav_horizontal_padding">4dp</dimen>
+    <dimen name="character_calendar_detail_header_gap">12dp</dimen>
+    <dimen name="character_calendar_detail_section_title_gap">8dp</dimen>
+    <dimen name="character_calendar_detail_field_gap">4dp</dimen>
+    <dimen name="top_bar_dropdown_wide_min_width">260dp</dimen>
 </resources>

@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import com.marshall.pyerite.characterCalendarModule.navHost.characterCalendarNavGraph
 import com.marshall.pyerite.characterClonesModule.navHost.characterClonesNavGraph
 import com.marshall.pyerite.characterMailModule.navHost.characterMailNavGraph
 import com.marshall.pyerite.characterSheetModule.navHost.characterSheetNavGraph
@@ -57,6 +58,7 @@ fun AppNavHost() {
                 characterClonesNavGraph(navController)
                 characterSkillsNavGraph(navController)
                 characterMailNavGraph(navController)
+                characterCalendarNavGraph(navController)
             }
             if (entityProfileState.stack.isNotEmpty()) {
                 EntityProfileBottomSheet(viewModel = entityProfileViewModel)
