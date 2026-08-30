@@ -345,3 +345,61 @@ internal data class EsiOrganization(
     val dateFounded: String? = null,
     val executorCorporationId: Long? = null,
 )
+
+/** Query parameter name for ESI paginated list routes. */
+internal object EsiPagedQuery {
+    const val PAGE = "page"
+}
+
+@Serializable
+internal data class EsiCharacterAssetDto(
+    @SerialName("type_id") val typeId: Int,
+    val quantity: Int = 0,
+    @SerialName("is_blueprint_copy") val isBlueprintCopy: Boolean = false,
+    @SerialName("is_singleton") val isSingleton: Boolean = false,
+)
+
+@Serializable
+internal data class EsiCharacterOrderDto(
+    @SerialName("order_id") val orderId: Long,
+    @SerialName("type_id") val typeId: Int,
+    val price: Double = 0.0,
+    @SerialName("volume_remain") val volumeRemain: Int = 0,
+    @SerialName("is_buy_order") val isBuyOrder: Boolean = false,
+    @SerialName("is_corporation") val isCorporation: Boolean = false,
+    val escrow: Double = 0.0,
+)
+
+/** Wire `type` values from ESI character contracts. */
+internal object EsiContractTypeValue {
+    const val ITEM_EXCHANGE = "item_exchange"
+}
+
+/** Wire `status` values from ESI character contracts. */
+internal object EsiContractStatusValue {
+    const val OUTSTANDING = "outstanding"
+}
+
+@Serializable
+internal data class EsiCharacterContractDto(
+    @SerialName("contract_id") val contractId: Long,
+    val type: String,
+    val status: String,
+    @SerialName("issuer_id") val issuerId: Long,
+    @SerialName("for_corporation") val forCorporation: Boolean = false,
+    val price: Double = 0.0,
+)
+
+@Serializable
+internal data class EsiContractItemDto(
+    @SerialName("type_id") val typeId: Int,
+    val quantity: Int = 0,
+    @SerialName("is_included") val isIncluded: Boolean = false,
+)
+
+@Serializable
+internal data class EsiMarketPriceDto(
+    @SerialName("type_id") val typeId: Int,
+    @SerialName("average_price") val averagePrice: Double? = null,
+    @SerialName("adjusted_price") val adjustedPrice: Double? = null,
+)

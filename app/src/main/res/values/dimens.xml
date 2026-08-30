@@ -258,4 +258,15 @@
     <dimen name="character_calendar_detail_section_title_gap">8dp</dimen>
     <dimen name="character_calendar_detail_field_gap">4dp</dimen>
     <dimen name="top_bar_dropdown_wide_min_width">260dp</dimen>
+
+    <!-- Personal property distribution -->
+    <dimen name="personal_property_chart_size">120dp</dimen>
+    <dimen name="personal_property_chart_stroke">18dp</dimen>
+    <dimen name="personal_property_chart_legend_gap">16dp</dimen>
+    <dimen name="personal_property_distribution_padding">12dp</dimen>
+    <dimen name="personal_property_legend_row_gap">8dp</dimen>
+    <dimen name="personal_property_legend_dot_size">10dp</dimen>
+    <dimen name="personal_property_legend_dot_gap">8dp</dimen>
+    <dimen name="personal_property_legend_label_text_size">13sp</dimen>
+    <dimen name="personal_property_legend_value_text_size">13sp</dimen>
 </resources>

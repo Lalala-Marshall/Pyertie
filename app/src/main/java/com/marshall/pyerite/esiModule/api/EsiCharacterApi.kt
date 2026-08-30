@@ -3,22 +3,27 @@ package com.marshall.pyerite.esiModule.api
 import com.marshall.pyerite.esiModule.model.EsiCalendarEventDetailDto
 import com.marshall.pyerite.esiModule.model.EsiCalendarEventSummaryDto
 import com.marshall.pyerite.esiModule.model.EsiCalendarQuery
+import com.marshall.pyerite.esiModule.model.EsiCharacterAssetDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterAttributesDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterClonesDto
+import com.marshall.pyerite.esiModule.model.EsiCharacterContractDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterFatigueDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterLocationDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterMedalDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterOnlineDto
+import com.marshall.pyerite.esiModule.model.EsiCharacterOrderDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterShipDto
 import com.marshall.pyerite.esiModule.model.EsiCharacterSkillsDto
 import com.marshall.pyerite.esiModule.model.EsiContactDto
+import com.marshall.pyerite.esiModule.model.EsiContractItemDto
 import com.marshall.pyerite.esiModule.model.EsiCorporationHistoryDto
 import com.marshall.pyerite.esiModule.model.EsiMailBodyDto
 import com.marshall.pyerite.esiModule.model.EsiMailHeaderDto
 import com.marshall.pyerite.esiModule.model.EsiMailLabelsDto
 import com.marshall.pyerite.esiModule.model.EsiMailingListDto
 import com.marshall.pyerite.esiModule.model.EsiMailQuery
+import com.marshall.pyerite.esiModule.model.EsiPagedQuery
 import com.marshall.pyerite.esiModule.model.EsiSendMailRequestDto
 import com.marshall.pyerite.esiModule.model.EsiSkillQueueEntryDto
 import okhttp3.ResponseBody
@@ -181,4 +186,35 @@ internal interface EsiCharacterApi {
         @Header("Authorization") authorization: String,
         @Body mail: EsiSendMailRequestDto,
     ): ResponseBody
+
+    @Headers("Accept: application/json")
+    @GET("characters/{character_id}/assets")
+    suspend fun fetchAssets(
+        @Path("character_id") characterId: Long,
+        @Header("Authorization") authorization: String,
+        @Query(EsiPagedQuery.PAGE) page: Int,
+    ): List<EsiCharacterAssetDto>
+
+    @Headers("Accept: application/json")
+    @GET("characters/{character_id}/orders")
+    suspend fun fetchOrders(
+        @Path("character_id") characterId: Long,
+        @Header("Authorization") authorization: String,
+    ): List<EsiCharacterOrderDto>
+
+    @Headers("Accept: application/json")
+    @GET("characters/{character_id}/contracts")
+    suspend fun fetchContracts(
+        @Path("character_id") characterId: Long,
+        @Header("Authorization") authorization: String,
+        @Query(EsiPagedQuery.PAGE) page: Int,
+    ): List<EsiCharacterContractDto>
+
+    @Headers("Accept: application/json")
+    @GET("characters/{character_id}/contracts/{contract_id}/items")
+    suspend fun fetchContractItems(
+        @Path("character_id") characterId: Long,
+        @Path("contract_id") contractId: Long,
+        @Header("Authorization") authorization: String,
+    ): List<EsiContractItemDto>
 }
