@@ -108,6 +108,11 @@
     <string name="personal_property_isk_value">%1$s ISK</string>
     <string name="personal_property_isk_zero">0 ISK</string>
     <string name="personal_property_load_failed">加载失败</string>
+    <string name="personal_property_ranking_title">%1$s（前%2$d名）</string>
+    <string name="personal_property_ranking_priced">有市场估价的物品（前%1$d名）</string>
+    <string name="personal_property_ranking_unpriced">无市场估价的物品（前%1$d名）</string>
+    <string name="personal_property_ranking_qty_price">%1$s × %2$s</string>
+    <string name="personal_property_ranking_empty">暂无数据</string>
     <string name="character_skills_hint_idle">空闲：无技能训练队列</string>
     <string name="character_skills_hint_paused">暂停：%1$d个技能（%2$s）</string>
     <string name="character_skills_hint_training">训练中：%1$d个技能（%2$s）</string>

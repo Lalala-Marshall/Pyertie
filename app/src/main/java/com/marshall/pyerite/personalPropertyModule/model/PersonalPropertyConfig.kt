@@ -8,6 +8,7 @@ internal object PersonalPropertyConfig {
     const val CONTRACTS_PAGE_SIZE = 1000
     const val CONTRACTS_MAX_PAGES = 10
     const val CONTRACT_ITEMS_CONCURRENCY = 4
+    const val RANKING_TOP_N = 20
     const val PERCENT_SCALE = 100.0
 
     private const val MILLIS_PER_SECOND = 1_000L

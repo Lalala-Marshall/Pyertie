@@ -23,7 +23,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.personalPropertyModule.model.PersonalPropertyBucket
+import com.marshall.pyerite.personalPropertyModule.model.PersonalPropertyCategory
 import com.marshall.pyerite.personalPropertyModule.model.PersonalPropertySummary
+import com.marshall.pyerite.personalPropertyModule.navHost.PersonalPropertyRoute
 import com.marshall.pyerite.personalPropertyModule.viewModel.PersonalPropertyViewModel
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
@@ -91,6 +93,14 @@ internal fun PersonalPropertyPage(
                     summary = uiState.summary,
                     detailsPending = detailsPending,
                     placeholder = placeholder,
+                    onCategoryClick = { category ->
+                        navController.navigate(
+                            PersonalPropertyRoute.Ranking.create(
+                                characterId = uiState.summary.characterId,
+                                category = category,
+                            ),
+                        )
+                    },
                 )
                 Spacer(modifier = Modifier.height(sectionGap))
                 PersonalPropertyDistributionSection(
@@ -152,6 +162,7 @@ private fun PersonalPropertyBreakdownSection(
     summary: PersonalPropertySummary,
     detailsPending: Boolean,
     placeholder: String,
+    onCategoryClick: (PersonalPropertyCategory) -> Unit,
 ) {
     val detailsReady = !detailsPending
     BaseContainer(useSystemBarsPadding = false) {
@@ -173,8 +184,9 @@ private fun PersonalPropertyBreakdownSection(
                 templateRes = R.string.personal_property_assets_hint,
             ),
             trailingValue = formatDetailIsk(summary.assets.isk, detailsReady, placeholder),
-            clickable = true,
+            clickable = detailsReady,
             showDivider = true,
+            onClick = { onCategoryClick(PersonalPropertyCategory.ASSETS) },
         )
         PropertyBreakdownRow(
             iconRes = R.drawable.ic_personal_property_implants,
@@ -186,8 +198,9 @@ private fun PersonalPropertyBreakdownSection(
                 templateRes = R.string.personal_property_implants_hint,
             ),
             trailingValue = formatDetailIsk(summary.implants.isk, detailsReady, placeholder),
-            clickable = true,
+            clickable = detailsReady,
             showDivider = true,
+            onClick = { onCategoryClick(PersonalPropertyCategory.IMPLANTS) },
         )
         PropertyBreakdownRow(
             iconRes = R.drawable.ic_personal_property_market,
@@ -204,8 +217,9 @@ private fun PersonalPropertyBreakdownSection(
                 placeholder = placeholder,
                 zeroAsIntegerIsk = true,
             ),
-            clickable = true,
+            clickable = detailsReady,
             showDivider = true,
+            onClick = { onCategoryClick(PersonalPropertyCategory.MARKET_ORDERS) },
         )
         PropertyBreakdownRow(
             iconRes = R.drawable.ic_personal_property_contract,
@@ -222,8 +236,9 @@ private fun PersonalPropertyBreakdownSection(
                 placeholder = placeholder,
                 zeroAsIntegerIsk = true,
             ),
-            clickable = true,
+            clickable = detailsReady,
             showDivider = false,
+            onClick = { onCategoryClick(PersonalPropertyCategory.CONTRACTS) },
         )
     }
 }
@@ -281,6 +296,7 @@ private fun PropertyBreakdownRow(
     trailingValue: String,
     clickable: Boolean,
     showDivider: Boolean,
+    onClick: (() -> Unit)? = null,
 ) {
     BaseLazyColumnItem(
         model = BaseLazyColumnItemModel(
@@ -289,11 +305,7 @@ private fun PropertyBreakdownRow(
             itemHint = hint,
             trailingValue = trailingValue,
             showChevron = clickable,
-            onClick = if (clickable) {
-                {}
-            } else {
-                null
-            },
+            onClick = if (clickable) onClick else null,
         ),
         showDivider = showDivider,
     )

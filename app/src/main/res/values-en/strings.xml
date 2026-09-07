@@ -107,6 +107,11 @@
     <string name="personal_property_isk_value">%1$s ISK</string>
     <string name="personal_property_isk_zero">0 ISK</string>
     <string name="personal_property_load_failed">Failed to load</string>
+    <string name="personal_property_ranking_title">%1$s (Top %2$d)</string>
+    <string name="personal_property_ranking_priced">Items with market value (Top %1$d)</string>
+    <string name="personal_property_ranking_unpriced">Items without market value (Top %1$d)</string>
+    <string name="personal_property_ranking_qty_price">%1$s × %2$s</string>
+    <string name="personal_property_ranking_empty">No data</string>
     <string name="character_skills_hint_idle">Idle: No skill training queue</string>
     <string name="character_skills_hint_paused">Paused: %1$d skills (%2$s)</string>
     <string name="character_skills_hint_training">Training: %1$d skills (%2$s)</string>

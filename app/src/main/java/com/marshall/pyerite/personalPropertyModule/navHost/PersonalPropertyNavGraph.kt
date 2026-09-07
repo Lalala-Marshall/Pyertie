@@ -6,6 +6,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.marshall.pyerite.personalPropertyModule.ui.PersonalPropertyPage
+import com.marshall.pyerite.personalPropertyModule.ui.PersonalPropertyRankingPage
+import com.marshall.pyerite.personalPropertyModule.viewModel.PersonalPropertyRankingViewModel
 import com.marshall.pyerite.personalPropertyModule.viewModel.PersonalPropertyViewModel
 
 fun NavGraphBuilder.personalPropertyNavGraph(
@@ -20,5 +22,18 @@ fun NavGraphBuilder.personalPropertyNavGraph(
         ),
     ) {
         PersonalPropertyPage(navController = navController)
+    }
+    composable(
+        route = PersonalPropertyRoute.Ranking.route,
+        arguments = listOf(
+            navArgument(PersonalPropertyRankingViewModel.NAV_ARG_CHARACTER_ID) {
+                type = NavType.LongType
+            },
+            navArgument(PersonalPropertyRankingViewModel.NAV_ARG_CATEGORY) {
+                type = NavType.StringType
+            },
+        ),
+    ) {
+        PersonalPropertyRankingPage(navController = navController)
     }
 }
