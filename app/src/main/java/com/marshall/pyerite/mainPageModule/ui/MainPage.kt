@@ -102,15 +102,18 @@ fun MainPage(
         characterSkillsViewModel.setCharacterId(currentCharacter?.characterId)
     }
 
-    val currentTotalSp = remember(currentCharacter?.characterId, loggedInCharacters) {
+    val currentLoggedInCharacter = remember(currentCharacter?.characterId, loggedInCharacters) {
         val characterId = currentCharacter?.characterId ?: return@remember null
-        loggedInCharacters.find { it.characterId == characterId }?.totalSp
+        loggedInCharacters.find { it.characterId == characterId }
     }
-    val characterSheetHint = currentTotalSp?.let { totalSp ->
+    val characterSheetHint = currentLoggedInCharacter?.totalSp?.let { totalSp ->
         stringResource(
             R.string.character_sheet_skill_points,
             NumberDisplayFormatter.format(totalSp, NumberDisplayFormatter.Style.FULL),
         )
+    }.orEmpty()
+    val personalPropertyHint = currentLoggedInCharacter?.walletBalance?.let { balance ->
+        stringResource(R.string.personal_property_home_wallet_hint, balance)
     }.orEmpty()
 
     val updateActionLabel = when (uiState) {
@@ -235,6 +238,7 @@ fun MainPage(
                             },
                         )
                         MainPagePersonalPropertyItem(
+                            walletBalanceHint = personalPropertyHint,
                             onClick = {
                                 val characterId = currentCharacter?.characterId
                                     ?: return@MainPagePersonalPropertyItem

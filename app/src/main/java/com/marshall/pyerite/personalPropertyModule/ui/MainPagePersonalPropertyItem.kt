@@ -12,6 +12,7 @@ private const val HOME_CHARACTER_SECTION_HINT_LINE_COUNT = 1
 
 @Composable
 fun MainPagePersonalPropertyItem(
+    walletBalanceHint: String,
     onClick: () -> Unit,
     showDivider: Boolean = false,
 ) {
@@ -24,6 +25,7 @@ fun MainPagePersonalPropertyItem(
             iconRes = R.drawable.ic_personal_property,
             iconSize = iconSize,
             itemName = stringResource(R.string.personal_property),
+            itemHint = walletBalanceHint,
             onClick = onClick,
         ),
         showDivider = showDivider,
