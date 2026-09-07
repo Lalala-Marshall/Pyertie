@@ -134,8 +134,7 @@ private fun PersonalPropertyTotalSection(
             model = BaseLazyColumnItemModel(
                 iconRes = R.drawable.ic_personal_property,
                 itemName = stringResource(R.string.personal_property_total),
-                itemHint = stringResource(R.string.personal_property_total_hint),
-                trailingValue = formatPropertyIsk(
+                itemHint = formatCompactIsk(
                     value = summary.totalIsk,
                     detailsReady = !detailsPending,
                     placeholder = placeholder,
@@ -160,7 +159,7 @@ private fun PersonalPropertyBreakdownSection(
             iconRes = R.drawable.ic_personal_property_wallet,
             name = stringResource(R.string.personal_property_wallet),
             hint = stringResource(R.string.personal_property_wallet_hint),
-            trailingValue = formatPropertyIsk(summary.walletIsk, detailsReady, placeholder),
+            trailingValue = formatDetailIsk(summary.walletIsk, detailsReady, placeholder),
             clickable = false,
             showDivider = true,
         )
@@ -173,7 +172,7 @@ private fun PersonalPropertyBreakdownSection(
                 placeholder = placeholder,
                 templateRes = R.string.personal_property_assets_hint,
             ),
-            trailingValue = formatPropertyIsk(summary.assets.isk, detailsReady, placeholder),
+            trailingValue = formatDetailIsk(summary.assets.isk, detailsReady, placeholder),
             clickable = true,
             showDivider = true,
         )
@@ -186,7 +185,7 @@ private fun PersonalPropertyBreakdownSection(
                 placeholder = placeholder,
                 templateRes = R.string.personal_property_implants_hint,
             ),
-            trailingValue = formatPropertyIsk(summary.implants.isk, detailsReady, placeholder),
+            trailingValue = formatDetailIsk(summary.implants.isk, detailsReady, placeholder),
             clickable = true,
             showDivider = true,
         )
@@ -199,7 +198,12 @@ private fun PersonalPropertyBreakdownSection(
                 placeholder = placeholder,
                 templateRes = R.string.personal_property_market_orders_hint,
             ),
-            trailingValue = formatPropertyIsk(summary.marketOrders.isk, detailsReady, placeholder),
+            trailingValue = formatDetailIsk(
+                value = summary.marketOrders.isk,
+                detailsReady = detailsReady,
+                placeholder = placeholder,
+                zeroAsIntegerIsk = true,
+            ),
             clickable = true,
             showDivider = true,
         )
@@ -212,7 +216,12 @@ private fun PersonalPropertyBreakdownSection(
                 placeholder = placeholder,
                 templateRes = R.string.personal_property_contracts_hint,
             ),
-            trailingValue = formatPropertyIsk(summary.contracts.isk, detailsReady, placeholder),
+            trailingValue = formatDetailIsk(
+                value = summary.contracts.isk,
+                detailsReady = detailsReady,
+                placeholder = placeholder,
+                zeroAsIntegerIsk = true,
+            ),
             clickable = true,
             showDivider = false,
         )

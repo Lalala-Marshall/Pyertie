@@ -23,9 +23,7 @@ internal class PersonalPropertyViewModel(
     val uiState: StateFlow<PersonalPropertyUiState> = _uiState.asStateFlow()
 
     init {
-        if (!_uiState.value.detailsReady) {
-            loadSummary(forceRefresh = false)
-        }
+        loadSummary(forceRefresh = true)
     }
 
     fun refresh() {

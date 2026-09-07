@@ -8,8 +8,7 @@ internal object PersonalPropertyConfig {
     const val CONTRACTS_PAGE_SIZE = 1000
     const val CONTRACTS_MAX_PAGES = 10
     const val CONTRACT_ITEMS_CONCURRENCY = 4
-    const val TYPE_ID_QUERY_CHUNK = 500
-    const val BLUEPRINT_CATEGORY_ID = 9
+    const val PERCENT_SCALE = 100.0
 
     private const val MILLIS_PER_SECOND = 1_000L
     private const val SECONDS_PER_MINUTE = 60

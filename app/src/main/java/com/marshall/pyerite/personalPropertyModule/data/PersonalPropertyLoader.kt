@@ -8,12 +8,12 @@ import com.marshall.pyerite.esiModule.model.EsiCharacterOrderDto
 import com.marshall.pyerite.esiModule.model.EsiContractItemDto
 import com.marshall.pyerite.esiModule.model.EsiContractStatusValue
 import com.marshall.pyerite.esiModule.model.EsiContractTypeValue
-import com.marshall.pyerite.esiModule.model.EsiMarketPriceDto
+import com.marshall.pyerite.esiModule.model.EsiHttpStatus
+import com.marshall.pyerite.esiModule.model.EsiPagedQuery
 import com.marshall.pyerite.eveAuthModule.token.EveTokenManager
 import com.marshall.pyerite.personalPropertyModule.model.PersonalPropertyBucket
 import com.marshall.pyerite.personalPropertyModule.model.PersonalPropertyConfig
 import com.marshall.pyerite.personalPropertyModule.model.PersonalPropertySummary
-import com.marshall.pyerite.sdeModule.room.RoomProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -23,6 +23,8 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
+import retrofit2.Response
 
 /**
  * Aggregates wallet, assets, plugged implants, market orders, and item-exchange
@@ -32,7 +34,6 @@ internal class PersonalPropertyLoader(
     private val tokenManager: EveTokenManager,
     private val characterApi: EsiCharacterApi,
     private val marketApi: EsiMarketApi,
-    private val roomProvider: RoomProvider,
 ) {
     @Volatile
     private var cachedPrices: Map<Int, Double>? = null
@@ -73,9 +74,10 @@ internal class PersonalPropertyLoader(
                 return cached
             }
             return runCatching {
-                marketApi.fetchPrices().associate { dto ->
-                    dto.typeId to dto.unitPrice()
-                }
+                marketApi.fetchPrices().mapNotNull { dto ->
+                    val average = dto.averagePrice ?: return@mapNotNull null
+                    dto.typeId to average
+                }.toMap()
             }.getOrNull()?.also { prices ->
                 cachedPrices = prices
                 cachedPricesAtMs = now
@@ -92,20 +94,46 @@ internal class PersonalPropertyLoader(
     }.getOrNull()
 
     private suspend fun loadAssets(characterId: Long): List<EsiCharacterAssetDto>? = runCatching {
-        val all = ArrayList<EsiCharacterAssetDto>()
+        val byItemId = LinkedHashMap<Long, EsiCharacterAssetDto>()
         var page = PersonalPropertyConfig.FIRST_PAGE
-        var pagesRemaining = PersonalPropertyConfig.ASSETS_MAX_PAGES
-        while (pagesRemaining > 0) {
-            pagesRemaining--
-            val chunk = tokenManager.executeWithAuthRetry(characterId) { auth ->
-                characterApi.fetchAssets(characterId, auth, page)
+        var totalPages = PersonalPropertyConfig.FIRST_PAGE
+        while (page <= totalPages && page <= PersonalPropertyConfig.ASSETS_MAX_PAGES) {
+            val response = fetchAssetsPage(characterId, page)
+            if (!response.isSuccessful) {
+                if (page > PersonalPropertyConfig.FIRST_PAGE &&
+                    response.code() == EsiHttpStatus.NOT_FOUND
+                ) {
+                    break
+                }
+                throw HttpException(response)
             }
-            all.addAll(chunk)
-            if (chunk.size < PersonalPropertyConfig.ASSETS_PAGE_SIZE) break
+            val chunk = response.body().orEmpty()
+            chunk.forEach { asset ->
+                byItemId[asset.itemId] = asset
+            }
+            val headerPages = response.headers()[EsiPagedQuery.PAGES_HEADER]?.toIntOrNull()
+            totalPages = when {
+                headerPages != null -> headerPages
+                chunk.size < PersonalPropertyConfig.ASSETS_PAGE_SIZE -> page
+                else -> page + 1
+            }
             page++
         }
-        all
+        byItemId.values.toList()
     }.getOrNull()
+
+    private suspend fun fetchAssetsPage(
+        characterId: Long,
+        page: Int,
+    ): Response<List<EsiCharacterAssetDto>> {
+        return tokenManager.executeWithAuthRetry(characterId) { auth ->
+            val response = characterApi.fetchAssets(characterId, auth, page)
+            if (response.code() == EsiHttpStatus.UNAUTHORIZED) {
+                throw HttpException(response)
+            }
+            response
+        }
+    }
 
     private suspend fun loadImplantTypeIds(characterId: Long): List<Int>? {
         val active = runCatching {
@@ -137,7 +165,7 @@ internal class PersonalPropertyLoader(
                 !contract.forCorporation
         }
         if (outstanding.isEmpty()) {
-            return ContractLoadResult(count = 0, includedItems = emptyList())
+            return ContractLoadResult(count = 0L, includedItems = emptyList())
         }
         val semaphore = Semaphore(PersonalPropertyConfig.CONTRACT_ITEMS_CONCURRENCY)
         val itemPages = coroutineScope {
@@ -160,7 +188,7 @@ internal class PersonalPropertyLoader(
         val included = itemPages.filterNotNull().flatten().filter { it.isIncluded }
         val allItemFetchesFailed = itemPages.all { it == null }
         return ContractLoadResult(
-            count = outstanding.size,
+            count = outstanding.size.toLong(),
             includedItems = if (allItemFetchesFailed) null else included,
         )
     }
@@ -181,24 +209,22 @@ internal class PersonalPropertyLoader(
         return all
     }
 
-    private suspend fun valueAssets(
+    private fun valueAssets(
         stacks: List<EsiCharacterAssetDto>?,
         prices: Map<Int, Double>?,
     ): PersonalPropertyBucket {
         if (stacks == null) return PersonalPropertyBucket()
-        if (stacks.isEmpty()) return PersonalPropertyBucket(count = 0, isk = 0.0)
-        val qtyByType = HashMap<Int, Long>()
+        if (stacks.isEmpty()) return PersonalPropertyBucket(count = 0L, isk = 0.0)
+        if (prices == null) return PersonalPropertyBucket()
+        var count = 0L
+        var isk = 0.0
         stacks.forEach { asset ->
-            qtyByType[asset.typeId] = (qtyByType[asset.typeId] ?: 0L) + asset.quantity.toLong()
+            if (asset.isBlueprintCopy) return@forEach
+            val price = prices[asset.typeId] ?: return@forEach
+            count += 1
+            isk += assetQuantity(asset).toDouble() * price
         }
-        val blueprintIds = blueprintTypeIds(qtyByType.keys)
-        val countedStacks = stacks.count { it.typeId !in blueprintIds }
-        val isk = prices?.let { map ->
-            qtyByType.entries.sumOf { (typeId, qty) ->
-                if (typeId in blueprintIds) 0.0 else qty * map.priceOf(typeId)
-            }
-        }
-        return PersonalPropertyBucket(count = countedStacks, isk = isk)
+        return PersonalPropertyBucket(count = count, isk = isk)
     }
 
     private fun valueImplants(
@@ -206,10 +232,16 @@ internal class PersonalPropertyLoader(
         prices: Map<Int, Double>?,
     ): PersonalPropertyBucket {
         if (typeIds == null) return PersonalPropertyBucket()
-        if (typeIds.isEmpty()) return PersonalPropertyBucket(count = 0, isk = 0.0)
+        if (typeIds.isEmpty()) return PersonalPropertyBucket(count = 0L, isk = 0.0)
+        var isk = 0.0
+        if (prices != null) {
+            typeIds.forEach { typeId ->
+                isk += prices.priceOf(typeId)
+            }
+        }
         return PersonalPropertyBucket(
-            count = typeIds.size,
-            isk = prices?.let { map -> typeIds.sumOf { map.priceOf(it) } },
+            count = typeIds.size.toLong(),
+            isk = if (prices == null) null else isk,
         )
     }
 
@@ -218,20 +250,20 @@ internal class PersonalPropertyLoader(
         prices: Map<Int, Double>?,
     ): PersonalPropertyBucket {
         if (orders == null) return PersonalPropertyBucket()
-        if (orders.isEmpty()) return PersonalPropertyBucket(count = 0, isk = 0.0)
-        val escrow = orders.filter { it.isBuyOrder }.sumOf { it.escrow }
+        if (orders.isEmpty()) return PersonalPropertyBucket(count = 0L, isk = 0.0)
         val sellOrders = orders.filter { !it.isBuyOrder }
-        val isk = if (prices == null && sellOrders.isNotEmpty()) {
-            null
-        } else {
-            val sellValue = prices?.let { map ->
-                sellOrders.sumOf { order ->
-                    order.volumeRemain * map.priceOf(order.typeId)
-                }
-            } ?: 0.0
-            escrow + sellValue
+        if (prices == null && sellOrders.isNotEmpty()) {
+            return PersonalPropertyBucket(count = orders.size.toLong(), isk = null)
         }
-        return PersonalPropertyBucket(count = orders.size, isk = isk)
+        var isk = 0.0
+        orders.forEach { order ->
+            if (order.isBuyOrder) {
+                isk += order.escrow
+            } else if (prices != null) {
+                isk += order.volumeRemain.toDouble() * prices.priceOf(order.typeId)
+            }
+        }
+        return PersonalPropertyBucket(count = orders.size.toLong(), isk = isk)
     }
 
     private fun valueContracts(
@@ -239,37 +271,31 @@ internal class PersonalPropertyLoader(
         prices: Map<Int, Double>?,
     ): PersonalPropertyBucket {
         if (result == null) return PersonalPropertyBucket()
-        if (result.count == 0) return PersonalPropertyBucket(count = 0, isk = 0.0)
+        if (result.count == 0L) return PersonalPropertyBucket(count = 0L, isk = 0.0)
         val items = result.includedItems
         val isk = if (items == null || prices == null) {
             null
         } else {
-            items.sumOf { item -> item.quantity * prices.priceOf(item.typeId) }
+            var total = 0.0
+            items.forEach { item ->
+                val quantity = if (item.quantity > 0) item.quantity.toLong() else 1L
+                total += quantity.toDouble() * prices.priceOf(item.typeId)
+            }
+            total
         }
         return PersonalPropertyBucket(count = result.count, isk = isk)
     }
 
-    private suspend fun blueprintTypeIds(typeIds: Set<Int>): Set<Int> {
-        if (typeIds.isEmpty()) return emptySet()
-        return runCatching {
-            val dao = roomProvider.getDatabase().sdeTypeDao()
-            typeIds.chunked(PersonalPropertyConfig.TYPE_ID_QUERY_CHUNK)
-                .flatMap { chunk -> dao.getTypeCategories(chunk) }
-                .mapNotNull { row ->
-                    row.typeId.takeIf {
-                        row.categoryId == PersonalPropertyConfig.BLUEPRINT_CATEGORY_ID
-                    }
-                }
-                .toSet()
-        }.getOrDefault(emptySet())
+    private fun assetQuantity(asset: EsiCharacterAssetDto): Long {
+        if (asset.isSingleton) return 1L
+        val quantity = asset.quantity
+        return if (quantity > 0) quantity.toLong() else 1L
     }
 
     private data class ContractLoadResult(
-        val count: Int,
+        val count: Long,
         val includedItems: List<EsiContractItemDto>?,
     )
 }
-
-private fun EsiMarketPriceDto.unitPrice(): Double = averagePrice ?: adjustedPrice ?: 0.0
 
 private fun Map<Int, Double>.priceOf(typeId: Int): Double = this[typeId] ?: 0.0

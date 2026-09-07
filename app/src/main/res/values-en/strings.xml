@@ -92,7 +92,6 @@
     <string name="personal_property">Personal Property</string>
     <string name="personal_property_home_wallet_hint">Wallet: %1$s ISK</string>
     <string name="personal_property_total">Total Assets</string>
-    <string name="personal_property_total_hint">Estimated net worth</string>
     <string name="personal_property_wallet">Wallet</string>
     <string name="personal_property_wallet_hint">Current balance</string>
     <string name="personal_property_assets">Assets</string>
@@ -104,6 +103,9 @@
     <string name="personal_property_contracts">Item Exchange Contracts</string>
     <string name="personal_property_contracts_hint">%1$d outstanding contracts</string>
     <string name="personal_property_distribution">Asset Distribution</string>
+    <string name="personal_property_distribution_slice">%1$s%%(%2$s ISK)</string>
+    <string name="personal_property_isk_value">%1$s ISK</string>
+    <string name="personal_property_isk_zero">0 ISK</string>
     <string name="personal_property_load_failed">Failed to load</string>
     <string name="character_skills_hint_idle">Idle: No skill training queue</string>
     <string name="character_skills_hint_paused">Paused: %1$d skills (%2$s)</string>

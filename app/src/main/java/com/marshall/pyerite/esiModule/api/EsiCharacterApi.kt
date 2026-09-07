@@ -27,6 +27,7 @@ import com.marshall.pyerite.esiModule.model.EsiPagedQuery
 import com.marshall.pyerite.esiModule.model.EsiSendMailRequestDto
 import com.marshall.pyerite.esiModule.model.EsiSkillQueueEntryDto
 import okhttp3.ResponseBody
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -193,7 +194,7 @@ internal interface EsiCharacterApi {
         @Path("character_id") characterId: Long,
         @Header("Authorization") authorization: String,
         @Query(EsiPagedQuery.PAGE) page: Int,
-    ): List<EsiCharacterAssetDto>
+    ): Response<List<EsiCharacterAssetDto>>
 
     @Headers("Accept: application/json")
     @GET("characters/{character_id}/orders")

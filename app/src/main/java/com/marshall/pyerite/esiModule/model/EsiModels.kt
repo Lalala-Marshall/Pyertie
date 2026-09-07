@@ -346,13 +346,20 @@ internal data class EsiOrganization(
     val executorCorporationId: Long? = null,
 )
 
-/** Query parameter name for ESI paginated list routes. */
+/** Query parameter and response header names for ESI paginated list routes. */
 internal object EsiPagedQuery {
     const val PAGE = "page"
+    const val PAGES_HEADER = "X-Pages"
+}
+
+internal object EsiHttpStatus {
+    const val UNAUTHORIZED = 401
+    const val NOT_FOUND = 404
 }
 
 @Serializable
 internal data class EsiCharacterAssetDto(
+    @SerialName("item_id") val itemId: Long,
     @SerialName("type_id") val typeId: Int,
     val quantity: Int = 0,
     @SerialName("is_blueprint_copy") val isBlueprintCopy: Boolean = false,

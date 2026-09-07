@@ -1,7 +1,7 @@
 package com.marshall.pyerite.personalPropertyModule.model
 
 internal data class PersonalPropertyBucket(
-    val count: Int? = null,
+    val count: Long? = null,
     val isk: Double? = null,
 )
 

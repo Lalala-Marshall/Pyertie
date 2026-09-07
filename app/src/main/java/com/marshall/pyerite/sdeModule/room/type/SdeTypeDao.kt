@@ -31,13 +31,4 @@ interface SdeTypeDao {
         """,
     )
     suspend fun getTypeDisplayName(typeId: Int): TypeDisplayNameRow?
-
-    @Query(
-        """
-        SELECT type_id AS typeId, categoryID AS categoryId
-        FROM types
-        WHERE type_id IN (:typeIds)
-        """,
-    )
-    suspend fun getTypeCategories(typeIds: List<Int>): List<TypeCategoryRow>
 }

@@ -260,8 +260,6 @@
     <dimen name="top_bar_dropdown_wide_min_width">260dp</dimen>
 
     <!-- Personal property distribution -->
-    <dimen name="personal_property_chart_size">120dp</dimen>
-    <dimen name="personal_property_chart_stroke">18dp</dimen>
     <dimen name="personal_property_chart_legend_gap">16dp</dimen>
     <dimen name="personal_property_distribution_padding">12dp</dimen>
     <dimen name="personal_property_legend_row_gap">8dp</dimen>
