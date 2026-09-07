@@ -5,11 +5,18 @@ import com.marshall.pyerite.characterCalendarModule.data.CalendarReminderStore
 import com.marshall.pyerite.characterCalendarModule.data.CharacterCalendarCache
 import com.marshall.pyerite.characterCalendarModule.data.CharacterCalendarLoader
 import com.marshall.pyerite.characterCalendarModule.model.CalendarAddReminderResult
+import com.marshall.pyerite.characterCalendarModule.model.CalendarEsiConfig
+import com.marshall.pyerite.characterCalendarModule.model.CalendarEventMissingException
+import com.marshall.pyerite.characterCalendarModule.model.CalendarEventStatus
 import com.marshall.pyerite.characterCalendarModule.model.CalendarReminder
 import com.marshall.pyerite.characterCalendarModule.model.CalendarReminderLead
 import com.marshall.pyerite.characterCalendarModule.model.CharacterCalendarEvent
 import com.marshall.pyerite.characterCalendarModule.model.CharacterCalendarEventDetail
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
@@ -40,11 +47,13 @@ internal class CharacterCalendarRepository(
     suspend fun loadEvents(
         characterId: Long,
         coverUntilEpochMs: Long,
+        nowEpochMs: Long = System.currentTimeMillis(),
     ): List<CharacterCalendarEvent> = withContext(Dispatchers.IO) {
         val incoming = loader.loadSummaries(characterId, coverUntilEpochMs)
-        val merged = cache.merge(characterId, incoming)
-        eventsByCharacterId[characterId] = merged
-        merged
+        val merged = cache.merge(characterId, incoming, nowEpochMs)
+        val visible = dropMissingUpcoming(characterId, merged, nowEpochMs)
+        eventsByCharacterId[characterId] = visible
+        visible
     }
 
     suspend fun loadDetail(
@@ -54,6 +63,14 @@ internal class CharacterCalendarRepository(
         val loaded = loader.loadDetail(characterId, eventId)
         detailsByKey[DetailKey(characterId, eventId)] = loaded
         loaded
+    }
+
+    fun dropMissingEvent(characterId: Long, eventId: Long): List<CharacterCalendarEvent> {
+        detailsByKey.remove(DetailKey(characterId, eventId))
+        cancelReminders(characterId, setOf(eventId))
+        val remaining = cache.markInaccessible(characterId, setOf(eventId))
+        eventsByCharacterId[characterId] = remaining
+        return remaining
     }
 
     fun pendingReminders(
@@ -103,6 +120,50 @@ internal class CharacterCalendarRepository(
     fun exactAlarmSettingsIntent() = reminderScheduler.exactAlarmSettingsIntent()
 
     fun ensureNotificationChannel() = reminderScheduler.ensureChannel()
+
+    private suspend fun dropMissingUpcoming(
+        characterId: Long,
+        events: List<CharacterCalendarEvent>,
+        nowEpochMs: Long,
+    ): List<CharacterCalendarEvent> {
+        val toProbe = events.filter { event ->
+            CalendarEventStatus.isUpcoming(event.startEpochMs, nowEpochMs) &&
+                cachedDetail(characterId, event.eventId) == null
+        }
+        if (toProbe.isEmpty()) return events
+        val missingIds = mutableSetOf<Long>()
+        toProbe.chunked(CalendarEsiConfig.DETAIL_PROBE_CONCURRENCY).forEach { chunk ->
+            coroutineScope {
+                chunk.map { event ->
+                    async {
+                        val result = runCatching { loader.loadDetail(characterId, event.eventId) }
+                        event.eventId to result
+                    }
+                }.awaitAll()
+            }.forEach { (eventId, result) ->
+                result.fold(
+                    onSuccess = { detail ->
+                        detailsByKey[DetailKey(characterId, eventId)] = detail
+                    },
+                    onFailure = { error ->
+                        if (error is CancellationException) throw error
+                        if (error is CalendarEventMissingException) {
+                            missingIds += eventId
+                        }
+                    },
+                )
+            }
+        }
+        if (missingIds.isEmpty()) return events
+        cancelReminders(characterId, missingIds)
+        return cache.markInaccessible(characterId, missingIds)
+    }
+
+    private fun cancelReminders(characterId: Long, eventIds: Set<Long>) {
+        reminderStore.reminders.value
+            .filter { it.characterId == characterId && it.eventId in eventIds }
+            .forEach(::removeReminder)
+    }
 
     private data class DetailKey(val characterId: Long, val eventId: Long)
 }

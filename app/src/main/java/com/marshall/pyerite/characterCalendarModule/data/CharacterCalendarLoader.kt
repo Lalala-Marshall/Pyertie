@@ -1,7 +1,9 @@
 package com.marshall.pyerite.characterCalendarModule.data
 
 import com.marshall.pyerite.characterCalendarModule.model.CalendarEsiConfig
+import com.marshall.pyerite.characterCalendarModule.model.CalendarEventMissingException
 import com.marshall.pyerite.characterCalendarModule.model.CalendarEventResponse
+import com.marshall.pyerite.characterCalendarModule.model.CalendarEventStatus
 import com.marshall.pyerite.characterCalendarModule.model.CalendarOwnerType
 import com.marshall.pyerite.characterCalendarModule.model.CharacterCalendarEvent
 import com.marshall.pyerite.characterCalendarModule.model.CharacterCalendarEventDetail
@@ -10,10 +12,12 @@ import com.marshall.pyerite.esiModule.model.EsiCalendarEventDetailDto
 import com.marshall.pyerite.esiModule.model.EsiCalendarEventResponseValue
 import com.marshall.pyerite.esiModule.model.EsiCalendarEventSummaryDto
 import com.marshall.pyerite.esiModule.model.EsiCalendarOwnerTypeValue
+import com.marshall.pyerite.esiModule.model.EsiHttpStatus
 import com.marshall.pyerite.esiModule.model.parseEsiDateMillis
 import com.marshall.pyerite.eveAuthModule.token.EveTokenManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 
 internal class CharacterCalendarLoader(
     private val tokenManager: EveTokenManager,
@@ -34,9 +38,10 @@ internal class CharacterCalendarLoader(
             val mapped = page.mapNotNull { it.toModel() }
             mapped.forEach { collected[it.eventId] = it }
             if (page.size < CalendarEsiConfig.PAGE_SIZE) break
-            val last = mapped.lastOrNull() ?: break
-            if (last.startEpochMs >= coverUntilEpochMs) break
-            fromEvent = last.eventId
+            val lastDto = page.lastOrNull() ?: break
+            val lastStart = parseEsiDateMillis(lastDto.eventDate) ?: break
+            if (lastStart >= coverUntilEpochMs) break
+            fromEvent = lastDto.eventId
         }
         collected.values.toList()
     }
@@ -45,8 +50,15 @@ internal class CharacterCalendarLoader(
         characterId: Long,
         eventId: Long,
     ): CharacterCalendarEventDetail = withContext(Dispatchers.IO) {
-        val dto = tokenManager.executeWithAuthRetry(characterId) { auth ->
-            characterApi.fetchCalendarEvent(characterId, eventId, auth)
+        val dto = try {
+            tokenManager.executeWithAuthRetry(characterId) { auth ->
+                characterApi.fetchCalendarEvent(characterId, eventId, auth)
+            }
+        } catch (httpError: HttpException) {
+            if (httpError.code() == EsiHttpStatus.NOT_FOUND) {
+                throw CalendarEventMissingException()
+            }
+            throw httpError
         }
         dto.toModel()
     }
@@ -54,9 +66,11 @@ internal class CharacterCalendarLoader(
 
 private fun EsiCalendarEventSummaryDto.toModel(): CharacterCalendarEvent? {
     val startEpochMs = parseEsiDateMillis(eventDate) ?: return null
+    val resolvedTitle = title.orEmpty()
+    if (!CalendarEventStatus.isDisplayableTitle(resolvedTitle)) return null
     return CharacterCalendarEvent(
         eventId = eventId,
-        title = title.orEmpty(),
+        title = resolvedTitle,
         startEpochMs = startEpochMs,
         importance = importance,
         response = parseCalendarResponse(eventResponse),

@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.marshall.pyerite.characterCalendarModule.model.CalendarDates
 import com.marshall.pyerite.characterCalendarModule.model.CalendarEventResponse
+import com.marshall.pyerite.characterCalendarModule.model.CalendarEventStatus
 import com.marshall.pyerite.characterCalendarModule.model.CharacterCalendarEvent
 import com.marshall.pyerite.infra.network.PyeriteJson
 import kotlinx.serialization.Serializable
@@ -12,6 +13,7 @@ import kotlinx.serialization.Serializable
 /**
  * Disk cache of calendar event summaries. Events are merged by event id so days
  * already started this month still show after ESI drops them from the upcoming list.
+ * Upcoming ghosts that ESI no longer lists (or whose detail route 404s) are dropped.
  */
 internal class CharacterCalendarCache(
     context: Context,
@@ -19,31 +21,71 @@ internal class CharacterCalendarCache(
     private val prefs: SharedPreferences =
         context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    fun get(characterId: Long): List<CharacterCalendarEvent> {
-        val raw = prefs.getString(keyFor(characterId), null) ?: return emptyList()
-        return runCatching {
-            PyeriteJson.decodeFromString<CachedCalendarEvents>(raw).toModels()
-        }.getOrElse { emptyList() }
-    }
+    fun get(characterId: Long): List<CharacterCalendarEvent> =
+        loadSnapshot(characterId).visibleEvents()
 
     fun merge(
         characterId: Long,
         incoming: List<CharacterCalendarEvent>,
         nowEpochMs: Long = System.currentTimeMillis(),
     ): List<CharacterCalendarEvent> {
-        val byId = LinkedHashMap<Long, CharacterCalendarEvent>()
-        get(characterId).forEach { byId[it.eventId] = it }
-        incoming.forEach { byId[it.eventId] = it }
+        val snapshot = loadSnapshot(characterId)
+        val inaccessible = snapshot.inaccessibleEventIds
+        val incomingById = LinkedHashMap<Long, CharacterCalendarEvent>()
+        incoming.forEach { event ->
+            if (event.eventId in inaccessible) return@forEach
+            if (!CalendarEventStatus.isDisplayableTitle(event.title)) return@forEach
+            incomingById[event.eventId] = event
+        }
         val pruneBefore = CalendarDates.previousMonthStartEpochMs(nowEpochMs)
-        val merged = byId.values
-            .filter { it.startEpochMs >= pruneBefore }
-            .sortedBy { it.startEpochMs }
-        save(characterId, merged)
+        val byId = LinkedHashMap<Long, CharacterCalendarEvent>()
+        snapshot.events.forEach { cached ->
+            if (cached.eventId in inaccessible) return@forEach
+            if (!CalendarEventStatus.isDisplayableTitle(cached.title)) return@forEach
+            if (cached.startEpochMs < pruneBefore) return@forEach
+            if (CalendarEventStatus.isUpcoming(cached.startEpochMs, nowEpochMs) &&
+                cached.eventId !in incomingById
+            ) {
+                return@forEach
+            }
+            byId[cached.eventId] = cached
+        }
+        incomingById.forEach { (eventId, event) -> byId[eventId] = event }
+        val merged = byId.values.sortedBy { it.startEpochMs }
+        saveSnapshot(characterId, merged, inaccessible)
         return merged
     }
 
-    private fun save(characterId: Long, events: List<CharacterCalendarEvent>) {
-        val encoded = PyeriteJson.encodeToString(CachedCalendarEvents.from(characterId, events))
+    fun markInaccessible(
+        characterId: Long,
+        eventIds: Set<Long>,
+    ): List<CharacterCalendarEvent> {
+        if (eventIds.isEmpty()) return get(characterId)
+        val snapshot = loadSnapshot(characterId)
+        val inaccessible = snapshot.inaccessibleEventIds + eventIds
+        val remaining = snapshot.events.filter { event ->
+            event.eventId !in inaccessible &&
+                CalendarEventStatus.isDisplayableTitle(event.title)
+        }
+        saveSnapshot(characterId, remaining, inaccessible)
+        return remaining
+    }
+
+    private fun loadSnapshot(characterId: Long): CachedCalendarSnapshot {
+        val raw = prefs.getString(keyFor(characterId), null) ?: return CachedCalendarSnapshot()
+        return runCatching {
+            PyeriteJson.decodeFromString<CachedCalendarEvents>(raw).toSnapshot()
+        }.getOrElse { CachedCalendarSnapshot() }
+    }
+
+    private fun saveSnapshot(
+        characterId: Long,
+        events: List<CharacterCalendarEvent>,
+        inaccessibleEventIds: Set<Long>,
+    ) {
+        val encoded = PyeriteJson.encodeToString(
+            CachedCalendarEvents.from(characterId, events, inaccessibleEventIds),
+        )
         prefs.edit { putString(keyFor(characterId), encoded) }
     }
 
@@ -55,20 +97,36 @@ internal class CharacterCalendarCache(
     }
 }
 
+private data class CachedCalendarSnapshot(
+    val events: List<CharacterCalendarEvent> = emptyList(),
+    val inaccessibleEventIds: Set<Long> = emptySet(),
+) {
+    fun visibleEvents(): List<CharacterCalendarEvent> = events.filter { event ->
+        event.eventId !in inaccessibleEventIds &&
+            CalendarEventStatus.isDisplayableTitle(event.title)
+    }
+}
+
 @Serializable
 private data class CachedCalendarEvents(
     val characterId: Long,
     val events: List<CachedCalendarEvent> = emptyList(),
+    val inaccessibleEventIds: List<Long> = emptyList(),
 ) {
-    fun toModels(): List<CharacterCalendarEvent> = events.map { it.toModel() }
+    fun toSnapshot(): CachedCalendarSnapshot = CachedCalendarSnapshot(
+        events = events.map { it.toModel() },
+        inaccessibleEventIds = inaccessibleEventIds.toSet(),
+    )
 
     companion object {
         fun from(
             characterId: Long,
             events: List<CharacterCalendarEvent>,
+            inaccessibleEventIds: Set<Long>,
         ): CachedCalendarEvents = CachedCalendarEvents(
             characterId = characterId,
             events = events.map(CachedCalendarEvent::from),
+            inaccessibleEventIds = inaccessibleEventIds.sorted(),
         )
     }
 }

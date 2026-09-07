@@ -6,11 +6,14 @@ import androidx.lifecycle.viewModelScope
 import com.marshall.pyerite.characterCalendarModule.model.CalendarAddReminderResult
 import com.marshall.pyerite.characterCalendarModule.model.CalendarDate
 import com.marshall.pyerite.characterCalendarModule.model.CalendarDates
+import com.marshall.pyerite.characterCalendarModule.model.CalendarEventMissingException
 import com.marshall.pyerite.characterCalendarModule.model.CalendarEventResponse
+import com.marshall.pyerite.characterCalendarModule.model.CalendarEventStatus
 import com.marshall.pyerite.characterCalendarModule.model.CalendarReminder
 import com.marshall.pyerite.characterCalendarModule.model.CalendarReminderLead
 import com.marshall.pyerite.characterCalendarModule.model.CharacterCalendarEvent
 import com.marshall.pyerite.characterCalendarModule.model.CharacterCalendarEventDetail
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -119,11 +122,9 @@ internal class CharacterCalendarViewModel(
                             detailFailed = false,
                         )
                     },
-                    onFailure = {
-                        current.copy(
-                            detailLoading = false,
-                            detailFailed = true,
-                        )
+                    onFailure = { error ->
+                        if (error is CancellationException) return@update current
+                        missingEventState(current, eventId, error)
                     },
                 )
             }
@@ -156,6 +157,34 @@ internal class CharacterCalendarViewModel(
     }
 
     fun exactAlarmSettingsIntent() = repository.exactAlarmSettingsIntent()
+
+    private fun missingEventState(
+        current: CharacterCalendarUiState,
+        eventId: Long,
+        error: Throwable,
+    ): CharacterCalendarUiState {
+        if (error !is CalendarEventMissingException) {
+            return current.copy(
+                detailLoading = false,
+                detailFailed = true,
+            )
+        }
+        val summary = current.events.firstOrNull { it.eventId == eventId }
+        if (summary != null && CalendarEventStatus.isExpired(summary.startEpochMs)) {
+            return current.copy(
+                detailLoading = false,
+                detailFailed = false,
+            )
+        }
+        val remaining = repository.dropMissingEvent(characterId, eventId)
+        return current.copy(
+            events = remaining,
+            openedEventId = null,
+            openedDetail = null,
+            detailLoading = false,
+            detailFailed = false,
+        )
+    }
 
     private fun refreshReminders() {
         _uiState.update {

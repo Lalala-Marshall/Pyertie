@@ -4,6 +4,7 @@ package com.marshall.pyerite.characterCalendarModule.model
 internal object CalendarEsiConfig {
     const val PAGE_SIZE = 50
     const val MAX_PAGES = 5
+    const val DETAIL_PROBE_CONCURRENCY = 4
 }
 
 internal object CalendarTimeConfig {
@@ -48,4 +49,22 @@ internal object CalendarEventCountConfig {
 
 internal object CalendarSheetConfig {
     const val HEIGHT_FRACTION = 0.85f
+}
+
+/**
+ * ESI calendar summaries can include deleted / empty-title ghosts whose detail
+ * route returns 404. Those are not useful to show.
+ */
+internal object CalendarEventStatus {
+    fun isExpired(
+        startEpochMs: Long,
+        nowEpochMs: Long = System.currentTimeMillis(),
+    ): Boolean = startEpochMs <= nowEpochMs
+
+    fun isUpcoming(
+        startEpochMs: Long,
+        nowEpochMs: Long = System.currentTimeMillis(),
+    ): Boolean = startEpochMs > nowEpochMs
+
+    fun isDisplayableTitle(title: String): Boolean = title.isNotBlank()
 }

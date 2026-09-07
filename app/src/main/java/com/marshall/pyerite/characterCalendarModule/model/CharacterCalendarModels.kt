@@ -87,3 +87,6 @@ internal enum class CalendarAddReminderResult {
     FIRE_TIME_PASSED,
     EXACT_ALARM_DENIED,
 }
+
+/** Detail route 404: event was deleted or never existed on ESI. */
+internal class CalendarEventMissingException : Exception()
