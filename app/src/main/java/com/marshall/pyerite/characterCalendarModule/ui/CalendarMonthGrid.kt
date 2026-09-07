@@ -119,6 +119,7 @@ internal fun CalendarMonthSection(
                     val isToday = date == today
                     val isSelected = date == selectedDate
                     val count = eventCountOn(date)
+                    val isPastDate = date < today
                     val textColor = when {
                         isSelected -> selectedText
                         isToday -> todayText
@@ -156,7 +157,7 @@ internal fun CalendarMonthSection(
                             fontSize = dimensionResource(R.dimen.character_calendar_day_text_size).value.sp,
                             fontWeight = if (isToday || isSelected) FontWeight.Bold else FontWeight.Normal,
                         )
-                        CalendarEventCountBadge(count = count)
+                        CalendarEventCountBadge(count = count, muted = isPastDate)
                     }
                 }
             }
@@ -187,17 +188,22 @@ private fun CalendarMonthNavButton(
 }
 
 @Composable
-private fun CalendarEventCountBadge(count: Int) {
+private fun CalendarEventCountBadge(count: Int, muted: Boolean) {
     val badgeSize = dimensionResource(R.dimen.character_calendar_count_badge_size)
     if (count <= 0) {
         Spacer(modifier = Modifier.height(badgeSize))
         return
     }
+    val badgeBackground = if (muted) {
+        colorResource(R.color.calendar_event_count_badge_background_past)
+    } else {
+        colorResource(R.color.calendar_event_count_badge_background)
+    }
     Box(
         modifier = Modifier
             .size(badgeSize)
             .clip(CircleShape)
-            .background(colorResource(R.color.calendar_event_count_badge_background)),
+            .background(badgeBackground),
         contentAlignment = Alignment.Center,
     ) {
         Text(

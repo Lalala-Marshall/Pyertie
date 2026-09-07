@@ -34,12 +34,14 @@ import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.characterCalendarModule.model.CalendarAddReminderResult
 import com.marshall.pyerite.characterCalendarModule.model.CalendarDate
+import com.marshall.pyerite.characterCalendarModule.model.CalendarEventStatus
 import com.marshall.pyerite.characterCalendarModule.model.CalendarReminderLead
 import com.marshall.pyerite.characterCalendarModule.model.CharacterCalendarEvent
 import com.marshall.pyerite.characterCalendarModule.viewModel.CharacterCalendarViewModel
 import com.marshall.pyerite.localization.LocaleController
 import com.marshall.pyerite.ui.golbalComponents.BaseContainer
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItem
+import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemHint
 import com.marshall.pyerite.ui.golbalComponents.BaseLazyColumnItemModel
 import com.marshall.pyerite.ui.golbalComponents.PageTitle
 import com.marshall.pyerite.ui.golbalComponents.PyeritePageScaffold
@@ -247,19 +249,28 @@ private fun CalendarDayEventsSection(
                 )
             }
             else -> {
+                val nowEpochMs = System.currentTimeMillis()
+                val pastColor = colorResource(R.color.text_caption)
                 Column {
                     events.forEachIndexed { index, event ->
                         val time = formatCalendarDateTime(event.startEpochMs)
                         val response = calendarResponseLabel(event.response)
+                        val expired = CalendarEventStatus.isExpired(event.startEpochMs, nowEpochMs)
                         BaseLazyColumnItem(
                             model = BaseLazyColumnItemModel(
                                 showLeadingIcon = false,
                                 itemName = event.title.ifBlank { placeholder },
                                 itemNameBold = true,
-                                itemHint = stringResource(
-                                    R.string.character_calendar_event_hint,
-                                    time,
-                                    response,
+                                itemNameColor = if (expired) pastColor else null,
+                                itemHints = listOf(
+                                    BaseLazyColumnItemHint(
+                                        text = stringResource(
+                                            R.string.character_calendar_event_hint,
+                                            time,
+                                            response,
+                                        ),
+                                        color = if (expired) pastColor else null,
+                                    ),
                                 ),
                                 onClick = { onEventClick(event.eventId) },
                             ),

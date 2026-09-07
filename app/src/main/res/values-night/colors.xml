@@ -55,9 +55,12 @@
     <color name="calendar_selected_border">#1565C0</color>
     <color name="calendar_selected_text">#90CAF9</color>
     <color name="calendar_event_count_badge_background">#1565C0</color>
+    <color name="calendar_event_count_badge_background_past">#4A4A4A</color>
     <color name="calendar_event_count_badge_text">#FFFFFF</color>
     <color name="calendar_add_reminder_button">#1565C0</color>
     <color name="calendar_add_reminder_button_text">#FFFFFF</color>
+    <color name="calendar_add_reminder_button_expired">#4A4A4A</color>
+    <color name="calendar_add_reminder_button_expired_text">#9AA3B8</color>
 
     <color name="personal_property_slice_wallet">#FFC107</color>
     <color name="personal_property_slice_assets">#64B5F6</color>

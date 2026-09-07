@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.marshall.pyerite.R
 import com.marshall.pyerite.characterCalendarModule.model.CalendarEventImportance
+import com.marshall.pyerite.characterCalendarModule.model.CalendarEventStatus
 import com.marshall.pyerite.characterCalendarModule.model.CalendarOwnerType
 import com.marshall.pyerite.characterCalendarModule.model.CalendarReminderLead
 import com.marshall.pyerite.characterCalendarModule.model.CalendarTimeConfig
@@ -58,6 +59,8 @@ internal fun CalendarEventDetailSheet(
     var pickingLead by rememberSaveable { mutableStateOf(false) }
     val title = detail?.title ?: summary?.title ?: stringResource(R.string.character_calendar)
     val placeholder = stringResource(R.string.character_sheet_value_placeholder)
+    val startEpochMs = detail?.startEpochMs ?: summary?.startEpochMs
+    val expired = startEpochMs != null && CalendarEventStatus.isExpired(startEpochMs)
 
     CalendarBottomSheet(
         title = title.ifBlank { placeholder },
@@ -69,12 +72,13 @@ internal fun CalendarEventDetailSheet(
             detail = detail,
             loading = loading,
             failed = failed,
+            expired = expired,
             placeholder = placeholder,
             onAddReminder = { pickingLead = true },
         )
     }
 
-    if (pickingLead) {
+    if (pickingLead && !expired) {
         CalendarReminderLeadSheet(
             onDismiss = { pickingLead = false },
             onSelect = { lead ->
@@ -120,6 +124,7 @@ private fun CalendarEventDetailBody(
     detail: CharacterCalendarEventDetail?,
     loading: Boolean,
     failed: Boolean,
+    expired: Boolean,
     placeholder: String,
     onAddReminder: () -> Unit,
     modifier: Modifier = Modifier,
@@ -247,7 +252,7 @@ private fun CalendarEventDetailBody(
             }
         }
         Spacer(modifier = Modifier.height(sectionGap))
-        CalendarAddReminderButton(onClick = onAddReminder)
+        CalendarAddReminderButton(expired = expired, onClick = onAddReminder)
     }
 }
 
@@ -270,10 +275,23 @@ private fun CalendarDetailInfoRow(
 }
 
 @Composable
-private fun CalendarAddReminderButton(onClick: () -> Unit) {
+private fun CalendarAddReminderButton(
+    expired: Boolean,
+    onClick: () -> Unit,
+) {
     val shape = RoundedCornerShape(
         dimensionResource(R.dimen.character_calendar_add_reminder_button_corner),
     )
+    val background = if (expired) {
+        colorResource(R.color.calendar_add_reminder_button_expired)
+    } else {
+        colorResource(R.color.calendar_add_reminder_button)
+    }
+    val textColor = if (expired) {
+        colorResource(R.color.calendar_add_reminder_button_expired_text)
+    } else {
+        colorResource(R.color.calendar_add_reminder_button_text)
+    }
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -284,14 +302,18 @@ private fun CalendarAddReminderButton(onClick: () -> Unit) {
             )
             .height(dimensionResource(R.dimen.character_calendar_add_reminder_button_height))
             .clip(shape)
-            .background(colorResource(R.color.calendar_add_reminder_button))
-            .clickable(onClick = onClick)
+            .background(background)
+            .clickable(enabled = !expired, onClick = onClick)
             .semantics { role = Role.Button },
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = stringResource(R.string.character_calendar_add_reminder),
-            color = colorResource(R.color.calendar_add_reminder_button_text),
+            text = if (expired) {
+                stringResource(R.string.character_calendar_event_expired)
+            } else {
+                stringResource(R.string.character_calendar_add_reminder)
+            },
+            color = textColor,
             fontSize = dimensionResource(R.dimen.sub_menu_label_text_size).value.sp,
             fontWeight = FontWeight.SemiBold,
         )
