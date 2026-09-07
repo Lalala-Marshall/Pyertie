@@ -30,6 +30,8 @@ import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.characterCalendarModule.navHost.CharacterCalendarRoute
 import com.marshall.pyerite.characterCalendarModule.ui.MainPageCharacterCalendarItem
+import com.marshall.pyerite.personalPropertyModule.navHost.PersonalPropertyRoute
+import com.marshall.pyerite.personalPropertyModule.ui.MainPagePersonalPropertyItem
 import com.marshall.pyerite.characterClonesModule.navHost.CharacterClonesRoute
 import com.marshall.pyerite.characterClonesModule.ui.MainPageCloneStatusItem
 import com.marshall.pyerite.characterClonesModule.viewModel.CharacterClonesViewModel
@@ -100,15 +102,18 @@ fun MainPage(
         characterSkillsViewModel.setCharacterId(currentCharacter?.characterId)
     }
 
-    val currentTotalSp = remember(currentCharacter?.characterId, loggedInCharacters) {
+    val currentLoggedInCharacter = remember(currentCharacter?.characterId, loggedInCharacters) {
         val characterId = currentCharacter?.characterId ?: return@remember null
-        loggedInCharacters.find { it.characterId == characterId }?.totalSp
+        loggedInCharacters.find { it.characterId == characterId }
     }
-    val characterSheetHint = currentTotalSp?.let { totalSp ->
+    val characterSheetHint = currentLoggedInCharacter?.totalSp?.let { totalSp ->
         stringResource(
             R.string.character_sheet_skill_points,
             NumberDisplayFormatter.format(totalSp, NumberDisplayFormatter.Style.FULL),
         )
+    }.orEmpty()
+    val personalPropertyHint = currentLoggedInCharacter?.walletBalance?.let { balance ->
+        stringResource(R.string.personal_property_home_wallet_hint, balance)
     }.orEmpty()
 
     val updateActionLabel = when (uiState) {
@@ -223,11 +228,22 @@ fun MainPage(
                             },
                         )
                         MainPageCharacterCalendarItem(
+                            showDivider = true,
                             onClick = {
                                 val characterId = currentCharacter?.characterId
                                     ?: return@MainPageCharacterCalendarItem
                                 navController.navigate(
                                     CharacterCalendarRoute.Root.create(characterId),
+                                )
+                            },
+                        )
+                        MainPagePersonalPropertyItem(
+                            walletBalanceHint = personalPropertyHint,
+                            onClick = {
+                                val characterId = currentCharacter?.characterId
+                                    ?: return@MainPagePersonalPropertyItem
+                                navController.navigate(
+                                    PersonalPropertyRoute.Root.create(characterId),
                                 )
                             },
                         )

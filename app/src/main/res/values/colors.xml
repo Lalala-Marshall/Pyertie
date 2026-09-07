@@ -68,4 +68,10 @@
     <color name="calendar_event_count_badge_text">#FFFFFF</color>
     <color name="calendar_add_reminder_button">#1565C0</color>
     <color name="calendar_add_reminder_button_text">#FFFFFF</color>
+
+    <color name="personal_property_slice_wallet">#E1A640</color>
+    <color name="personal_property_slice_assets">#1565C0</color>
+    <color name="personal_property_slice_implants">#7B1FA2</color>
+    <color name="personal_property_slice_market">#34A853</color>
+    <color name="personal_property_slice_contracts">#00897B</color>
 </resources>

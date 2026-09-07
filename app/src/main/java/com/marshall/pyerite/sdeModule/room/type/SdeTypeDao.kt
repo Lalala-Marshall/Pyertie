@@ -31,4 +31,14 @@ interface SdeTypeDao {
         """,
     )
     suspend fun getTypeDisplayName(typeId: Int): TypeDisplayNameRow?
+
+    @Query(
+        """
+        SELECT type_id AS id, name, zh_name AS zhName, en_name AS enName,
+            icon_filename AS iconFilename
+        FROM types
+        WHERE type_id IN (:typeIds)
+        """,
+    )
+    suspend fun getTypesForDisplay(typeIds: List<Int>): List<TypeDisplayIconRow>
 }

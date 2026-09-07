@@ -22,6 +22,7 @@ import com.marshall.pyerite.entityProfileModule.ui.EntityProfileBottomSheet
 import com.marshall.pyerite.entityProfileModule.viewModel.EntityProfileViewModel
 import com.marshall.pyerite.mainPageModule.navHost.MainRoute
 import com.marshall.pyerite.mainPageModule.navHost.mainNavGraph
+import com.marshall.pyerite.personalPropertyModule.navHost.personalPropertyNavGraph
 import com.marshall.pyerite.ui.golbalComponents.LocalOpenEntityProfile
 import com.marshall.pyerite.ui.golbalComponents.UniverseEntityRef
 import org.koin.androidx.compose.koinViewModel
@@ -59,6 +60,7 @@ fun AppNavHost() {
                 characterSkillsNavGraph(navController)
                 characterMailNavGraph(navController)
                 characterCalendarNavGraph(navController)
+                personalPropertyNavGraph(navController)
             }
             if (entityProfileState.stack.isNotEmpty()) {
                 EntityProfileBottomSheet(viewModel = entityProfileViewModel)

@@ -3,6 +3,7 @@ package com.marshall.pyerite.esiModule
 import com.marshall.pyerite.esiModule.api.EsiAllianceApi
 import com.marshall.pyerite.esiModule.api.EsiCharacterApi
 import com.marshall.pyerite.esiModule.api.EsiCorporationApi
+import com.marshall.pyerite.esiModule.api.EsiMarketApi
 import com.marshall.pyerite.esiModule.api.EsiUniverseApi
 import com.marshall.pyerite.esiModule.data.EsiPublicDataSource
 import com.marshall.pyerite.esiModule.http.EsiConfig
@@ -18,5 +19,6 @@ val esiModule = module {
     single { get<EsiHttp>().client.createApi<EsiUniverseApi>(EsiConfig.BASE_URL) }
     single { get<EsiHttp>().client.createApi<EsiCorporationApi>(EsiConfig.BASE_URL) }
     single { get<EsiHttp>().client.createApi<EsiAllianceApi>(EsiConfig.BASE_URL) }
+    single { get<EsiHttp>().client.createApi<EsiMarketApi>(EsiConfig.BASE_URL) }
     singleOf(::EsiPublicDataSource)
 }
