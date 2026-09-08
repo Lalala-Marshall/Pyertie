@@ -30,6 +30,8 @@ import androidx.navigation.NavController
 import com.marshall.pyerite.R
 import com.marshall.pyerite.characterCalendarModule.navHost.CharacterCalendarRoute
 import com.marshall.pyerite.characterCalendarModule.ui.MainPageCharacterCalendarItem
+import com.marshall.pyerite.loyaltyPointsModule.navHost.LoyaltyPointsRoute
+import com.marshall.pyerite.loyaltyPointsModule.ui.MainPageLoyaltyPointsItem
 import com.marshall.pyerite.personalPropertyModule.navHost.PersonalPropertyRoute
 import com.marshall.pyerite.personalPropertyModule.ui.MainPagePersonalPropertyItem
 import com.marshall.pyerite.characterClonesModule.navHost.CharacterClonesRoute
@@ -239,11 +241,21 @@ fun MainPage(
                         )
                         MainPagePersonalPropertyItem(
                             walletBalanceHint = personalPropertyHint,
+                            showDivider = true,
                             onClick = {
                                 val characterId = currentCharacter?.characterId
                                     ?: return@MainPagePersonalPropertyItem
                                 navController.navigate(
                                     PersonalPropertyRoute.Root.create(characterId),
+                                )
+                            },
+                        )
+                        MainPageLoyaltyPointsItem(
+                            onClick = {
+                                val characterId = currentCharacter?.characterId
+                                    ?: return@MainPageLoyaltyPointsItem
+                                navController.navigate(
+                                    LoyaltyPointsRoute.Hub.create(characterId),
                                 )
                             },
                         )

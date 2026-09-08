@@ -430,4 +430,26 @@
     <string name="entity_profile_npc_tag">NPC</string>
     <string name="entity_profile_load_failed">加载失败</string>
     <string name="entity_profile_retry">重试</string>
+
+    <string name="loyalty_points">忠诚点</string>
+    <string name="loyalty_points_store">忠诚点商店</string>
+    <string name="loyalty_points_basic_info">基本信息</string>
+    <string name="loyalty_points_factions">可选势力</string>
+    <string name="loyalty_points_find_station">寻找空间站</string>
+    <string name="loyalty_points_offer_categories">可兑换物品分类</string>
+    <string name="loyalty_points_offers">可兑换物品</string>
+    <string name="loyalty_points_hint">%1$s LP</string>
+    <string name="loyalty_points_lp_value">%1$s LP</string>
+    <string name="loyalty_points_isk_value">%1$s ISK</string>
+    <string name="loyalty_points_times_separator">\u0020x\u0020</string>
+    <string name="loyalty_points_plus_separator">\u0020+\u0020</string>
+    <string name="loyalty_points_required_items">需要的物品（%1$s ISK）</string>
+    <string name="loyalty_points_corps_empty">暂无忠诚点</string>
+    <string name="loyalty_points_stations_empty">暂无空间站</string>
+    <string name="loyalty_points_offers_empty">暂无可兑换物品</string>
+    <string name="loyalty_points_categories_empty">暂无可兑换分类</string>
+    <string name="loyalty_points_factions_empty">暂无可选势力</string>
+    <string name="loyalty_points_faction_corps_empty">暂无可选军团</string>
+    <string name="loyalty_points_militia_tag">卫队</string>
+    <string name="loyalty_points_station_region_title">%1$s（%2$d）</string>
 </resources>

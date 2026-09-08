@@ -52,6 +52,10 @@ data class BaseLazyColumnItemHint(
     val color: Color? = null,
     val iconUrl: String? = null,
     val iconRes: Int? = null,
+    /** SDE icon pack filename; resolved via [IconManager] when [iconUrl] / [iconRes] are unset. */
+    val iconFileName: String? = null,
+    /** Larger hint (between title and default subtitle), e.g. LP store cost line. */
+    val emphasized: Boolean = false,
     val onClick: (() -> Unit)? = null,
 )
 
@@ -179,6 +183,10 @@ fun BaseLazyColumnItem(
     val valueTextSize = dimensionResource(R.dimen.sub_menu_value_text_size).value.sp
     val hintTextSize = dimensionResource(R.dimen.detail_row_label_subtitle_text_size).value.sp
     val hintLineHeight = dimensionResource(R.dimen.detail_row_label_subtitle_line_height).value.sp
+    val emphasizedHintTextSize =
+        dimensionResource(R.dimen.detail_row_label_emphasized_subtitle_text_size).value.sp
+    val emphasizedHintLineHeight =
+        dimensionResource(R.dimen.detail_row_label_emphasized_subtitle_line_height).value.sp
     val hintSpacing = dimensionResource(R.dimen.detail_row_label_subtitle_spacing)
     val hintIconSize = dimensionResource(R.dimen.base_lazy_column_item_hint_icon_size)
     val hintIconGap = dimensionResource(R.dimen.base_lazy_column_item_hint_icon_gap)
@@ -187,7 +195,9 @@ fun BaseLazyColumnItem(
     val trailingColor = model.trailingValueColor ?: defaultHintColor
     val showHintLeadingColumn = titleLeadingContent != null ||
         (model.alignHintLeadingColumn &&
-            hints.any { !it.iconUrl.isNullOrBlank() || it.iconRes != null })
+            hints.any {
+                !it.iconUrl.isNullOrBlank() || it.iconRes != null || !it.iconFileName.isNullOrBlank()
+            })
 
     val rootModifier = modifier
         .fillMaxWidth()
@@ -310,7 +320,19 @@ fun BaseLazyColumnItem(
                         }
                         hints.forEach { hint ->
                             val hintClick = hint.onClick
-                            val hintHasIcon = !hint.iconUrl.isNullOrBlank() || hint.iconRes != null
+                            val hintHasIcon = !hint.iconUrl.isNullOrBlank() ||
+                                hint.iconRes != null ||
+                                !hint.iconFileName.isNullOrBlank()
+                            val lineFontSize = if (hint.emphasized) {
+                                emphasizedHintTextSize
+                            } else {
+                                hintTextSize
+                            }
+                            val lineLineHeight = if (hint.emphasized) {
+                                emphasizedHintLineHeight
+                            } else {
+                                hintLineHeight
+                            }
                             Row(verticalAlignment = Alignment.Top) {
                                 if (showHintLeadingColumn || hintHasIcon) {
                                     Box(
@@ -320,7 +342,9 @@ fun BaseLazyColumnItem(
                                         BaseLazyColumnItemHintIcon(
                                             iconUrl = hint.iconUrl,
                                             iconRes = hint.iconRes,
+                                            iconFileName = hint.iconFileName,
                                             size = hintIconSize,
+                                            iconManager = iconManager,
                                         )
                                     }
                                     Spacer(modifier = Modifier.width(hintIconGap))
@@ -329,8 +353,8 @@ fun BaseLazyColumnItem(
                                 if (annotated != null) {
                                     Text(
                                         text = annotated,
-                                        fontSize = hintTextSize,
-                                        lineHeight = hintLineHeight,
+                                        fontSize = lineFontSize,
+                                        lineHeight = lineLineHeight,
                                         modifier = Modifier.weight(1f),
                                     )
                                 } else {
@@ -342,8 +366,8 @@ fun BaseLazyColumnItem(
                                             } else {
                                                 defaultHintColor
                                             },
-                                        fontSize = hintTextSize,
-                                        lineHeight = hintLineHeight,
+                                        fontSize = lineFontSize,
+                                        lineHeight = lineLineHeight,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
                                         modifier = Modifier
@@ -419,10 +443,23 @@ fun BaseLazyColumnItem(
 private fun BaseLazyColumnItemHintIcon(
     iconUrl: String?,
     iconRes: Int?,
+    iconFileName: String?,
     size: Dp,
+    iconManager: IconManager,
 ) {
     val shape = PyeriteIconShape.shape
+    val iconFile = iconFileName?.let { iconManager.getIconFile(it) }
     when {
+        iconFile != null -> {
+            Icon(
+                modifier = Modifier
+                    .size(size)
+                    .clip(shape),
+                painter = rememberAsyncImagePainter(iconFile),
+                contentDescription = null,
+                tint = Color.Unspecified,
+            )
+        }
         !iconUrl.isNullOrBlank() -> {
             AsyncImage(
                 model = iconUrl,

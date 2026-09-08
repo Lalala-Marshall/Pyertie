@@ -410,3 +410,9 @@ internal data class EsiMarketPriceDto(
     @SerialName("average_price") val averagePrice: Double? = null,
     @SerialName("adjusted_price") val adjustedPrice: Double? = null,
 )
+
+@Serializable
+internal data class EsiLoyaltyPointsDto(
+    @SerialName("corporation_id") val corporationId: Long,
+    @SerialName("loyalty_points") val loyaltyPoints: Long,
+)

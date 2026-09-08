@@ -23,6 +23,7 @@ import com.marshall.pyerite.esiModule.model.EsiMailHeaderDto
 import com.marshall.pyerite.esiModule.model.EsiMailLabelsDto
 import com.marshall.pyerite.esiModule.model.EsiMailingListDto
 import com.marshall.pyerite.esiModule.model.EsiMailQuery
+import com.marshall.pyerite.esiModule.model.EsiLoyaltyPointsDto
 import com.marshall.pyerite.esiModule.model.EsiPagedQuery
 import com.marshall.pyerite.esiModule.model.EsiSendMailRequestDto
 import com.marshall.pyerite.esiModule.model.EsiSkillQueueEntryDto
@@ -218,4 +219,11 @@ internal interface EsiCharacterApi {
         @Path("contract_id") contractId: Long,
         @Header("Authorization") authorization: String,
     ): List<EsiContractItemDto>
+
+    @Headers("Accept: application/json")
+    @GET("characters/{character_id}/loyalty/points")
+    suspend fun fetchLoyaltyPoints(
+        @Path("character_id") characterId: Long,
+        @Header("Authorization") authorization: String,
+    ): List<EsiLoyaltyPointsDto>
 }
