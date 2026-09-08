@@ -26,11 +26,18 @@ import com.marshall.pyerite.sdeModule.room.industry.BlueprintResearchMaterialMat
 import com.marshall.pyerite.sdeModule.room.industry.BlueprintResearchTimeMaterialEntity
 import com.marshall.pyerite.sdeModule.room.industry.IndustryDao
 import com.marshall.pyerite.sdeModule.room.industry.TypeMaterialEntity
+import com.marshall.pyerite.sdeModule.room.loyalty.LoyaltyDao
+import com.marshall.pyerite.sdeModule.room.loyalty.LoyaltyOfferEntity
+import com.marshall.pyerite.sdeModule.room.loyalty.LoyaltyOfferOutputEntity
+import com.marshall.pyerite.sdeModule.room.loyalty.LoyaltyOfferRequirementEntity
 import com.marshall.pyerite.sdeModule.room.map.MapDao
 import com.marshall.pyerite.sdeModule.room.map.RegionEntity
 import com.marshall.pyerite.sdeModule.room.map.SolarSystemEntity
 import com.marshall.pyerite.sdeModule.room.map.StationEntity
 import com.marshall.pyerite.sdeModule.room.map.UniverseLinkEntity
+import com.marshall.pyerite.sdeModule.room.npc.AgentEntity
+import com.marshall.pyerite.sdeModule.room.npc.FactionEntity
+import com.marshall.pyerite.sdeModule.room.npc.NpcCorporationEntity
 import com.marshall.pyerite.sdeModule.room.skill.SkillDao
 import com.marshall.pyerite.sdeModule.room.type.SdeTypeDao
 import com.marshall.pyerite.sdeModule.room.type.TypeDao
@@ -61,8 +68,14 @@ import com.marshall.pyerite.sdeModule.room.type.TypeEntity
         RegionEntity::class,
         UniverseLinkEntity::class,
         StationEntity::class,
+        NpcCorporationEntity::class,
+        FactionEntity::class,
+        AgentEntity::class,
+        LoyaltyOfferEntity::class,
+        LoyaltyOfferOutputEntity::class,
+        LoyaltyOfferRequirementEntity::class,
     ],
-    version = 4,
+    version = 7,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -79,4 +92,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun skillDao(): SkillDao
     /** Map / station lookups (shared by list, sheet, etc.). */
     abstract fun mapDao(): MapDao
+    /** NPC corps, factions, LP store offers and agent stations. */
+    abstract fun loyaltyDao(): LoyaltyDao
 }

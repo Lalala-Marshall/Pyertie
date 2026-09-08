@@ -55,6 +55,9 @@
     <color name="character_delete">#E53935</color>
     <color name="character_org_badge_background">#FFFFFF</color>
     <color name="character_status_positive">#34A853</color>
+    <color name="loyalty_points_lp">#1565C0</color>
+    <color name="loyalty_points_militia_tag">#7B1FA2</color>
+    <color name="loyalty_points_militia_tag_text">@color/white</color>
     <color name="character_status_online">#34A853</color>
     <color name="character_status_offline">#E53935</color>
     <color name="entity_profile_npc_tag">#7B1FA2</color>

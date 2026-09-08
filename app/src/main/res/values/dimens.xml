@@ -24,6 +24,12 @@
     <dimen name="detail_row_label_subtitle_spacing">2dp</dimen>
     <dimen name="detail_row_label_subtitle_text_size">12sp</dimen>
     <dimen name="detail_row_label_subtitle_line_height">16sp</dimen>
+    <dimen name="detail_row_label_emphasized_subtitle_text_size">14sp</dimen>
+    <dimen name="detail_row_label_emphasized_subtitle_line_height">18sp</dimen>
+    <dimen name="loyalty_points_militia_tag_horizontal_padding">6dp</dimen>
+    <dimen name="loyalty_points_militia_tag_vertical_padding">0dp</dimen>
+    <dimen name="loyalty_points_militia_tag_corner">4dp</dimen>
+    <dimen name="loyalty_points_militia_tag_text_size">10sp</dimen>
     <dimen name="detail_divider_thickness">0.5dp</dimen>
 
     <!-- Submenu row (nested under an expandable header) -->

@@ -428,4 +428,26 @@
     <string name="entity_profile_npc_tag">NPC</string>
     <string name="entity_profile_load_failed">Failed to load</string>
     <string name="entity_profile_retry">Retry</string>
+
+    <string name="loyalty_points">Loyalty Points</string>
+    <string name="loyalty_points_store">LP Store</string>
+    <string name="loyalty_points_basic_info">Basic Info</string>
+    <string name="loyalty_points_factions">Factions</string>
+    <string name="loyalty_points_find_station">Find Station</string>
+    <string name="loyalty_points_offer_categories">Redeemable Categories</string>
+    <string name="loyalty_points_offers">Redeemable Items</string>
+    <string name="loyalty_points_hint">%1$s LP</string>
+    <string name="loyalty_points_lp_value">%1$s LP</string>
+    <string name="loyalty_points_isk_value">%1$s ISK</string>
+    <string name="loyalty_points_times_separator">\u0020x\u0020</string>
+    <string name="loyalty_points_plus_separator">\u0020+\u0020</string>
+    <string name="loyalty_points_required_items">Required items (%1$s ISK)</string>
+    <string name="loyalty_points_corps_empty">No loyalty points</string>
+    <string name="loyalty_points_stations_empty">No stations found</string>
+    <string name="loyalty_points_offers_empty">No redeemable items</string>
+    <string name="loyalty_points_categories_empty">No redeemable categories</string>
+    <string name="loyalty_points_factions_empty">No factions</string>
+    <string name="loyalty_points_faction_corps_empty">No corporations</string>
+    <string name="loyalty_points_militia_tag">Militia</string>
+    <string name="loyalty_points_station_region_title">%1$s (%2$d)</string>
 </resources>
