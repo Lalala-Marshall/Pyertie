@@ -25,6 +25,8 @@ import com.marshall.pyerite.esiModule.model.EsiMailingListDto
 import com.marshall.pyerite.esiModule.model.EsiMailQuery
 import com.marshall.pyerite.esiModule.model.EsiLoyaltyPointsDto
 import com.marshall.pyerite.esiModule.model.EsiPagedQuery
+import com.marshall.pyerite.esiModule.model.EsiSearchQuery
+import com.marshall.pyerite.esiModule.model.EsiSearchResultDto
 import com.marshall.pyerite.esiModule.model.EsiSendMailRequestDto
 import com.marshall.pyerite.esiModule.model.EsiSkillQueueEntryDto
 import okhttp3.ResponseBody
@@ -226,4 +228,14 @@ internal interface EsiCharacterApi {
         @Path("character_id") characterId: Long,
         @Header("Authorization") authorization: String,
     ): List<EsiLoyaltyPointsDto>
+
+    @Headers("Accept: application/json")
+    @GET("characters/{character_id}/search")
+    suspend fun search(
+        @Path("character_id") characterId: Long,
+        @Header("Authorization") authorization: String,
+        @Query(EsiSearchQuery.CATEGORIES) categories: String,
+        @Query(EsiSearchQuery.SEARCH) search: String,
+        @Query(EsiSearchQuery.STRICT) strict: Boolean,
+    ): EsiSearchResultDto
 }

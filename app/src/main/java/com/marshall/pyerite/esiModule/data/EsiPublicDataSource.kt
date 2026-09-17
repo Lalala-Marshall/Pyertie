@@ -9,6 +9,8 @@ import com.marshall.pyerite.esiModule.model.EsiCharacterPublic
 import com.marshall.pyerite.esiModule.model.EsiCorporationHistoryDto
 import com.marshall.pyerite.esiModule.model.EsiOrganization
 import com.marshall.pyerite.esiModule.model.EsiOrganizationDto
+import com.marshall.pyerite.esiModule.model.EsiSearchQuery
+import com.marshall.pyerite.esiModule.model.EsiUniverseNameDto
 import com.marshall.pyerite.esiModule.model.EsiUniverseStationDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -66,6 +68,20 @@ internal class EsiPublicDataSource(
         val names = runCatching { getDto { universeApi.fetchUniverseNames(listOf(id)) } }.getOrNull()
         names?.firstOrNull()?.name?.takeIf { it.isNotBlank() }?.also { universeNameCache[id] = it }
     }
+
+    suspend fun fetchUniverseNames(ids: List<Long>): List<EsiUniverseNameDto> =
+        withContext(Dispatchers.IO) {
+            if (ids.isEmpty()) return@withContext emptyList()
+            ids.distinct().chunked(EsiSearchQuery.UNIVERSE_NAMES_BATCH_SIZE).flatMap { chunk ->
+                val names = runCatching {
+                    getDto { universeApi.fetchUniverseNames(chunk) }
+                }.getOrDefault(emptyList())
+                names.forEach { dto ->
+                    dto.name.takeIf { it.isNotBlank() }?.let { universeNameCache[dto.id] = it }
+                }
+                names
+            }
+        }
 
     suspend fun fetchSolarSystemName(systemId: Long): String? = withContext(Dispatchers.IO) {
         runCatching { getDto { universeApi.fetchSolarSystem(systemId) }.name }.getOrNull()

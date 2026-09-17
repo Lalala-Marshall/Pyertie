@@ -450,4 +450,26 @@
     <string name="loyalty_points_faction_corps_empty">No corporations</string>
     <string name="loyalty_points_militia_tag">Militia</string>
     <string name="loyalty_points_station_region_title">%1$s (%2$d)</string>
+
+    <string name="people_and_places">People and places</string>
+    <string name="people_places_filters_title">Filters (optional)</string>
+    <string name="people_places_category_character">Character</string>
+    <string name="people_places_category_corporation">Corporation</string>
+    <string name="people_places_category_alliance">Alliance</string>
+    <string name="people_places_category_structure">Structure</string>
+    <string name="people_places_hint_corporation">Corporation</string>
+    <string name="people_places_hint_alliance">Alliance</string>
+    <string name="people_places_my_corporation">My corporation members only</string>
+    <string name="people_places_my_alliance">My alliance members only</string>
+    <string name="people_places_exact_match">Exact match</string>
+    <string name="people_places_clear_filters">Clear filters</string>
+    <string name="people_places_building_type_all">All</string>
+    <string name="people_places_building_type_station">Station</string>
+    <string name="people_places_building_type_structure">Structure</string>
+    <string name="people_places_results_title">Search results (%1$d/%2$d)</string>
+    <string name="people_places_results_title_truncated">Search results (%1$d/%2$d showing partial results)</string>
+    <string name="people_places_missing_affiliation">--</string>
+    <string name="people_places_searching">Searching…</string>
+    <string name="people_places_search_failed">Search failed</string>
+    <string name="people_places_search_min_length">Enter at least %1$d characters</string>
 </resources>
