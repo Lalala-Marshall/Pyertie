@@ -463,6 +463,7 @@
     <string name="people_places_my_alliance">My alliance members only</string>
     <string name="people_places_exact_match">Exact match</string>
     <string name="people_places_clear_filters">Clear filters</string>
+    <string name="people_places_building_type">Building type</string>
     <string name="people_places_building_type_all">All</string>
     <string name="people_places_building_type_station">Station</string>
     <string name="people_places_building_type_structure">Structure</string>

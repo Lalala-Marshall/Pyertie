@@ -179,29 +179,32 @@ private fun PeoplePlacesBuildingTypeRow(
     onSelect: (PeoplePlacesBuildingType) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    Box {
+    Box(modifier = Modifier.fillMaxWidth()) {
         BaseLazyColumnItem(
             model = BaseLazyColumnItemModel(
                 showLeadingIcon = false,
-                itemName = stringResource(selected.labelRes()),
+                itemName = stringResource(R.string.people_places_building_type),
+                trailingValue = stringResource(selected.labelRes()),
                 showChevron = true,
                 chevronExpanded = expanded,
                 onClick = { expanded = true },
             ),
             showDivider = true,
         )
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
-            PeoplePlacesBuildingType.entries.forEach { type ->
-                DropdownMenuItem(
-                    text = { Text(text = stringResource(type.labelRes())) },
-                    onClick = {
-                        onSelect(type)
-                        expanded = false
-                    },
-                )
+        Box(modifier = Modifier.align(Alignment.CenterEnd)) {
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+            ) {
+                PeoplePlacesBuildingType.entries.forEach { type ->
+                    DropdownMenuItem(
+                        text = { Text(text = stringResource(type.labelRes())) },
+                        onClick = {
+                            onSelect(type)
+                            expanded = false
+                        },
+                    )
+                }
             }
         }
     }

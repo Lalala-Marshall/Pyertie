@@ -465,6 +465,7 @@
     <string name="people_places_my_alliance">只看我的联盟成员</string>
     <string name="people_places_exact_match">精准匹配</string>
     <string name="people_places_clear_filters">清除过滤</string>
+    <string name="people_places_building_type">建筑类型</string>
     <string name="people_places_building_type_all">全部</string>
     <string name="people_places_building_type_station">空间站</string>
     <string name="people_places_building_type_structure">建筑</string>
