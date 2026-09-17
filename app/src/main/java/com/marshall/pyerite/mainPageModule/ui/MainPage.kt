@@ -32,6 +32,8 @@ import com.marshall.pyerite.characterCalendarModule.navHost.CharacterCalendarRou
 import com.marshall.pyerite.characterCalendarModule.ui.MainPageCharacterCalendarItem
 import com.marshall.pyerite.loyaltyPointsModule.navHost.LoyaltyPointsRoute
 import com.marshall.pyerite.loyaltyPointsModule.ui.MainPageLoyaltyPointsItem
+import com.marshall.pyerite.peoplePlacesModule.navHost.PeoplePlacesRoute
+import com.marshall.pyerite.peoplePlacesModule.ui.MainPagePeoplePlacesItem
 import com.marshall.pyerite.personalPropertyModule.navHost.PersonalPropertyRoute
 import com.marshall.pyerite.personalPropertyModule.ui.MainPagePersonalPropertyItem
 import com.marshall.pyerite.characterClonesModule.navHost.CharacterClonesRoute
@@ -251,11 +253,21 @@ fun MainPage(
                             },
                         )
                         MainPageLoyaltyPointsItem(
+                            showDivider = true,
                             onClick = {
                                 val characterId = currentCharacter?.characterId
                                     ?: return@MainPageLoyaltyPointsItem
                                 navController.navigate(
                                     LoyaltyPointsRoute.Hub.create(characterId),
+                                )
+                            },
+                        )
+                        MainPagePeoplePlacesItem(
+                            onClick = {
+                                val characterId = currentCharacter?.characterId
+                                    ?: return@MainPagePeoplePlacesItem
+                                navController.navigate(
+                                    PeoplePlacesRoute.Search.create(characterId),
                                 )
                             },
                         )

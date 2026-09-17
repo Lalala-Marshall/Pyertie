@@ -452,4 +452,26 @@
     <string name="loyalty_points_faction_corps_empty">暂无可选军团</string>
     <string name="loyalty_points_militia_tag">卫队</string>
     <string name="loyalty_points_station_region_title">%1$s（%2$d）</string>
+
+    <string name="people_and_places">人物与地点</string>
+    <string name="people_places_filters_title">过滤条件（可留空）</string>
+    <string name="people_places_category_character">人物</string>
+    <string name="people_places_category_corporation">军团</string>
+    <string name="people_places_category_alliance">联盟</string>
+    <string name="people_places_category_structure">建筑</string>
+    <string name="people_places_hint_corporation">所属军团</string>
+    <string name="people_places_hint_alliance">所属联盟</string>
+    <string name="people_places_my_corporation">只看我的军团成员</string>
+    <string name="people_places_my_alliance">只看我的联盟成员</string>
+    <string name="people_places_exact_match">精准匹配</string>
+    <string name="people_places_clear_filters">清除过滤</string>
+    <string name="people_places_building_type_all">全部</string>
+    <string name="people_places_building_type_station">空间站</string>
+    <string name="people_places_building_type_structure">建筑</string>
+    <string name="people_places_results_title">搜索条件（%1$d/%2$d）</string>
+    <string name="people_places_results_title_truncated">搜索条件（%1$d/%2$d 只展示部分结果）</string>
+    <string name="people_places_missing_affiliation">--</string>
+    <string name="people_places_searching">搜索中…</string>
+    <string name="people_places_search_failed">搜索失败</string>
+    <string name="people_places_search_min_length">至少输入 %1$d 个字符</string>
 </resources>

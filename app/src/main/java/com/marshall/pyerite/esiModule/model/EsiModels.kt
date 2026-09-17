@@ -303,12 +303,32 @@ internal data class EsiUniverseIdNameDto(
     val name: String,
 )
 
-/** Wire `category` values from POST `/universe/names`. */
+/** Wire `category` values from POST `/universe/names` and ESI search. */
 internal object EsiUniverseNameCategory {
     const val CHARACTER = "character"
     const val CORPORATION = "corporation"
     const val ALLIANCE = "alliance"
+    const val STATION = "station"
+    const val STRUCTURE = "structure"
 }
+
+/** Query parameter names for GET `/characters/{id}/search`. */
+internal object EsiSearchQuery {
+    const val CATEGORIES = "categories"
+    const val SEARCH = "search"
+    const val STRICT = "strict"
+    const val CATEGORY_SEPARATOR = ","
+    const val UNIVERSE_NAMES_BATCH_SIZE = 1_000
+}
+
+@Serializable
+internal data class EsiSearchResultDto(
+    val character: List<Long> = emptyList(),
+    val corporation: List<Long> = emptyList(),
+    val alliance: List<Long> = emptyList(),
+    val station: List<Long> = emptyList(),
+    val structure: List<Long> = emptyList(),
+)
 
 @Serializable
 internal data class EsiContactDto(
