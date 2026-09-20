@@ -176,6 +176,11 @@
     <dimen name="skill_plan_show_completed_icon_size">12dp</dimen>
     <dimen name="skill_plan_show_completed_label_gap">4dp</dimen>
     <dimen name="skill_plan_show_completed_border">1.5dp</dimen>
+    <dimen name="corporation_wallet_select_all_check_size">18dp</dimen>
+    <dimen name="corporation_wallet_select_all_icon_size">12dp</dimen>
+    <dimen name="corporation_wallet_select_all_gap">6dp</dimen>
+    <dimen name="corporation_wallet_select_all_border">1.5dp</dimen>
+    <dimen name="corporation_wallet_item_check_size">20dp</dimen>
     <dimen name="top_bar_dropdown_corner">12dp</dimen>
     <dimen name="top_bar_dropdown_min_width">200dp</dimen>
     <dimen name="top_bar_dropdown_divider_horizontal_padding">12dp</dimen>

@@ -9,13 +9,16 @@ import com.marshall.pyerite.corporationModule.wallet.model.CorporationWalletDate
 import com.marshall.pyerite.corporationModule.wallet.model.CorporationWalletDayRow
 import com.marshall.pyerite.corporationModule.wallet.model.CorporationWalletDivisionTab
 import com.marshall.pyerite.corporationModule.wallet.model.CorporationWalletJournalEntry
+import com.marshall.pyerite.corporationModule.wallet.model.CorporationWalletJournalFilter
 import com.marshall.pyerite.corporationModule.wallet.model.CorporationWalletLedger
 import com.marshall.pyerite.corporationModule.wallet.model.CorporationWalletMarketTransaction
 import com.marshall.pyerite.corporationModule.wallet.model.CorporationWalletPeriodSummary
 import com.marshall.pyerite.corporationModule.wallet.model.CorporationWalletSummaryWindow
+import com.marshall.pyerite.corporationModule.wallet.model.mergeSimilarMarketTransactions
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -34,12 +37,38 @@ internal class CorporationWalletDivisionViewModel(
     private val _uiState = MutableStateFlow(initialUiState())
     val uiState: StateFlow<CorporationWalletDivisionUiState> = _uiState.asStateFlow()
 
+    private var lastForceRefreshAtMs = 0L
+
     init {
         load(forceRefresh = repository.cachedLedger(characterId, division) == null)
+        viewModelScope.launch {
+            combine(
+                repository.journalFilter,
+                repository.mergeSimilarTransactions,
+            ) { filter, mergeSimilar -> filter to mergeSimilar }
+                .collect { (filter, mergeSimilar) ->
+                    _uiState.update { current ->
+                        present(
+                            current.copy(
+                                journalFilter = filter,
+                                mergeSimilarTransactions = mergeSimilar,
+                            ),
+                        )
+                    }
+                }
+        }
     }
 
     fun refresh() {
         if (_uiState.value.isLoading) return
+        load(forceRefresh = true)
+    }
+
+    fun forceRefreshJournal() {
+        val nowMs = System.currentTimeMillis()
+        if (_uiState.value.isLoading) return
+        if (nowMs - lastForceRefreshAtMs < CorporationWalletConfig.FORCE_REFRESH_DEBOUNCE_MS) return
+        lastForceRefreshAtMs = nowMs
         load(forceRefresh = true)
     }
 
@@ -49,12 +78,16 @@ internal class CorporationWalletDivisionViewModel(
 
     fun cycleSummaryWindow() {
         _uiState.update { current ->
-            val next = current.summaryWindow.next()
-            current.copy(
-                summaryWindow = next,
-                periodSummary = summarizeJournal(current.journal, next),
-            )
+            present(current.copy(summaryWindow = current.summaryWindow.next()))
         }
+    }
+
+    fun onJournalFilterChange(filter: CorporationWalletJournalFilter) {
+        repository.setJournalFilter(filter)
+    }
+
+    fun onMergeSimilarTransactionsChange(enabled: Boolean) {
+        repository.setMergeSimilarTransactions(enabled)
     }
 
     private fun initialUiState(): CorporationWalletDivisionUiState {
@@ -71,7 +104,11 @@ internal class CorporationWalletDivisionViewModel(
                 summaryWindow = CorporationWalletSummaryWindow.DAYS_30,
             )
         } else {
-            CorporationWalletDivisionUiState(divisionName = divisionName)
+            CorporationWalletDivisionUiState(
+                divisionName = divisionName,
+                journalFilter = repository.journalFilter.value,
+                mergeSimilarTransactions = repository.mergeSimilarTransactions.value,
+            )
         }
     }
 
@@ -111,18 +148,35 @@ internal class CorporationWalletDivisionViewModel(
         selectedTab: CorporationWalletDivisionTab,
         summaryWindow: CorporationWalletSummaryWindow,
     ): CorporationWalletDivisionUiState {
-        return CorporationWalletDivisionUiState(
-            divisionName = divisionName,
-            selectedTab = selectedTab,
-            summaryWindow = summaryWindow,
-            journal = ledger.journal,
-            transactions = ledger.transactions,
-            journalDays = journalDays(ledger.journal),
-            transactionDays = transactionDays(ledger.transactions),
-            periodSummary = summarizeJournal(ledger.journal, summaryWindow),
-            isLoading = false,
-            loadFailed = false,
-            permissionDenied = false,
+        return present(
+            CorporationWalletDivisionUiState(
+                divisionName = divisionName,
+                selectedTab = selectedTab,
+                summaryWindow = summaryWindow,
+                journal = ledger.journal,
+                transactions = ledger.transactions,
+                journalFilter = repository.journalFilter.value,
+                mergeSimilarTransactions = repository.mergeSimilarTransactions.value,
+                isLoading = false,
+                loadFailed = false,
+                permissionDenied = false,
+            ),
+        )
+    }
+
+    private fun present(
+        state: CorporationWalletDivisionUiState,
+    ): CorporationWalletDivisionUiState {
+        val visibleJournal = state.journal.filter { state.journalFilter.matches(it) }
+        val visibleTransactions = if (state.mergeSimilarTransactions) {
+            mergeSimilarMarketTransactions(state.transactions)
+        } else {
+            state.transactions
+        }
+        return state.copy(
+            journalDays = journalDays(visibleJournal),
+            transactionDays = transactionDays(visibleTransactions),
+            periodSummary = summarizeJournal(visibleJournal, state.summaryWindow),
         )
     }
 
@@ -145,6 +199,8 @@ internal data class CorporationWalletDivisionUiState(
         expense = CorporationWalletConfig.ZERO_ISK,
         net = CorporationWalletConfig.ZERO_ISK,
     ),
+    val journalFilter: CorporationWalletJournalFilter = CorporationWalletJournalFilter.ALL,
+    val mergeSimilarTransactions: Boolean = false,
     val isLoading: Boolean = true,
     val loadFailed: Boolean = false,
     val permissionDenied: Boolean = false,

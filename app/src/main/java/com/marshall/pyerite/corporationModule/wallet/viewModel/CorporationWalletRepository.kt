@@ -1,9 +1,13 @@
 package com.marshall.pyerite.corporationModule.wallet.viewModel
 
 import com.marshall.pyerite.corporationModule.wallet.data.CorporationWalletLoader
+import com.marshall.pyerite.corporationModule.wallet.model.CorporationWalletJournalFilter
 import com.marshall.pyerite.corporationModule.wallet.model.CorporationWalletLedger
 import com.marshall.pyerite.corporationModule.wallet.model.CorporationWalletsSnapshot
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -17,11 +21,25 @@ internal class CorporationWalletRepository(
     private val walletLocks = ConcurrentHashMap<Long, Mutex>()
     private val ledgerLocks = ConcurrentHashMap<String, Mutex>()
 
+    private val _journalFilter = MutableStateFlow(CorporationWalletJournalFilter.ALL)
+    val journalFilter: StateFlow<CorporationWalletJournalFilter> = _journalFilter.asStateFlow()
+
+    private val _mergeSimilarTransactions = MutableStateFlow(false)
+    val mergeSimilarTransactions: StateFlow<Boolean> = _mergeSimilarTransactions.asStateFlow()
+
     fun cachedWallets(characterId: Long): CorporationWalletsSnapshot? =
         walletsByCharacterId[characterId]
 
     fun cachedLedger(characterId: Long, division: Int): CorporationWalletLedger? =
         ledgerByKey[ledgerKey(characterId, division)]
+
+    fun setJournalFilter(filter: CorporationWalletJournalFilter) {
+        _journalFilter.value = filter
+    }
+
+    fun setMergeSimilarTransactions(enabled: Boolean) {
+        _mergeSimilarTransactions.value = enabled
+    }
 
     suspend fun loadWallets(
         characterId: Long,

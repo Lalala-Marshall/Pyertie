@@ -511,6 +511,17 @@
     <string name="corporation_wallet_balance_value">Balance: %1$s</string>
     <string name="corporation_wallet_journal_hint_industry">Project fee between %1$s and %2$s (project ID: %3$s)</string>
     <string name="corporation_wallet_journal_hint_industry_no_id">Project fee between %1$s and %2$s</string>
+    <string name="corporation_wallet_journal_filter_title">Filter</string>
+    <string name="corporation_wallet_filter_select_all">Select all</string>
+    <string name="corporation_wallet_filter_income">Income</string>
+    <string name="corporation_wallet_filter_expense">Expense</string>
+    <string name="corporation_wallet_filter_direction_section">Income &amp; Expense</string>
+    <string name="corporation_wallet_filter_type_section">Journal types</string>
+    <string name="corporation_wallet_force_refresh">Refresh</string>
+    <string name="corporation_wallet_sheet_done">Done</string>
+    <string name="corporation_wallet_transaction_settings_title">Settings</string>
+    <string name="corporation_wallet_merge_similar_transactions">Merge similar transactions</string>
+    <string name="corporation_wallet_merge_similar_transactions_hint">Records with the same time, item, and location</string>
     <string name="corporation_journal_category_industry">Industry</string>
     <string name="corporation_journal_category_market">Market</string>
     <string name="corporation_journal_category_contract">Contracts</string>
@@ -567,8 +578,8 @@
     <string name="corporation_journal_ref_contract_price_payment_corp">Contract Price Payment (Corporation)</string>
     <string name="corporation_journal_ref_contract_reversal">Contract Reversal</string>
     <string name="corporation_journal_ref_contract_reward">Contract Reward</string>
-    <string name="corporation_journal_ref_contract_reward_deposited">Contract Reward Deposited</string>
-    <string name="corporation_journal_ref_contract_reward_deposited_corp">Contract Reward Deposited (Corporation)</string>
+    <string name="corporation_journal_ref_contract_reward_deposited">Prepaid Contract Reward</string>
+    <string name="corporation_journal_ref_contract_reward_deposited_corp">Prepaid Contract Reward (Corporation)</string>
     <string name="corporation_journal_ref_contract_reward_refund">Contract Reward Refund</string>
     <string name="corporation_journal_ref_contract_sales_tax">Contract Sales Tax</string>
     <string name="corporation_journal_ref_copying">Copying</string>
@@ -582,7 +593,7 @@
     <string name="corporation_journal_ref_corporation_payment">Corporation Payment</string>
     <string name="corporation_journal_ref_corporation_registration_fee">Corporation Registration Fee</string>
     <string name="corporation_journal_ref_courier_mission_escrow">Courier Mission Escrow</string>
-    <string name="corporation_journal_ref_cspa">CSPA</string>
+    <string name="corporation_journal_ref_cspa">CONCORD Spam Prevention Fee</string>
     <string name="corporation_journal_ref_cspaofflinerefund">CSPA Offline Refund</string>
     <string name="corporation_journal_ref_daily_goal_payouts">Daily Goal Reward</string>
     <string name="corporation_journal_ref_datacore_fee">Datacore Fee</string>
@@ -595,7 +606,7 @@
     <string name="corporation_journal_ref_factory_slot_rental_fee">Factory Slot Rental Fee</string>
     <string name="corporation_journal_ref_gm_cash_transfer">GM Cash Transfer</string>
     <string name="corporation_journal_ref_industry_job">Industry</string>
-    <string name="corporation_journal_ref_industry_job_tax">Industry Job Tax</string>
+    <string name="corporation_journal_ref_industry_job_tax">Industry Facility Tax</string>
     <string name="corporation_journal_ref_infrastructure_hub_maintenance">Infrastructure Hub Maintenance</string>
     <string name="corporation_journal_ref_insurance">Insurance</string>
     <string name="corporation_journal_ref_item_exchange">Item Exchange</string>

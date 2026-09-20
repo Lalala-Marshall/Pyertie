@@ -36,5 +36,9 @@ internal object CorporationWalletConfig {
     const val SECURITY_LOW_MAX = 0.5
 
     const val ZERO_ISK = 0.0
+
+    const val FORCE_REFRESH_DEBOUNCE_MS = 1_000L
+    const val FILTER_SHEET_HEIGHT_FRACTION = 0.85f
+    const val SETTINGS_SHEET_HEIGHT_FRACTION = 0.70f
 }
 

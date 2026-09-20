@@ -373,6 +373,7 @@ internal class CorporationWalletLoader(
             dayKey = CorporationWalletDateFormatter.dayKey(epochMs),
             amount = dto.amount,
             balance = dto.balance,
+            refType = dto.refType,
             category = category,
             titleRes = CorporationWalletJournalRef.titleResFor(dto.refType),
             description = CorporationWalletJournalDescription(
@@ -397,6 +398,7 @@ internal class CorporationWalletLoader(
             dateEpochMs = epochMs,
             dayKey = CorporationWalletDateFormatter.dayKey(epochMs),
             typeId = dto.typeId,
+            locationId = dto.locationId,
             zhName = type?.zhName,
             enName = type?.enName,
             name = type?.name ?: dto.typeId.toString(),

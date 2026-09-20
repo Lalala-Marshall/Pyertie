@@ -8,10 +8,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
@@ -32,7 +40,7 @@ import com.marshall.pyerite.ui.golbalComponents.PyeritePageScaffold
 import com.marshall.pyerite.ui.golbalComponents.PyeritePullToRefreshBox
 import com.marshall.pyerite.ui.golbalComponents.PyeriteSegmentedControl
 import com.marshall.pyerite.ui.golbalComponents.PyeriteSegmentedOption
-import com.marshall.pyerite.ui.golbalComponents.pyeritePullRefreshTopBarAction
+import com.marshall.pyerite.ui.golbalComponents.PyeriteTopBarActionItem
 import com.marshall.pyerite.ui.golbalComponents.rememberNavigateUpAction
 import com.marshall.pyerite.ui.golbalComponents.rememberScrollTitleCollapsed
 import com.marshall.pyerite.util.NumberDisplayFormatter
@@ -55,13 +63,38 @@ internal fun CorporationWalletDivisionPage(
     val showCollapsedTitle = rememberScrollTitleCollapsed(scrollState)
     val sectionGap = dimensionResource(R.dimen.type_detail_section_gap)
     val bottomPadding = dimensionResource(R.dimen.type_detail_bottom_padding)
-    val endActions = listOfNotNull(
-        pyeritePullRefreshTopBarAction(
-            isRefreshing = uiState.isLoading,
-            refreshFailed = uiState.loadFailed,
-            onRefresh = viewModel::refresh,
-        ),
-    )
+    var showJournalFilterSheet by remember { mutableStateOf(false) }
+    var showTransactionSettingsSheet by remember { mutableStateOf(false) }
+    val endActions = when (uiState.selectedTab) {
+        CorporationWalletDivisionTab.JOURNAL -> listOf(
+            PyeriteTopBarActionItem(
+                onClick = { showJournalFilterSheet = true },
+                icon = if (uiState.journalFilter.isDefault) {
+                    Icons.Outlined.FilterList
+                } else {
+                    Icons.Filled.FilterList
+                },
+                contentDescription = stringResource(R.string.corporation_wallet_journal_filter_title),
+            ),
+            PyeriteTopBarActionItem(
+                onClick = viewModel::forceRefreshJournal,
+                icon = Icons.Default.Refresh,
+                contentDescription = stringResource(R.string.corporation_wallet_force_refresh),
+                iconTint = colorResource(R.color.character_delete),
+                enabled = !uiState.isLoading,
+                spinning = uiState.isLoading,
+            ),
+        )
+        CorporationWalletDivisionTab.TRANSACTIONS -> listOf(
+            PyeriteTopBarActionItem(
+                onClick = { showTransactionSettingsSheet = true },
+                icon = Icons.Default.Settings,
+                contentDescription = stringResource(
+                    R.string.corporation_wallet_transaction_settings_title,
+                ),
+            ),
+        )
+    }
     val language = localeController.contentLanguage
 
     PyeritePageScaffold(
@@ -95,7 +128,11 @@ internal fun CorporationWalletDivisionPage(
                         ),
                     ),
                     selected = uiState.selectedTab,
-                    onSelect = viewModel::onTabSelected,
+                    onSelect = { tab ->
+                        showJournalFilterSheet = false
+                        showTransactionSettingsSheet = false
+                        viewModel.onTabSelected(tab)
+                    },
                 )
                 if (uiState.permissionDenied || uiState.loadFailed) {
                     CorporationWalletStatusBanner(
@@ -219,6 +256,22 @@ internal fun CorporationWalletDivisionPage(
                 }
             }
         }
+    }
+    if (showJournalFilterSheet && uiState.selectedTab == CorporationWalletDivisionTab.JOURNAL) {
+        CorporationWalletJournalFilterSheet(
+            filter = uiState.journalFilter,
+            onFilterChange = viewModel::onJournalFilterChange,
+            onDismiss = { showJournalFilterSheet = false },
+        )
+    }
+    if (showTransactionSettingsSheet &&
+        uiState.selectedTab == CorporationWalletDivisionTab.TRANSACTIONS
+    ) {
+        CorporationWalletTransactionSettingsSheet(
+            mergeSimilarTransactions = uiState.mergeSimilarTransactions,
+            onMergeSimilarTransactionsChange = viewModel::onMergeSimilarTransactionsChange,
+            onDismiss = { showTransactionSettingsSheet = false },
+        )
     }
 }
 

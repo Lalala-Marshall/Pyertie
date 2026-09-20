@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marshall.pyerite.corporationModule.wallet.model.CorporationWalletAccessException
 import com.marshall.pyerite.corporationModule.wallet.model.CorporationWalletMarketTransaction
+import com.marshall.pyerite.corporationModule.wallet.model.mergeSimilarMarketTransactions
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,11 +27,17 @@ internal class CorporationWalletTransactionDayViewModel(
         "Missing $NAV_ARG_DAY_KEY"
     }
 
+    private var sourceTransactions: List<CorporationWalletMarketTransaction> =
+        repository.cachedLedger(characterId, division)?.transactions.orEmpty()
+
     private val _uiState = MutableStateFlow(initialUiState())
     val uiState: StateFlow<CorporationWalletTransactionDayUiState> = _uiState.asStateFlow()
 
     init {
         load(forceRefresh = repository.cachedLedger(characterId, division) == null)
+        viewModelScope.launch {
+            repository.mergeSimilarTransactions.collect { publishEntries() }
+        }
     }
 
     fun refresh() {
@@ -43,7 +50,10 @@ internal class CorporationWalletTransactionDayViewModel(
         return if (cached != null) {
             CorporationWalletTransactionDayUiState(
                 dayKey = dayKey,
-                entries = cached.transactions.filter { it.dayKey == dayKey },
+                entries = visibleEntries(
+                    cached.transactions,
+                    repository.mergeSimilarTransactions.value,
+                ),
                 isLoading = false,
             )
         } else {
@@ -62,8 +72,12 @@ internal class CorporationWalletTransactionDayViewModel(
             _uiState.update { current ->
                 result.fold(
                     onSuccess = { ledger ->
+                        sourceTransactions = ledger.transactions
                         current.copy(
-                            entries = ledger.transactions.filter { it.dayKey == dayKey },
+                            entries = visibleEntries(
+                                ledger.transactions,
+                                repository.mergeSimilarTransactions.value,
+                            ),
                             isLoading = false,
                             loadFailed = false,
                             permissionDenied = false,
@@ -79,6 +93,25 @@ internal class CorporationWalletTransactionDayViewModel(
                 )
             }
         }
+    }
+
+    private fun publishEntries() {
+        _uiState.update {
+            it.copy(
+                entries = visibleEntries(
+                    sourceTransactions,
+                    repository.mergeSimilarTransactions.value,
+                ),
+            )
+        }
+    }
+
+    private fun visibleEntries(
+        transactions: List<CorporationWalletMarketTransaction>,
+        mergeSimilar: Boolean,
+    ): List<CorporationWalletMarketTransaction> {
+        val dayEntries = transactions.filter { it.dayKey == dayKey }
+        return if (mergeSimilar) mergeSimilarMarketTransactions(dayEntries) else dayEntries
     }
 
     companion object {

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.marshall.pyerite.corporationModule.wallet.model.CorporationWalletAccessException
 import com.marshall.pyerite.corporationModule.wallet.model.CorporationWalletJournalEntry
+import com.marshall.pyerite.corporationModule.wallet.model.CorporationWalletJournalFilter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,11 +27,17 @@ internal class CorporationWalletJournalDayViewModel(
         "Missing $NAV_ARG_DAY_KEY"
     }
 
+    private var sourceJournal: List<CorporationWalletJournalEntry> =
+        repository.cachedLedger(characterId, division)?.journal.orEmpty()
+
     private val _uiState = MutableStateFlow(initialUiState())
     val uiState: StateFlow<CorporationWalletJournalDayUiState> = _uiState.asStateFlow()
 
     init {
         load(forceRefresh = repository.cachedLedger(characterId, division) == null)
+        viewModelScope.launch {
+            repository.journalFilter.collect { publishEntries() }
+        }
     }
 
     fun refresh() {
@@ -43,7 +50,7 @@ internal class CorporationWalletJournalDayViewModel(
         return if (cached != null) {
             CorporationWalletJournalDayUiState(
                 dayKey = dayKey,
-                entries = cached.journal.filter { it.dayKey == dayKey },
+                entries = visibleEntries(cached.journal, repository.journalFilter.value),
                 isLoading = false,
             )
         } else {
@@ -62,8 +69,9 @@ internal class CorporationWalletJournalDayViewModel(
             _uiState.update { current ->
                 result.fold(
                     onSuccess = { ledger ->
+                        sourceJournal = ledger.journal
                         current.copy(
-                            entries = ledger.journal.filter { it.dayKey == dayKey },
+                            entries = visibleEntries(ledger.journal, repository.journalFilter.value),
                             isLoading = false,
                             loadFailed = false,
                             permissionDenied = false,
@@ -78,6 +86,20 @@ internal class CorporationWalletJournalDayViewModel(
                     },
                 )
             }
+        }
+    }
+
+    private fun publishEntries() {
+        val filter = repository.journalFilter.value
+        _uiState.update { it.copy(entries = visibleEntries(sourceJournal, filter)) }
+    }
+
+    private fun visibleEntries(
+        journal: List<CorporationWalletJournalEntry>,
+        filter: CorporationWalletJournalFilter,
+    ): List<CorporationWalletJournalEntry> {
+        return journal.filter { entry ->
+            entry.dayKey == dayKey && filter.matches(entry)
         }
     }
 
