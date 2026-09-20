@@ -70,6 +70,8 @@ data class PyeriteTopBarMenuItem(
     val trailingContentDescription: String? = null,
     val onTrailingClick: (() -> Unit)? = null,
     val enabled: Boolean = true,
+    /** When true and this is not the last item, a divider is drawn below the row. */
+    val showDividerBelow: Boolean = true,
 )
 
 @Immutable
@@ -335,7 +337,7 @@ private fun TopBarActionSegment(
                         enabled = item.enabled,
                         contentPadding = MenuDefaults.DropdownMenuItemContentPadding,
                     )
-                    if (index != action.menuItems.lastIndex) {
+                    if (index != action.menuItems.lastIndex && item.showDividerBelow) {
                         HorizontalDivider(
                             modifier = Modifier.padding(horizontal = dividerHorizontalPadding),
                             thickness = dimensionResource(R.dimen.detail_divider_thickness),
