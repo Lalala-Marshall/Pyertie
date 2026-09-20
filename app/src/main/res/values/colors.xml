@@ -80,4 +80,7 @@
     <color name="personal_property_slice_implants">#7B1FA2</color>
     <color name="personal_property_slice_market">#34A853</color>
     <color name="personal_property_slice_contracts">#00897B</color>
+
+    <color name="wallet_income">#34A853</color>
+    <color name="wallet_expense">#D32F2F</color>
 </resources>

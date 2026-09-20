@@ -25,6 +25,7 @@ import com.marshall.pyerite.mainPageModule.navHost.MainRoute
 import com.marshall.pyerite.mainPageModule.navHost.mainNavGraph
 import com.marshall.pyerite.loyaltyPointsModule.navHost.loyaltyPointsNavGraph
 import com.marshall.pyerite.peoplePlacesModule.navHost.peoplePlacesNavGraph
+import com.marshall.pyerite.corporationModule.wallet.navHost.corporationWalletNavGraph
 import com.marshall.pyerite.personalPropertyModule.navHost.personalPropertyNavGraph
 import com.marshall.pyerite.ui.golbalComponents.LocalOpenEntityProfile
 import com.marshall.pyerite.ui.golbalComponents.UniverseEntityRef
@@ -65,6 +66,7 @@ fun AppNavHost() {
                 characterMailNavGraph(navController)
                 characterCalendarNavGraph(navController)
                 personalPropertyNavGraph(navController)
+                corporationWalletNavGraph(navController)
                 loyaltyPointsNavGraph(navController)
                 peoplePlacesNavGraph(navController)
             }

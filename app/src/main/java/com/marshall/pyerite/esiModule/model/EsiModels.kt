@@ -374,6 +374,7 @@ internal object EsiPagedQuery {
 
 internal object EsiHttpStatus {
     const val UNAUTHORIZED = 401
+    const val FORBIDDEN = 403
     const val NOT_FOUND = 404
 }
 
@@ -435,4 +436,58 @@ internal data class EsiMarketPriceDto(
 internal data class EsiLoyaltyPointsDto(
     @SerialName("corporation_id") val corporationId: Long,
     @SerialName("loyalty_points") val loyaltyPoints: Long,
+)
+
+@Serializable
+internal data class EsiCharacterRolesDto(
+    val roles: List<String> = emptyList(),
+    @SerialName("roles_at_hq") val rolesAtHq: List<String> = emptyList(),
+    @SerialName("roles_at_base") val rolesAtBase: List<String> = emptyList(),
+    @SerialName("roles_at_other") val rolesAtOther: List<String> = emptyList(),
+)
+
+@Serializable
+internal data class EsiCorporationWalletDto(
+    val division: Int,
+    val balance: Double = 0.0,
+)
+
+@Serializable
+internal data class EsiCorporationDivisionNameDto(
+    val division: Int,
+    val name: String? = null,
+)
+
+@Serializable
+internal data class EsiCorporationDivisionsDto(
+    val hangar: List<EsiCorporationDivisionNameDto> = emptyList(),
+    val wallet: List<EsiCorporationDivisionNameDto> = emptyList(),
+)
+
+@Serializable
+internal data class EsiCorporationWalletJournalDto(
+    val id: Long,
+    val date: String,
+    val amount: Double = 0.0,
+    val balance: Double? = null,
+    val description: String? = null,
+    val reason: String? = null,
+    @SerialName("ref_type") val refType: String,
+    @SerialName("first_party_id") val firstPartyId: Long? = null,
+    @SerialName("second_party_id") val secondPartyId: Long? = null,
+    @SerialName("context_id") val contextId: Long? = null,
+    @SerialName("context_id_type") val contextIdType: String? = null,
+)
+
+@Serializable
+internal data class EsiCorporationWalletTransactionDto(
+    @SerialName("transaction_id") val transactionId: Long,
+    val date: String,
+    @SerialName("type_id") val typeId: Int,
+    val quantity: Int = 0,
+    @SerialName("unit_price") val unitPrice: Double = 0.0,
+    @SerialName("is_buy") val isBuy: Boolean = false,
+    @SerialName("location_id") val locationId: Long,
+    @SerialName("client_id") val clientId: Long? = null,
+    @SerialName("journal_ref_id") val journalRefId: Long? = null,
 )

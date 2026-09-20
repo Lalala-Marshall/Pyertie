@@ -1,11 +1,18 @@
 package com.marshall.pyerite.esiModule.api
 
 import com.marshall.pyerite.esiModule.model.EsiContactDto
+import com.marshall.pyerite.esiModule.model.EsiCorporationDivisionsDto
+import com.marshall.pyerite.esiModule.model.EsiCorporationWalletDto
+import com.marshall.pyerite.esiModule.model.EsiCorporationWalletJournalDto
+import com.marshall.pyerite.esiModule.model.EsiCorporationWalletTransactionDto
 import com.marshall.pyerite.esiModule.model.EsiOrganizationDto
+import com.marshall.pyerite.esiModule.model.EsiPagedQuery
+import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Headers
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 /**
  * ESI `/corporations/...` routes (OpenAPI 3.1, no `/latest`, no trailing slash).
@@ -21,4 +28,36 @@ internal interface EsiCorporationApi {
         @Path("corporation_id") corporationId: Long,
         @Header("Authorization") authorization: String,
     ): List<EsiContactDto>
+
+    @Headers("Accept: application/json")
+    @GET("corporations/{corporation_id}/wallets")
+    suspend fun fetchWallets(
+        @Path("corporation_id") corporationId: Long,
+        @Header("Authorization") authorization: String,
+    ): List<EsiCorporationWalletDto>
+
+    @Headers("Accept: application/json")
+    @GET("corporations/{corporation_id}/wallets/{division}/journal")
+    suspend fun fetchWalletJournal(
+        @Path("corporation_id") corporationId: Long,
+        @Path("division") division: Int,
+        @Header("Authorization") authorization: String,
+        @Query(EsiPagedQuery.PAGE) page: Int,
+    ): Response<List<EsiCorporationWalletJournalDto>>
+
+    @Headers("Accept: application/json")
+    @GET("corporations/{corporation_id}/wallets/{division}/transactions")
+    suspend fun fetchWalletTransactions(
+        @Path("corporation_id") corporationId: Long,
+        @Path("division") division: Int,
+        @Header("Authorization") authorization: String,
+        @Query(EsiPagedQuery.PAGE) page: Int,
+    ): Response<List<EsiCorporationWalletTransactionDto>>
+
+    @Headers("Accept: application/json")
+    @GET("corporations/{corporation_id}/divisions")
+    suspend fun fetchDivisions(
+        @Path("corporation_id") corporationId: Long,
+        @Header("Authorization") authorization: String,
+    ): EsiCorporationDivisionsDto
 }

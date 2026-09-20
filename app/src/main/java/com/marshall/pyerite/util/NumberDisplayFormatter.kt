@@ -7,24 +7,26 @@ import kotlin.math.floor
 /**
  * Project-wide numeric display for ISK, SP, and similar magnitudes.
  *
- * - `Style.COMPACT`: abbreviate with `M` / `B` (no `k`); two fractional digits, truncated.
+ * - `Style.COMPACT`: abbreviate with `k` / `M` / `B`; two fractional digits, truncated.
  * - `Style.FULL`: every three digits grouped with commas; doubles also truncate to two decimals.
  */
 object NumberDisplayFormatter {
 
     enum class Style {
-        /** `M` then `B`; below one million uses `Style.FULL`. */
+        /** `k` then `M` then `B`; below one thousand uses `Style.FULL`. */
         COMPACT,
 
-        /** A Thousand separators; no abbreviation. */
+        /** Thousand separators; no abbreviation. */
         FULL,
     }
 
+    private const val THOUSAND = 1_000.0
     private const val MILLION = 1_000_000.0
     private const val BILLION = 1_000_000_000.0
     private const val FRACTION_SCALE = 100.0
     private const val FRACTION_DIGITS = 2
 
+    private const val SUFFIX_THOUSAND = "k"
     private const val SUFFIX_MILLION = "M"
     private const val SUFFIX_BILLION = "B"
 
@@ -47,6 +49,9 @@ object NumberDisplayFormatter {
             }
             magnitude >= MILLION -> {
                 sign + truncateToFixed(magnitude / MILLION) + SUFFIX_MILLION
+            }
+            magnitude >= THOUSAND -> {
+                sign + truncateToFixed(magnitude / THOUSAND) + SUFFIX_THOUSAND
             }
             else -> formatFull(value)
         }
