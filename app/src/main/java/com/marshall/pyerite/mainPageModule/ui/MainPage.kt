@@ -34,6 +34,8 @@ import com.marshall.pyerite.loyaltyPointsModule.navHost.LoyaltyPointsRoute
 import com.marshall.pyerite.loyaltyPointsModule.ui.MainPageLoyaltyPointsItem
 import com.marshall.pyerite.peoplePlacesModule.navHost.PeoplePlacesRoute
 import com.marshall.pyerite.peoplePlacesModule.ui.MainPagePeoplePlacesItem
+import com.marshall.pyerite.corporationModule.wallet.navHost.CorporationWalletRoute
+import com.marshall.pyerite.corporationModule.wallet.ui.MainPageCorporationWalletItem
 import com.marshall.pyerite.personalPropertyModule.navHost.PersonalPropertyRoute
 import com.marshall.pyerite.personalPropertyModule.ui.MainPagePersonalPropertyItem
 import com.marshall.pyerite.characterClonesModule.navHost.CharacterClonesRoute
@@ -130,7 +132,10 @@ fun MainPage(
         uiState is SdeUpdateUiState.CheckFailed
     val pageTitle = stringResource(R.string.main_page)
     val characterSectionTitle = stringResource(R.string.character)
+    val corporationSectionTitle = stringResource(R.string.corporation)
     val dataSectionTitle = stringResource(R.string.data)
+    val showCorporationSection =
+        currentLoggedInCharacter?.hasCorporationManagementAccess == true
     val refreshTopBarAction = pyeritePullRefreshTopBarAction(
         isRefreshing = isRefreshing,
         refreshFailed = refreshFailed,
@@ -283,6 +288,26 @@ fun MainPage(
                                 )
                             },
                         )
+                    }
+                }
+                if (showCorporationSection) {
+                    item(key = "corporation_section_header") {
+                        MainPageSectionHeader(title = corporationSectionTitle)
+                    }
+                    item(key = "corporation_section_entries") {
+                        MainPageSectionCard(
+                            bottomSpacing = dimensionResource(R.dimen.character_main_card_bottom_spacing),
+                        ) {
+                            MainPageCorporationWalletItem(
+                                onClick = {
+                                    val characterId = currentCharacter?.characterId
+                                        ?: return@MainPageCorporationWalletItem
+                                    navController.navigate(
+                                        CorporationWalletRoute.Wallets.create(characterId),
+                                    )
+                                },
+                            )
+                        }
                     }
                 }
                 item(key = "data_section_header") {

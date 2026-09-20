@@ -16,6 +16,7 @@ import com.marshall.pyerite.esiModule.data.allianceLogoUrl
 import com.marshall.pyerite.esiModule.data.corporationLogoUrl
 import com.marshall.pyerite.esiModule.model.parseEsiDateMillis
 import com.marshall.pyerite.esiModule.data.portraitUrl
+import com.marshall.pyerite.eveAuthModule.model.EveSsoScope
 import com.marshall.pyerite.eveAuthModule.model.EveStoredSession
 import com.marshall.pyerite.eveAuthModule.token.EveTokenManager
 import com.marshall.pyerite.localization.LocaleController
@@ -73,6 +74,17 @@ internal class CharacterProfileLoader(
                     }
                 }.getOrNull()
             }
+            val grantedScopes = tokenManager.grantedScopes(session.characterId)
+            val rolesDeferred = async {
+                if (EveSsoScope.CHARACTERS_READ_CORPORATION_ROLES !in grantedScopes) {
+                    return@async null
+                }
+                runCatching {
+                    tokenManager.executeWithAuthRetry(session.characterId) { auth ->
+                        characterApi.fetchRoles(session.characterId, auth)
+                    }
+                }.getOrNull()
+            }
 
             val public = publicDeferred.await()
             val skills = skillsDeferred.await()
@@ -85,6 +97,8 @@ internal class CharacterProfileLoader(
             val location = locationDeferred.await()
             val locationInfo = resolveLocation(location)
             val queue = queueDeferred.await()?.let { entries -> mapSkillQueue(entries) }
+            val roles = rolesDeferred.await()
+            val hasCorporationManagementAccess = !roles?.roles.isNullOrEmpty()
 
             LoggedInCharacter(
                 characterId = session.characterId,
@@ -106,7 +120,9 @@ internal class CharacterProfileLoader(
                 allianceName = formatOrgLabel(alliance),
                 allianceIconUrl = public?.allianceId?.let { allianceLogoUrl(it) },
                 skillQueue = queue,
-                grantedScopes = tokenManager.grantedScopes(session.characterId),
+                grantedScopes = grantedScopes,
+                corporationId = public?.corporationId,
+                hasCorporationManagementAccess = hasCorporationManagementAccess,
             )
         }
     }
