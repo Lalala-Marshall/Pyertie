@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.marshall.pyerite.localization.LocaleController
 import com.marshall.pyerite.localization.SdeDatabase
+import com.marshall.pyerite.sdeModule.room.mastery.SdeMasteryTableBootstrap
 
 /**
  * Opens the language-specific SDE sqlite (Room).
@@ -41,6 +42,7 @@ class RoomProvider(
         check(dbFile.exists()) {
             "SDE database missing: $dbName. BundledSdeUpdater must run before Room opens."
         }
+        SdeMasteryTableBootstrap.ensurePresent(dbFile)
         val database = Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, dbName)
             .createFromFile(dbFile)
             .addMigrations(
@@ -50,6 +52,7 @@ class RoomProvider(
                 AppDatabaseMigrations.MIGRATION_4_5,
                 AppDatabaseMigrations.MIGRATION_5_6,
                 AppDatabaseMigrations.MIGRATION_6_7,
+                AppDatabaseMigrations.MIGRATION_7_8,
             )
             .build()
         cachedDbName = dbName

@@ -41,6 +41,8 @@ import com.marshall.pyerite.characterClonesModule.ui.MainPageCloneStatusItem
 import com.marshall.pyerite.characterClonesModule.viewModel.CharacterClonesViewModel
 import com.marshall.pyerite.characterMailModule.navHost.CharacterMailRoute
 import com.marshall.pyerite.characterMailModule.ui.MainPageCharacterMailItem
+import com.marshall.pyerite.characterMasteryModule.navHost.CharacterMasteryRoute
+import com.marshall.pyerite.characterMasteryModule.ui.MainPageCharacterMasteryItem
 import com.marshall.pyerite.characterSheetModule.navHost.CharacterSheetRoute
 import com.marshall.pyerite.characterSheetModule.ui.MainPageCharacterSheetItem
 import com.marshall.pyerite.characterSkillsModule.navHost.CharacterSkillsRoute
@@ -263,11 +265,21 @@ fun MainPage(
                             },
                         )
                         MainPagePeoplePlacesItem(
+                            showDivider = true,
                             onClick = {
                                 val characterId = currentCharacter?.characterId
                                     ?: return@MainPagePeoplePlacesItem
                                 navController.navigate(
                                     PeoplePlacesRoute.Search.create(characterId),
+                                )
+                            },
+                        )
+                        MainPageCharacterMasteryItem(
+                            onClick = {
+                                val characterId = currentCharacter?.characterId
+                                    ?: return@MainPageCharacterMasteryItem
+                                navController.navigate(
+                                    CharacterMasteryRoute.Overview.create(characterId),
                                 )
                             },
                         )

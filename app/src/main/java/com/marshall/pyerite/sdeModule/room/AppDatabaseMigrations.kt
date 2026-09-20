@@ -2,6 +2,7 @@ package com.marshall.pyerite.sdeModule.room
 
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.marshall.pyerite.sdeModule.room.mastery.SdeMasteryTableBootstrap
 
 /**
  * Room identity-hash migrations for the prepackaged SDE file.
@@ -42,6 +43,14 @@ internal object AppDatabaseMigrations {
     val MIGRATION_6_7 = object : Migration(6, 7) {
         override fun migrate(db: SupportSQLiteDatabase) {
             // NPC / loyalty entities declare existing SDE indexes (createFromFile validates).
+        }
+    }
+
+    val MIGRATION_7_8 = object : Migration(7, 8) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Empty tables on the installed copy only; bundled EveSDE is not modified.
+            db.execSQL(SdeMasteryTableBootstrap.CREATE_CERTIFICATE_SKILLS)
+            db.execSQL(SdeMasteryTableBootstrap.CREATE_MASTERIES)
         }
     }
 }

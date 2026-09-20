@@ -473,4 +473,14 @@
     <string name="people_places_searching">Searching…</string>
     <string name="people_places_search_failed">Search failed</string>
     <string name="people_places_search_min_length">Enter at least %1$d characters</string>
+
+    <string name="character_mastery">Mastery</string>
+    <string name="character_mastery_filter">Filter mastery</string>
+    <string name="character_mastery_filter_all">All</string>
+    <string name="character_mastery_filter_locked">Not qualified</string>
+    <string name="character_mastery_filter_qualified">Qualified</string>
+    <string name="character_mastery_filter_level">Mastery %1$s</string>
+    <string name="character_mastery_filter_empty">No ships match “%1$s”</string>
+    <string name="character_mastery_icon">Mastery level</string>
+    <string name="character_mastery_groups_empty">No mastery data</string>
 </resources>

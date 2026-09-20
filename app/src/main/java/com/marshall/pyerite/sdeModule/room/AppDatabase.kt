@@ -35,6 +35,10 @@ import com.marshall.pyerite.sdeModule.room.map.RegionEntity
 import com.marshall.pyerite.sdeModule.room.map.SolarSystemEntity
 import com.marshall.pyerite.sdeModule.room.map.StationEntity
 import com.marshall.pyerite.sdeModule.room.map.UniverseLinkEntity
+import com.marshall.pyerite.sdeModule.room.mastery.CertificateSkillEntity
+import com.marshall.pyerite.sdeModule.room.mastery.MasteryDao
+import com.marshall.pyerite.sdeModule.room.mastery.MasteryEntity
+import com.marshall.pyerite.sdeModule.room.mastery.TypeSkillRequirementEntity
 import com.marshall.pyerite.sdeModule.room.npc.AgentEntity
 import com.marshall.pyerite.sdeModule.room.npc.FactionEntity
 import com.marshall.pyerite.sdeModule.room.npc.NpcCorporationEntity
@@ -74,8 +78,11 @@ import com.marshall.pyerite.sdeModule.room.type.TypeEntity
         LoyaltyOfferEntity::class,
         LoyaltyOfferOutputEntity::class,
         LoyaltyOfferRequirementEntity::class,
+        MasteryEntity::class,
+        CertificateSkillEntity::class,
+        TypeSkillRequirementEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -94,4 +101,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun mapDao(): MapDao
     /** NPC corps, factions, LP store offers and agent stations. */
     abstract fun loyaltyDao(): LoyaltyDao
+    /** Ship mastery certificates and direct hull skill requirements. */
+    abstract fun masteryDao(): MasteryDao
 }

@@ -475,4 +475,14 @@
     <string name="people_places_searching">搜索中…</string>
     <string name="people_places_search_failed">搜索失败</string>
     <string name="people_places_search_min_length">至少输入 %1$d 个字符</string>
+
+    <string name="character_mastery">专精</string>
+    <string name="character_mastery_filter">筛选专精</string>
+    <string name="character_mastery_filter_all">全部</string>
+    <string name="character_mastery_filter_locked">不达标</string>
+    <string name="character_mastery_filter_qualified">达标</string>
+    <string name="character_mastery_filter_level">专精 %1$s</string>
+    <string name="character_mastery_filter_empty">没有符合「%1$s」的飞船</string>
+    <string name="character_mastery_icon">专精等级</string>
+    <string name="character_mastery_groups_empty">暂无专精数据</string>
 </resources>

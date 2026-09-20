@@ -12,6 +12,7 @@ import com.marshall.pyerite.characterClonesModule.characterClonesModule
 import com.marshall.pyerite.loyaltyPointsModule.loyaltyPointsModule
 import com.marshall.pyerite.peoplePlacesModule.peoplePlacesModule
 import com.marshall.pyerite.characterMailModule.characterMailModule
+import com.marshall.pyerite.characterMasteryModule.characterMasteryModule
 import com.marshall.pyerite.characterSheetModule.characterSheetModule
 import com.marshall.pyerite.entityProfileModule.entityProfileModule
 import com.marshall.pyerite.personalPropertyModule.personalPropertyModule
@@ -56,6 +57,7 @@ class PyeriteApp : Application() {
                 characterSheetModule,
                 characterClonesModule,
                 characterSkillsModule,
+                characterMasteryModule,
                 characterMailModule,
                 characterCalendarModule,
                 personalPropertyModule,

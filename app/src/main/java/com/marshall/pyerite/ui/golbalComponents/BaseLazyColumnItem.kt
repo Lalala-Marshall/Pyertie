@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
@@ -146,6 +147,8 @@ fun BaseLazyColumnItem(
      * under the hint line.
      */
     omitContentBottomPadding: Boolean = false,
+    /** Optional full-row background (e.g. mastery right-edge gradient). */
+    backgroundBrush: Brush? = null,
     iconManager: IconManager = koinInject(),
 ) {
     val hints = model.resolvedHints()
@@ -201,6 +204,13 @@ fun BaseLazyColumnItem(
 
     val rootModifier = modifier
         .fillMaxWidth()
+        .then(
+            if (backgroundBrush != null) {
+                Modifier.background(backgroundBrush)
+            } else {
+                Modifier
+            },
+        )
         .then(
             if (model.onClick != null) {
                 Modifier.clickable(onClick = model.onClick)
