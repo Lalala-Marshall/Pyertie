@@ -480,6 +480,13 @@ internal data class EsiCorporationWalletJournalDto(
 )
 
 @Serializable
+internal data class EsiCorporationMemberTrackingDto(
+    @SerialName("character_id") val characterId: Long,
+    @SerialName("location_id") val locationId: Long? = null,
+    @SerialName("ship_type_id") val shipTypeId: Int? = null,
+)
+
+@Serializable
 internal data class EsiCorporationWalletTransactionDto(
     @SerialName("transaction_id") val transactionId: Long,
     val date: String,

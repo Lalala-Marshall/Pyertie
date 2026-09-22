@@ -2,6 +2,7 @@ package com.marshall.pyerite.esiModule.api
 
 import com.marshall.pyerite.esiModule.model.EsiContactDto
 import com.marshall.pyerite.esiModule.model.EsiCorporationDivisionsDto
+import com.marshall.pyerite.esiModule.model.EsiCorporationMemberTrackingDto
 import com.marshall.pyerite.esiModule.model.EsiCorporationWalletDto
 import com.marshall.pyerite.esiModule.model.EsiCorporationWalletJournalDto
 import com.marshall.pyerite.esiModule.model.EsiCorporationWalletTransactionDto
@@ -53,6 +54,14 @@ internal interface EsiCorporationApi {
         @Header("Authorization") authorization: String,
         @Query(EsiPagedQuery.PAGE) page: Int,
     ): Response<List<EsiCorporationWalletTransactionDto>>
+
+    @Headers("Accept: application/json")
+    @GET("corporations/{corporation_id}/membertracking")
+    suspend fun fetchMemberTracking(
+        @Path("corporation_id") corporationId: Long,
+        @Header("Authorization") authorization: String,
+        @Query(EsiPagedQuery.PAGE) page: Int,
+    ): Response<List<EsiCorporationMemberTrackingDto>>
 
     @Headers("Accept: application/json")
     @GET("corporations/{corporation_id}/divisions")
