@@ -98,6 +98,18 @@ data class UniverseLinkEntity(
  * Joined solar-system + region row for character location display.
  * Not a table entity — Room @Query projection only.
  */
+/**
+ * Solar-system id plus display fields for batch location lookup.
+ * Not a table entity — Room @Query projection only.
+ */
+data class SolarSystemLookupRow(
+    @ColumnInfo(name = "solarSystemID") val solarSystemId: Long,
+    @ColumnInfo(name = "system_name") val systemName: String?,
+    @ColumnInfo(name = "system_zh_name") val systemZhName: String?,
+    @ColumnInfo(name = "system_en_name") val systemEnName: String?,
+    @ColumnInfo(name = "security_status") val securityStatus: Double?,
+)
+
 data class SolarSystemLocationRow(
     @ColumnInfo(name = "system_name") val systemName: String?,
     @ColumnInfo(name = "system_zh_name") val systemZhName: String?,

@@ -26,6 +26,21 @@ interface MapDao {
 
     @Query(
         """
+        SELECT
+            ss.solarSystemID AS solarSystemID,
+            ss.solarSystemName AS system_name,
+            ss.solarSystemName_zh AS system_zh_name,
+            ss.solarSystemName_en AS system_en_name,
+            COALESCE(u.system_security, ss.security_status) AS security_status
+        FROM solarsystems ss
+        LEFT JOIN universe u ON u.solarsystem_id = ss.solarSystemID
+        WHERE ss.solarSystemID IN (:solarSystemIds)
+        """,
+    )
+    suspend fun getSolarSystemLocations(solarSystemIds: List<Long>): List<SolarSystemLookupRow>
+
+    @Query(
+        """
         SELECT stationID, stationTypeID, stationName, solarSystemID
         FROM stations
         WHERE stationID = :stationId
@@ -33,4 +48,13 @@ interface MapDao {
         """,
     )
     suspend fun getStation(stationId: Long): StationLocationRow?
+
+    @Query(
+        """
+        SELECT stationID, stationTypeID, stationName, solarSystemID
+        FROM stations
+        WHERE stationID IN (:stationIds)
+        """,
+    )
+    suspend fun getStations(stationIds: List<Long>): List<StationLocationRow>
 }
