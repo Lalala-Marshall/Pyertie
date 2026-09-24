@@ -110,6 +110,18 @@ data class SolarSystemLookupRow(
     @ColumnInfo(name = "security_status") val securityStatus: Double?,
 )
 
+/** Batch solar-system lookup that also includes the parent region name. */
+data class SolarSystemRegionLookupRow(
+    @ColumnInfo(name = "solarSystemID") val solarSystemId: Long,
+    @ColumnInfo(name = "system_name") val systemName: String?,
+    @ColumnInfo(name = "system_zh_name") val systemZhName: String?,
+    @ColumnInfo(name = "system_en_name") val systemEnName: String?,
+    @ColumnInfo(name = "security_status") val securityStatus: Double?,
+    @ColumnInfo(name = "region_name") val regionName: String?,
+    @ColumnInfo(name = "region_zh_name") val regionZhName: String?,
+    @ColumnInfo(name = "region_en_name") val regionEnName: String?,
+)
+
 data class SolarSystemLocationRow(
     @ColumnInfo(name = "system_name") val systemName: String?,
     @ColumnInfo(name = "system_zh_name") val systemZhName: String?,

@@ -280,4 +280,12 @@
     <dimen name="personal_property_legend_dot_gap">8dp</dimen>
     <dimen name="personal_property_legend_label_text_size">13sp</dimen>
     <dimen name="personal_property_legend_value_text_size">13sp</dimen>
+
+    <dimen name="corporation_structure_status_ring_size">44dp</dimen>
+    <dimen name="corporation_structure_icon_size">40dp</dimen>
+    <dimen name="corporation_structure_status_ring_width">2dp</dimen>
+    <dimen name="corporation_structure_service_tag_corner">4dp</dimen>
+    <dimen name="corporation_structure_service_tag_horizontal_padding">6dp</dimen>
+    <dimen name="corporation_structure_service_tag_vertical_padding">2dp</dimen>
+    <dimen name="corporation_structure_service_tag_gap">4dp</dimen>
 </resources>
