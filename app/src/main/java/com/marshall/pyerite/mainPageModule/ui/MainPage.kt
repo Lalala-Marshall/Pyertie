@@ -36,6 +36,8 @@ import com.marshall.pyerite.peoplePlacesModule.navHost.PeoplePlacesRoute
 import com.marshall.pyerite.peoplePlacesModule.ui.MainPagePeoplePlacesItem
 import com.marshall.pyerite.corporationModule.members.navHost.CorporationMembersRoute
 import com.marshall.pyerite.corporationModule.members.ui.MainPageCorporationMembersItem
+import com.marshall.pyerite.corporationModule.structures.navHost.CorporationStructuresRoute
+import com.marshall.pyerite.corporationModule.structures.ui.MainPageCorporationStructuresItem
 import com.marshall.pyerite.corporationModule.wallet.navHost.CorporationWalletRoute
 import com.marshall.pyerite.corporationModule.wallet.ui.MainPageCorporationWalletItem
 import com.marshall.pyerite.personalPropertyModule.navHost.PersonalPropertyRoute
@@ -311,11 +313,21 @@ fun MainPage(
                                 },
                             )
                             MainPageCorporationMembersItem(
+                                showDivider = true,
                                 onClick = {
                                     val characterId = currentCharacter?.characterId
                                         ?: return@MainPageCorporationMembersItem
                                     navController.navigate(
                                         CorporationMembersRoute.Members.create(characterId),
+                                    )
+                                },
+                            )
+                            MainPageCorporationStructuresItem(
+                                onClick = {
+                                    val characterId = currentCharacter?.characterId
+                                        ?: return@MainPageCorporationStructuresItem
+                                    navController.navigate(
+                                        CorporationStructuresRoute.Structures.create(characterId),
                                     )
                                 },
                             )

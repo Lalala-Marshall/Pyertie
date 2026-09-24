@@ -487,6 +487,23 @@ internal data class EsiCorporationMemberTrackingDto(
 )
 
 @Serializable
+internal data class EsiCorporationStructureServiceDto(
+    val name: String,
+    val state: String,
+)
+
+@Serializable
+internal data class EsiCorporationStructureDto(
+    @SerialName("structure_id") val structureId: Long,
+    @SerialName("type_id") val typeId: Int,
+    @SerialName("system_id") val systemId: Long,
+    val name: String? = null,
+    val state: String,
+    @SerialName("fuel_expires") val fuelExpires: String? = null,
+    val services: List<EsiCorporationStructureServiceDto>? = null,
+)
+
+@Serializable
 internal data class EsiCorporationWalletTransactionDto(
     @SerialName("transaction_id") val transactionId: Long,
     val date: String,
